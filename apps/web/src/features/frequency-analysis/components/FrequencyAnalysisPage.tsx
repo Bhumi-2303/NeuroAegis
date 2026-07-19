@@ -15,18 +15,20 @@ import {
   GlassCard, 
   SkeletonShimmer, 
   EmptyState, 
-  ErrorState 
+  ErrorState,
+  HudCornerFrame,
+  FrequencyBandRow,
 } from '../../../shared/components';
 import { pageTransition, staggerChildren, slideUp } from '../../../shared/lib/motion-presets';
 
 import { useFrequencyBands } from '../hooks/useFrequencyBands';
 
 const BANDS = [
-  { name: 'gamma', color: '#FF4D6D', label: 'Gamma' },
-  { name: 'beta', color: '#FFB020', label: 'Beta' },
-  { name: 'alpha', color: '#00FFA3', label: 'Alpha' },
-  { name: 'theta', color: '#4B7DFF', label: 'Theta' },
-  { name: 'delta', color: '#8B5CF6', label: 'Delta' }
+  { name: 'gamma', color: '#FF4D6D', label: 'Gamma', greek: 'γ', hz: '30–100 Hz' },
+  { name: 'beta', color: '#FFB020', label: 'Beta', greek: 'β', hz: '13–30 Hz' },
+  { name: 'alpha', color: '#00FFA3', label: 'Alpha', greek: 'α', hz: '8–13 Hz' },
+  { name: 'theta', color: '#4B7DFF', label: 'Theta', greek: 'θ', hz: '4–8 Hz' },
+  { name: 'delta', color: '#8B5CF6', label: 'Delta', greek: 'δ', hz: '0.5–4 Hz' }
 ] as const;
 
 export const FrequencyAnalysisPage: React.FC = () => {
@@ -51,17 +53,19 @@ export const FrequencyAnalysisPage: React.FC = () => {
     return Array.from(groupedData.values()).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
   }, [data]);
 
-  const latestAverages = useMemo(() => {
+  const bandStats = useMemo(() => {
     if (chartData.length === 0) return null;
     
-    const result: Record<string, number> = {};
+    const result: Record<string, { avg: number; sparkline: number[] }> = {};
     BANDS.forEach(({ name }) => {
-      // simple average of last N points or overall average for display
       const values = chartData.map(d => d[name]).filter(v => v !== undefined && v !== null);
       if (values.length > 0) {
-        result[name] = values.reduce((sum, val) => sum + val, 0) / values.length;
+        result[name] = {
+          avg: values.reduce((sum: number, val: number) => sum + val, 0) / values.length,
+          sparkline: values.slice(-20),
+        };
       } else {
-        result[name] = 0;
+        result[name] = { avg: 0, sparkline: [] };
       }
     });
     return result;
@@ -147,7 +151,7 @@ export const FrequencyAnalysisPage: React.FC = () => {
                     fillOpacity={1}
                     fill={`url(#gradient-${name})`}
                     strokeWidth={2}
-                    style={{ filter: `drop-shadow(0 0 4px ${color}80)` }} // Glowing stroke
+                    style={{ filter: `drop-shadow(0 0 4px ${color}80)` }}
                     isAnimationActive={false}
                   />
                 ))}
@@ -156,19 +160,26 @@ export const FrequencyAnalysisPage: React.FC = () => {
           </GlassCard>
         </motion.div>
 
-        {/* Bottom Stat Tiles */}
-        {latestAverages && (
-          <motion.div variants={staggerChildren} className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {BANDS.map(({ name, label, color }) => (
-              <motion.div key={name} variants={slideUp}>
-                <GlassCard className="p-4 flex flex-col items-center justify-center text-center">
-                  <span className="text-sm font-body" style={{ color: color }}>{label}</span>
-                  <span className="text-xl font-mono mt-2" style={{ color: 'var(--text-primary)' }}>
-                    {latestAverages[name].toFixed(2)} µV²
-                  </span>
-                </GlassCard>
-              </motion.div>
-            ))}
+        {/* FrequencyBandRow list — replaces the old stat tiles */}
+        {bandStats && (
+          <motion.div variants={slideUp}>
+            <GlassCard className="p-4">
+              <HudCornerFrame label="Band Power Levels">
+                <div className="flex flex-col gap-0.5 mt-2">
+                  {BANDS.map(({ name, label, color, greek, hz }) => (
+                    <FrequencyBandRow
+                      key={name}
+                      bandName={label}
+                      greekLetter={greek}
+                      color={color}
+                      hzRange={hz}
+                      sparklineData={bandStats[name].sparkline}
+                      avgPower={bandStats[name].avg}
+                    />
+                  ))}
+                </div>
+              </HudCornerFrame>
+            </GlassCard>
           </motion.div>
         )}
       </motion.div>
@@ -183,11 +194,10 @@ export const FrequencyAnalysisPage: React.FC = () => {
       animate="animate"
       exit="exit"
     >
-      <header className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-[var(--bg-2)] border border-[rgba(255,255,255,0.1)] rounded-lg">
-          <Radio className="w-6 h-6 text-[var(--accent-primary)]" />
-        </div>
-        <h1 className="text-2xl font-display text-[var(--text-primary)]">Frequency Band Analysis</h1>
+      <header className="mb-6">
+        <HudCornerFrame label="Frequency Band Analysis" icon={<Radio size={14} strokeWidth={1.5} />}>
+          <h1 className="text-2xl font-display text-[var(--text-primary)]">Frequency Band Analysis</h1>
+        </HudCornerFrame>
       </header>
 
       <main className="flex-1">
