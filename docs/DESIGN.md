@@ -512,3 +512,21 @@ Four states    →  Loading (shimmer) · Empty (on-brand) · Error (retry) · Su
 ---
 
 *Document version 1.0 — authored 2026-07-18. Governed by the NeuroAegis design council. All changes require review.*
+
+
+## 13 · New Redesign Patterns (V2)
+
+The V2 UI redesign introduces the following patterns to enhance the clinical, futuristic aesthetic:
+
+| Component | Description | Use Case |
+|-----------|-------------|----------|
+| **HudCornerFrame** | Thin corner-bracket frame wrapping a child element, featuring an integrated label and icon. | Wrapping glass cards and section titles to reinforce the "HUD" aesthetic. |
+| **ClinicalMetaTable** | Compact two-column Attribute/Value table. The attribute is styled as secondary text, and the value as primary text. | Displaying session, patient, or model metadata. |
+| **CircularScoreGauge** | Circular ring with a large centered number and a vertical gradient scale bar. Uses `--state-success`/`warning`/`danger` mapped colors. | Highlighting primary KPI scores like Confidence or Accuracy. |
+| **ShapFeatureRow** | Repeating list row with a horizontal track and a signed SHAP value marker. | Displaying AI explainability feature importance. |
+| **ModelSelectorSegmented** | Single-select segmented pill control. Active segment is highlighted with a background fill and active text color. | Switching between machine learning models (e.g., Random Forest vs XGBoost). |
+| **InspectorPopoutCard** | Floating card breaking out past parent panel edge, acting as a detailed tooltip or inspector panel. | Showing deeper details on hover/click (e.g., detailed prediction stats). |
+| **FrequencyBandRow** | Glowing sparkline paired with a Hz readout and a colored Greek-letter icon chip. | Visualizing specific EEG frequency bands (Alpha, Beta, Gamma, etc.). |
+| **SessionFilmstrip** | Horizontal scrollable thumbnail strip of past sessions. Active session is highlighted. | Navigating patient history and past EEG recordings. |
+| **DualLineComparisonChart** | Two datasets rendered as dotted/marker lines overlaid on fainter background lines. | Comparing model metrics side-by-side (e.g., Accuracy vs F1 Score). |
+| **Toolbar Pattern** | Floating or inline strip with icon buttons (pan, zoom, measure) and toggles. | Enhancing main visualizations like the EEG Monitor or 3D Brain. |
