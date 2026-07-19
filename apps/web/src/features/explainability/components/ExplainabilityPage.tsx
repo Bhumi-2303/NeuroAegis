@@ -6,7 +6,9 @@ import {
   SkeletonShimmer, 
   EmptyState, 
   ErrorState, 
-  ShapBarChart 
+  ShapBarChart,
+  HudCornerFrame,
+  ModelSelectorSegmented,
 } from '../../../shared/components';
 import { pageTransition, slideUp, staggerChildren } from '../../../shared/lib/motion-presets';
 import { useExplanation } from '../hooks/useExplanation';
@@ -22,7 +24,7 @@ const createMockInput = (modelName: string): ModelInput => ({
 });
 
 export const ExplainabilityPage: React.FC = () => {
-  const [selectedModel] = useState<'random_forest' | 'xgboost' | 'lightgbm'>('random_forest');
+  const [selectedModel, setSelectedModel] = useState<'random_forest' | 'xgboost' | 'lightgbm'>('random_forest');
   
   const input = createMockInput(selectedModel);
   const { data, isLoading, isError, refetch } = useExplanation(input);
@@ -34,10 +36,16 @@ export const ExplainabilityPage: React.FC = () => {
 
   return (
     <motion.div {...pageTransition} className="p-6 space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Lightbulb className="w-8 h-8 text-[var(--accent-highlight)]" strokeWidth={1.5} />
-        <h1 className="text-2xl font-[var(--font-display)] text-[var(--text-primary)]">Model Explainability</h1>
-      </div>
+      <HudCornerFrame label="Model Explainability" icon={<Lightbulb size={14} strokeWidth={1.5} />}>
+        <h1 className="text-2xl font-display text-[var(--text-primary)]">Model Explainability</h1>
+      </HudCornerFrame>
+
+      {/* Model Selector */}
+      <ModelSelectorSegmented
+        models={['random_forest', 'xgboost', 'lightgbm'] as const}
+        selected={selectedModel}
+        onSelect={(m) => setSelectedModel(m as 'random_forest' | 'xgboost' | 'lightgbm')}
+      />
 
       <motion.div {...staggerChildren} className="flex flex-col gap-6">
         {isLoading && (
@@ -74,34 +82,42 @@ export const ExplainabilityPage: React.FC = () => {
           <>
             <motion.div {...slideUp}>
               <GlassCard className="p-6">
-                <div className="flex gap-12">
-                  <div>
-                    <div className="text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Base Value</div>
-                    <div className="text-2xl font-[var(--font-mono)] text-[var(--text-primary)]">
-                      {data.explanation.baseValue.toFixed(4)}
+                <HudCornerFrame label="Summary">
+                  <div className="flex gap-12 mt-2">
+                    <div>
+                      <div className="text-sm font-body text-[var(--text-secondary)] mb-1">Base Value</div>
+                      <div className="text-2xl font-mono text-[var(--text-primary)]">
+                        {data.explanation.baseValue.toFixed(4)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-body text-[var(--text-secondary)] mb-1">Total Features Analyzed</div>
+                      <div className="text-2xl font-mono text-[var(--text-primary)]">
+                        {data.explanation.features.length}
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Total Features Analyzed</div>
-                    <div className="text-2xl font-[var(--font-mono)] text-[var(--text-primary)]">
-                      {data.explanation.features.length}
-                    </div>
-                  </div>
-                </div>
+                </HudCornerFrame>
               </GlassCard>
             </motion.div>
 
             <motion.div {...slideUp}>
-              <GlassCard title="Feature Contributions" className="p-6 h-[400px]">
-                <ShapBarChart features={chartFeatures} />
+              <GlassCard className="p-6">
+                <HudCornerFrame label="Feature Contributions">
+                  <div className="mt-2">
+                    <ShapBarChart features={chartFeatures} />
+                  </div>
+                </HudCornerFrame>
               </GlassCard>
             </motion.div>
 
             <motion.div {...slideUp}>
-              <GlassCard title="Understanding SHAP Values" className="p-6">
-                <p className="font-[var(--font-body)] text-[var(--text-secondary)] text-sm leading-relaxed">
-                  SHAP (SHapley Additive exPlanations) values show how much each feature contributes to pushing the model output from the base value (the average model output) to the actual prediction. Features with positive values push the prediction higher (e.g., towards seizure), while those with negative values push the prediction lower (e.g., towards non-seizure).
-                </p>
+              <GlassCard className="p-6">
+                <HudCornerFrame label="Understanding SHAP Values">
+                  <p className="font-body text-[var(--text-secondary)] text-sm leading-relaxed mt-2">
+                    SHAP (SHapley Additive exPlanations) values show how much each feature contributes to pushing the model output from the base value (the average model output) to the actual prediction. Features with positive values push the prediction higher (e.g., towards seizure), while those with negative values push the prediction lower (e.g., towards non-seizure).
+                  </p>
+                </HudCornerFrame>
               </GlassCard>
             </motion.div>
           </>
