@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Activity } from 'lucide-react';
+import { Activity, Move, ZoomIn, Ruler, Sparkles } from 'lucide-react';
 import { 
   LineChart, 
   Line, 
@@ -16,7 +16,8 @@ import {
   GlassCard, 
   SkeletonShimmer, 
   EmptyState, 
-  ErrorState 
+  ErrorState,
+  HudCornerFrame,
 } from '../../../shared/components';
 import { pageTransition, staggerChildren, slideUp } from '../../../shared/lib/motion-presets';
 
@@ -33,6 +34,41 @@ const CHANNEL_COLORS: Record<string, string> = {
   Default: '#94A3B8'
 };
 
+function EEGToolbar(): React.JSX.Element {
+  return (
+    <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-[rgba(11,22,37,0.7)] border border-[rgba(255,255,255,0.06)] backdrop-blur-sm w-fit">
+      <button
+        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+        aria-label="Pan" title="Pan"
+      >
+        <Move size={14} strokeWidth={1.5} />
+      </button>
+      <button
+        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+        aria-label="Zoom" title="Zoom"
+      >
+        <ZoomIn size={14} strokeWidth={1.5} />
+      </button>
+      <button
+        className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:bg-[rgba(0,229,255,0.06)] transition-colors"
+        aria-label="Measure" title="Measure"
+      >
+        <Ruler size={14} strokeWidth={1.5} />
+      </button>
+      <div className="w-px h-4 bg-[rgba(255,255,255,0.08)] mx-1" />
+      <span className="text-[10px] font-mono text-[var(--text-secondary)] px-1">100%</span>
+      <div className="w-px h-4 bg-[rgba(255,255,255,0.08)] mx-1" />
+      <button
+        className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-mono bg-[rgba(139,92,246,0.1)] text-[var(--accent-highlight)] border border-[rgba(139,92,246,0.2)] hover:bg-[rgba(139,92,246,0.2)] transition-colors"
+        aria-label="AI Explain"
+      >
+        <Sparkles size={10} strokeWidth={1.5} />
+        AI Explain
+      </button>
+    </div>
+  );
+}
+
 export const EEGMonitorPage: React.FC = () => {
   const { selectedChannels, timeWindow, isRunning } = useEegStore();
   const { data, error, isLoading } = useEEGStream(selectedChannels);
@@ -40,7 +76,6 @@ export const EEGMonitorPage: React.FC = () => {
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    // Group data points by timestamp so Recharts can plot multiple lines correctly
     const groupedData = new Map<string, any>();
     
     data.forEach((point) => {
@@ -97,7 +132,12 @@ export const EEGMonitorPage: React.FC = () => {
       <motion.div variants={staggerChildren} className="space-y-6">
         <motion.div variants={slideUp}>
           <GlassCard className="p-6 h-[500px]">
-            <ResponsiveContainer width="100%" height="100%">
+            {/* Toolbar above the chart */}
+            <div className="mb-4">
+              <EEGToolbar />
+            </div>
+
+            <ResponsiveContainer width="100%" height="85%">
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
                 <XAxis 
@@ -178,11 +218,10 @@ export const EEGMonitorPage: React.FC = () => {
       animate="animate"
       exit="exit"
     >
-      <header className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-[var(--bg-2)] border border-[rgba(255,255,255,0.1)] rounded-lg">
-          <Activity className="w-6 h-6 text-[var(--accent-primary)]" />
-        </div>
-        <h1 className="text-2xl font-display text-[var(--text-primary)]">Neural Activity Monitor</h1>
+      <header className="mb-6">
+        <HudCornerFrame label="Neural Activity Monitor" icon={<Activity size={14} strokeWidth={1.5} />}>
+          <h1 className="text-2xl font-display text-[var(--text-primary)]">Neural Activity Monitor</h1>
+        </HudCornerFrame>
       </header>
 
       <main className="flex-1">
