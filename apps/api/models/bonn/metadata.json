@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "dataset": "bonn",
+  "model_type": "lightgbm",
+  "model_name": "final_lightgbm_full_dataset",
+  "feature_count": 57,
+  "classes": ["Non-Seizure", "Seizure"],
+  "training_date": "2026-07-20",
+  "description": "Final LightGBM model trained on full dataset."
+}
