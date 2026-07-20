@@ -1,0 +1,9 @@
+{
+    "Model": "LightGBM",
+    "Training Samples": 500,
+    "Selected Features": 56,
+    "Classes": 5,
+    "Reported Test Accuracy": 0.9,
+    "Training Date": "2026-07-19 13:07:05",
+    "Dataset": "Bonn University EEG Dataset"
+}

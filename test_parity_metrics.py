@@ -1,0 +1,67 @@
+import numpy as np
+import json
+from apps.api.app.services.preprocessing import wavelet_denoise
+from apps.api.app.services.feature_extraction import extract_features
+
+def compute_metrics():
+    raw_data = np.load('NeuroAegis_Complete_Project/features/bonn_raw_dataset.npz')
+    signals = raw_data['signals']
+    
+    feature_matrix = np.load('NeuroAegis_Complete_Project/features/feature_matrix.npz')['X']
+    with open('NeuroAegis_Complete_Project/features/feature_names.json', 'r') as f:
+        feature_names = json.load(f)
+        
+    # Test 100 samples spread across the dataset
+    total_samples = len(signals)
+    sample_indices = np.linspace(0, total_samples - 1, 100, dtype=int)
+    
+    rtol = 1e-5
+    atol = 1e-7
+    
+    max_abs_error = 0.0
+    max_rel_error = 0.0
+    mismatched_features_count = 0
+    total_features_compared = 0
+    
+    print("Testing parity for 100 samples...")
+    for idx in sample_indices:
+        signal = signals[idx]
+        exported_features = dict(zip(feature_names, feature_matrix[idx]))
+        
+        denoised_signal = wavelet_denoise(signal, wavelet="coif3", level=4)
+        denoised_signal = denoised_signal.astype(np.float32)
+        
+        backend_features = extract_features(denoised_signal)
+        
+        for feat_name, exported_val in exported_features.items():
+            if feat_name not in backend_features:
+                continue
+            backend_val = np.float32(backend_features[feat_name])
+            total_features_compared += 1
+            
+            abs_err = np.abs(backend_val - exported_val)
+            if exported_val != 0:
+                rel_err = abs_err / np.abs(exported_val)
+            else:
+                rel_err = abs_err
+                
+            if abs_err > max_abs_error:
+                max_abs_error = abs_err
+            if rel_err > max_rel_error:
+                max_rel_error = rel_err
+                
+            if not np.isclose(backend_val, exported_val, rtol=rtol, atol=atol):
+                mismatched_features_count += 1
+                
+    print("--- PARITY TEST METRICS ---")
+    print(f"Number of samples tested: {len(sample_indices)}")
+    print(f"Number of features compared: {total_features_compared}")
+    print(f"rtol value: {rtol}")
+    print(f"atol value: {atol}")
+    print(f"Maximum absolute error: {max_abs_error:.12f}")
+    print(f"Maximum relative error: {max_rel_error:.12f}")
+    print(f"Number of mismatched features: {mismatched_features_count}")
+    print("---------------------------")
+
+if __name__ == "__main__":
+    compute_metrics()
