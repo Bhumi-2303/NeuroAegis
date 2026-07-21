@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@neuroaegis/model-contracts": "*",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
@@ -20,6 +21,7 @@
     "lucide-react": "latest",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "react-hook-form": "^7.82.0",
     "react-router-dom": "latest",
     "recharts": "latest",
     "tailwind-merge": "latest",

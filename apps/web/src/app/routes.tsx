@@ -12,6 +12,9 @@ import { ReportsPage } from '../features/reports';
 import { PatientsPage } from '../features/patients';
 import { SettingsPage } from '../features/settings';
 
+// Doctor V2
+import { DoctorDashboard } from '../doctor/pages/DoctorDashboard';
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -55,4 +58,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path: '/doctor',
+    element: <DoctorDashboard />
+  }
 ]);
