@@ -23,30 +23,20 @@ export const ExplainabilityPage: React.FC = () => {
     setData(null);
 
     try {
-      // Mocking the backend call to match CONTRACT.md /api/v1/predict shape
-      await new Promise(r => setTimeout(r, 1200));
+      const res = await fetch('/api/v1/jobs/latest');
+      if (!res.ok) throw new Error('Failed to fetch latest job');
+      const latestJob = await res.json();
       
+      if (latestJob.status !== 'Completed' || !latestJob.prediction) {
+        throw new Error('Latest job not completed or missing prediction data');
+      }
+
       const responseData: ModelOutput = {
-        modelName: selectedModel,
-        prediction: {
-          label: 'seizure',
-          probabilities: { seizure: 0.85, non_seizure: 0.15 }
-        },
-        confidence: { value: 0.88, band: 'high' },
-        explanation: {
-          baseValue: 0.35,
-          features: [
-            { featureName: 'Alpha Power (Cz)', value: 0.18 },
-            { featureName: 'Beta Power (Fz)', value: -0.12 },
-            { featureName: 'Theta Peak (Pz)', value: 0.14 },
-            { featureName: 'Delta Ratio (Oz)', value: 0.09 },
-            { featureName: 'Gamma Sync (C3-C4)', value: -0.07 },
-            { featureName: 'Spike Count', value: 0.22 },
-            { featureName: 'Signal Entropy', value: -0.04 },
-            { featureName: 'Wavelet Energy', value: 0.11 }
-          ]
-        },
-        generatedAt: new Date().toISOString()
+        modelName: latestJob.modelName,
+        prediction: latestJob.prediction,
+        confidence: latestJob.confidence,
+        explanation: latestJob.explanation,
+        generatedAt: latestJob.generatedAt
       };
       
       setData(responseData);

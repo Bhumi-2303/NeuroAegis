@@ -4,7 +4,7 @@ import { Users, Search, Plus, User, Activity, Clock, Edit2, X, Save } from 'luci
 import { GlassCard, EmptyState } from '../../../shared/components';
 import { pageTransition, fadeIn, slideUp } from '../../../shared/lib/motion-presets';
 
-// Mock schema since /api/v1/patients isn't in CONTRACT.md yet
+// Using backend Patient schema now
 interface Patient {
   id: string;
   name: string;
@@ -12,16 +12,12 @@ interface Patient {
   gender: string;
   weight: number;
   height: number;
-  medicalHistory: string;
-  lastVisit: string;
+  medical_history: string;
+  vital_signs?: any;
   status: 'active' | 'monitoring' | 'discharged';
+  last_visit: string;
+  created_at: string;
 }
-
-const MOCK_PATIENTS: Patient[] = [
-  { id: 'PAT-001', name: 'Eleanor Vance', age: 42, gender: 'F', weight: 65, height: 165, medicalHistory: 'Temporal lobe epilepsy', lastVisit: '2026-07-15T10:00:00Z', status: 'monitoring' },
-  { id: 'PAT-002', name: 'Marcus Brody', age: 28, gender: 'M', weight: 82, height: 180, medicalHistory: 'No prior seizures. Recent head trauma.', lastVisit: '2026-07-20T14:30:00Z', status: 'active' },
-  { id: 'PAT-003', name: 'Sarah Connor', age: 35, gender: 'F', weight: 58, height: 160, medicalHistory: 'Generalized seizures, medicated.', lastVisit: '2026-06-05T09:15:00Z', status: 'discharged' },
-];
 
 export const PatientsPage = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -32,9 +28,20 @@ export const PatientsPage = () => {
   // Form State
   const [formData, setFormData] = useState<Partial<Patient>>({});
 
+  const fetchPatients = async () => {
+    try {
+      const res = await fetch('/api/v1/patients/');
+      if (res.ok) {
+        const data = await res.json();
+        setPatients(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch patients', err);
+    }
+  };
+
   useEffect(() => {
-    // Simulate initial load
-    setTimeout(() => setPatients(MOCK_PATIENTS), 400);
+    fetchPatients();
   }, []);
 
   const filteredPatients = patients.filter(p => 
@@ -54,18 +61,33 @@ export const PatientsPage = () => {
     setView('form');
   };
 
-  const handleSave = () => {
-    if (selectedPatient) {
-      setPatients(patients.map(p => p.id === selectedPatient.id ? { ...p, ...formData } as Patient : p));
-    } else {
-      const newPatient = { 
-        ...formData, 
-        id: `PAT-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-        lastVisit: new Date().toISOString()
-      } as Patient;
-      setPatients([...patients, newPatient]);
+  const handleSave = async () => {
+    try {
+      if (selectedPatient) {
+        // Edit existing patient (assuming PUT endpoint exists, or just fallback if not)
+        // For now, API doesn't have PUT /patients/{id}, so we might just do a local update
+        // In a real app we'd call a PUT endpoint
+        setPatients(patients.map(p => p.id === selectedPatient.id ? { ...p, ...formData } as Patient : p));
+      } else {
+        // Create new patient
+        const newPatientData = { 
+          ...formData,
+        };
+        const res = await fetch('/api/v1/patients/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPatientData)
+        });
+        
+        if (res.ok) {
+          const createdPatient = await res.json();
+          setPatients([...patients, createdPatient]);
+        }
+      }
+      setView('list');
+    } catch (err) {
+      console.error('Failed to save patient', err);
     }
-    setView('list');
   };
 
   return (
@@ -147,7 +169,7 @@ export const PatientsPage = () => {
                       <div className="flex justify-between">
                         <span>Last Visit:</span>
                         <span className="text-[var(--text-primary)] font-[var(--font-mono)] text-xs">
-                          {new Date(patient.lastVisit).toLocaleDateString()}
+                          {new Date(patient.last_visit || patient.created_at || Date.now()).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -205,7 +227,7 @@ export const PatientsPage = () => {
                 <div className="flex gap-4">
                   <Activity className="w-5 h-5 text-[var(--accent-secondary)] shrink-0" />
                   <p className="text-[var(--text-primary)] font-[var(--font-body)] text-sm leading-relaxed">
-                    {selectedPatient.medicalHistory || "No medical history recorded."}
+                    {selectedPatient.medical_history || "No medical history recorded."}
                   </p>
                 </div>
               </GlassCard>
@@ -216,7 +238,7 @@ export const PatientsPage = () => {
                   <div>
                     <h4 className="text-[var(--text-primary)] font-[var(--font-body)] text-sm font-medium mb-1">Last Clinic Visit</h4>
                     <p className="text-[var(--text-secondary)] text-sm font-[var(--font-mono)]">
-                      {new Date(selectedPatient.lastVisit).toLocaleString()}
+                      {new Date(selectedPatient.last_visit || selectedPatient.created_at || Date.now()).toLocaleString()}
                     </p>
                   </div>
                 </div>
@@ -293,8 +315,8 @@ export const PatientsPage = () => {
                 <div className="md:col-span-2">
                   <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-2">Medical History</label>
                   <textarea 
-                    value={formData.medicalHistory || ''}
-                    onChange={e => setFormData({...formData, medicalHistory: e.target.value})}
+                    value={formData.medical_history || ''}
+                    onChange={e => setFormData({...formData, medical_history: e.target.value})}
                     rows={4}
                     className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] resize-none"
                   />

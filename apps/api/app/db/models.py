@@ -13,13 +13,16 @@ class Patient(Base):
     weight = Column(Float)
     height = Column(Float)
     
-    # Medical history stored as JSON for flexibility
-    medical_history = Column(JSON)
+    # Medical history stored as string to match frontend mock
+    medical_history = Column(String, nullable=True)
     
     # Vital signs stored as JSON
     vital_signs = Column(JSON)
     
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    status = Column(String, default="active")
+    last_visit = Column(DateTime, default=datetime.utcnow)
     
     jobs = relationship("PredictionJob", back_populates="patient")
 

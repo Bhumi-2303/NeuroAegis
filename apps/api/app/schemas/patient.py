@@ -8,8 +8,10 @@ class PatientBase(BaseModel):
     gender: str
     weight: float
     height: float
-    medical_history: Optional[Dict[str, Any]] = None
+    medical_history: Optional[str] = None
     vital_signs: Optional[Dict[str, Any]] = None
+    status: str = "active"
+    last_visit: Optional[datetime] = None
 
 class PatientCreate(PatientBase):
     pass

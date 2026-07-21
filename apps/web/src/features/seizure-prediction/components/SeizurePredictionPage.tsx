@@ -54,38 +54,56 @@ export const SeizurePredictionPage: React.FC = () => {
     setData(null);
 
     try {
-      // Mock job polling sequence to mimic /api/predict/status/{job_id}
-      await new Promise(r => setTimeout(r, 800));
-      setCurrentStep('Preprocessing');
-      
-      await new Promise(r => setTimeout(r, 1200));
-      setCurrentStep('Inference');
-      
-      await new Promise(r => setTimeout(r, 1500));
-      setCurrentStep('SHAP');
-      
-      await new Promise(r => setTimeout(r, 1000));
-      
-      // Return final output
-      const responseData: ModelOutput = {
-        modelName: selectedModel,
-        prediction: {
-          label: Math.random() > 0.5 ? 'seizure' : 'non_seizure',
-          probabilities: { seizure: 0.85, non_seizure: 0.15 }
-        },
-        confidence: { value: 0.88, band: 'high' },
-        explanation: {
-          baseValue: 0.35,
-          features: [
-            { featureName: 'Alpha Power', value: 0.12 },
-            { featureName: 'Beta Power', value: -0.05 },
-            { featureName: 'Theta Peak', value: 0.08 }
-          ]
-        },
-        generatedAt: new Date().toISOString()
-      };
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('sampling_rate', samplingRate.toString());
+      formData.append('channels', channels);
 
-      setData(responseData);
+      const res = await fetch('/api/v1/predict', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!res.ok) throw new Error('Prediction request failed');
+      const { job_id } = await res.json();
+      
+      while (true) {
+        const statusRes = await fetch(`/api/v1/jobs/${job_id}`);
+        if (!statusRes.ok) throw new Error('Failed to fetch job status');
+        const statusData = await statusRes.json();
+        
+        // Map backend stages to UI steps
+        const s = statusData.status;
+        if (s.includes('Validating')) setCurrentStep('Validating');
+        else if (s.includes('Feature') || s.includes('Processing')) setCurrentStep('Preprocessing');
+        else if (s.includes('Inference') || s.includes('Graph')) setCurrentStep('Inference');
+        else if (s.includes('SHAP') || s.includes('Explainable') || s.includes('Confidence')) setCurrentStep('SHAP');
+        
+        if (statusData.status === 'Completed') {
+          const responseData: ModelOutput = {
+            modelName: selectedModel,
+            prediction: {
+               label: statusData.result.prediction_label,
+               probabilities: { 
+                 seizure: statusData.result.probability_seizure,
+                 non_seizure: 1.0 - statusData.result.probability_seizure
+               }
+            },
+            confidence: {
+               value: statusData.result.probability_seizure,
+               band: statusData.result.confidence_band
+            },
+            explanation: statusData.result.shap_explanation,
+            generatedAt: new Date().toISOString()
+          };
+          setData(responseData);
+          break;
+        } else if (statusData.status === 'Failed' || statusData.error) {
+           throw new Error(statusData.error || 'Job failed');
+        }
+        
+        await new Promise(r => setTimeout(r, 1000));
+      }
     } catch (err) {
       console.error(err);
       setIsError(true);
