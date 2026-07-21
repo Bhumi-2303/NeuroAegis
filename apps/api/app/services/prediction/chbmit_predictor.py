@@ -36,7 +36,12 @@ class CHBMITPredictor(BasePredictor):
             # Load models
             lgb_path = os.path.join(self.model_dir, "lightgbm_baseline.pkl")
             if os.path.exists(lgb_path):
-                self.models['lightgbm'] = joblib.load(lgb_path)
+                loaded = joblib.load(lgb_path)
+                if isinstance(loaded, dict) and 'model' in loaded:
+                    self.models['lightgbm'] = loaded['model']
+                else:
+                    self.models['lightgbm'] = loaded
+
                 
             rf_path = os.path.join(self.model_dir, "random_forest_baseline.pkl")
             if os.path.exists(rf_path):
@@ -81,10 +86,15 @@ class CHBMITPredictor(BasePredictor):
         # Depending on the model type, `predict_proba` might be needed instead of `predict` for prob
         # Assuming model.predict returns probabilities, or using predict_proba if available
         if hasattr(model, "predict_proba"):
-            probs = model.predict_proba(feature_vector)[0]
-            prob_seizure = float(probs[1]) if len(probs) > 1 else float(probs[0])
+            probs = model.predict_proba(feature_vector)
+            prob_seizure = float(probs[0][1]) if len(probs[0]) > 1 else float(probs[0][0])
         else:
-            prob_seizure = float(model.predict(feature_vector)[0])
+            preds = model.predict(feature_vector)
+            val = preds[0]
+            if isinstance(val, (np.ndarray, list)):
+                prob_seizure = float(val[1]) if len(val) > 1 else float(val[0])
+            else:
+                prob_seizure = float(val)
             
         prob_non_seizure = 1.0 - prob_seizure
         is_seizure = prob_seizure > 0.5

@@ -37,8 +37,15 @@ class BonnPredictor(BasePredictor):
                 logger.error(f"Bonn: Model file not found at {model_path}.")
                 return False
                 
-            self.models['lightgbm'] = joblib.load(model_path)
-            shap_service.initialize(self.models['lightgbm'], self.selected_features)
+            loaded = joblib.load(model_path)
+            if isinstance(loaded, dict) and 'model' in loaded:
+                self.models['lightgbm'] = loaded['model']
+            else:
+                self.models['lightgbm'] = loaded
+            try:
+                shap_service.initialize(self.models['lightgbm'], self.selected_features)
+            except Exception as e:
+                logger.warning(f"Bonn: Failed to initialize SHAP explainer (explanations will not be available): {e}")
             
             self.is_loaded = True
             return True
@@ -63,7 +70,18 @@ class BonnPredictor(BasePredictor):
             raise ValueError(f"Model '{model_name}' not available for Bonn")
             
         model = self.models[model_name]
-        prob_seizure = float(model.predict(feature_vector)[0])
+        
+        if hasattr(model, "predict_proba"):
+            probs = model.predict_proba(feature_vector)
+            prob_seizure = float(probs[0][1]) if len(probs[0]) > 1 else float(probs[0][0])
+        else:
+            preds = model.predict(feature_vector)
+            val = preds[0]
+            if isinstance(val, (np.ndarray, list)):
+                prob_seizure = float(val[1]) if len(val) > 1 else float(val[0])
+            else:
+                prob_seizure = float(val)
+                
         prob_non_seizure = 1.0 - prob_seizure
         
         is_seizure = prob_seizure > 0.5
