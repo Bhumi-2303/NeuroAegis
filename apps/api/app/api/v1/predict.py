@@ -13,6 +13,10 @@ from app.core.config import settings
 
 router = APIRouter()
 
+import logging
+
+logger = logging.getLogger("neuroaegis")
+
 def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, dataset: str, model_name: str, db: Session):
     try:
         # Update status to processing
@@ -22,8 +26,11 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, datase
             job.progress = 50
             db.commit()
 
+        logger.info(f"[{job_id}] Job started. Dataset: {dataset}, Model: {model_name}")
+
         # Run model
         predictor = prediction_router.get_predictor(dataset)
+        logger.info(f"[{job_id}] Predictor retrieved successfully. Starting inference...")
         result = predictor.get_prediction(
             eeg_data=eeg_data,
             channel_names=channel_names,
@@ -43,13 +50,14 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, datase
             import datetime
             job.completed_at = datetime.datetime.utcnow()
             db.commit()
+            logger.info(f"[{job_id}] Prediction finished successfully. Result: {job.prediction_label} ({job.probability_seizure:.4f})")
     except Exception as e:
-        import logging
-        logging.getLogger("neuroaegis").error(f"Prediction background task failed: {e}", exc_info=True)
+        logger.error(f"[{job_id}] Prediction background task failed: {e}", exc_info=True)
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
         if job:
             job.status = "Failed"
             job.progress = 0
+            job.error = str(e)
             db.commit()
 
 
@@ -76,12 +84,37 @@ async def predict_eeg(
     if file.size > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail="File too large")
         
-    if not file.filename.endswith(".csv"):
-        raise HTTPException(status_code=400, detail="Only .csv files are supported currently")
+    if not (file.filename.endswith(".csv") or file.filename.endswith(".txt") or file.filename.endswith(".edf")):
+        raise HTTPException(status_code=400, detail="Only .csv, .txt, and .edf files are supported currently")
         
     try:
+        logger.info(f"Received predict request. File: {file.filename}, Size: {file.size}, Provided dataset: {dataset}")
         contents = await file.read()
-        df = pd.read_csv(io.BytesIO(contents))
+        logger.info(f"File {file.filename} read successfully. Size: {len(contents)} bytes")
+        
+        if file.filename.endswith(".csv"):
+            df = pd.read_csv(io.BytesIO(contents), on_bad_lines='skip')
+        elif file.filename.endswith(".txt"):
+            try:
+                df = pd.read_csv(io.BytesIO(contents), sep=r'\s+|,', engine='python', on_bad_lines='skip')
+            except Exception:
+                df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python', on_bad_lines='skip')
+        elif file.filename.endswith(".edf"):
+            import mne
+            import tempfile
+            import os
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".edf") as tmp:
+                tmp.write(contents)
+                tmp_path = tmp.name
+            try:
+                raw = mne.io.read_raw_edf(tmp_path, preload=True, verbose=False)
+                df = raw.to_data_frame()
+                if 'time' in df.columns:
+                    df = df.drop('time', axis=1)
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
         
         # 1. Dataset Detection (if not explicitly provided)
         detected_dataset = dataset
@@ -93,12 +126,11 @@ async def predict_eeg(
             det_ds, conf, rules = dataset_detector.detect(df, provided_fs)
             
             if conf < 0.70:
-                raise ValueError("Unable to determine EEG dataset. Confidence is too low.")
+                reason = "Unable to determine EEG dataset. Confidence is too low."
+                logger.warning(reason)
+                raise ValueError(reason)
             elif conf < 0.90:
-                # We proceed but we might want to flag a warning. 
-                # For now, we will include the warning in the rules/logs.
-                import logging
-                logging.getLogger("neuroaegis").warning(f"Dataset detected with low confidence: {conf}")
+                logger.warning(f"Dataset detected with low confidence: {conf}")
                 
             detected_dataset = det_ds
             confidence = conf
@@ -125,7 +157,9 @@ async def predict_eeg(
                 raise ValueError("Number of provided channels does not match CSV columns")
                 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid CSV file or detection failed: {str(e)}")
+        error_msg = f"Invalid CSV file or detection failed: {str(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=400, detail=error_msg)
         
     try:
         # Verify patient exists if provided
@@ -151,10 +185,14 @@ async def predict_eeg(
         db.add(job)
         db.commit()
         
+        
+        logger.info(f"[{job_id}] Validator passed. Dataset: {detected_dataset}, Confidence: {confidence:.2f}, Predictor: {selected_model}")
+        
         background_tasks.add_task(
             process_and_save_prediction, 
             job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset, selected_model, db
         )
+        logger.info(f"[{job_id}] Response sent for prediction task.")
         
         return {
             "job_id": job_id,
@@ -168,6 +206,5 @@ async def predict_eeg(
     except HTTPException:
         raise
     except Exception as e:
-        import logging
-        logging.getLogger("neuroaegis").error(f"Prediction failed: {e}", exc_info=True)
+        logger.error(f"Prediction failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

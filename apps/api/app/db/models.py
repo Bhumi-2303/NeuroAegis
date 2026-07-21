@@ -45,6 +45,7 @@ class PredictionJob(Base):
     detected_dataset = Column(String, nullable=True)
     detection_confidence = Column(Float, nullable=True)
     selected_model = Column(String, nullable=True)
+    error = Column(String, nullable=True)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)

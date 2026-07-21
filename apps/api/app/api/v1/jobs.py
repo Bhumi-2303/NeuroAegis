@@ -45,7 +45,7 @@ def get_latest_job(db: Session = Depends(get_db)):
             "shap_explanation": job.shap_explanation
         }
     elif job.status == "Failed":
-        response["error"] = "Job failed during processing"
+        response["error"] = job.error or "Job failed during processing"
         
     return response
 
@@ -72,6 +72,6 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
             "shap_explanation": job.shap_explanation
         }
     elif job.status == "Failed":
-        response["error"] = "Job failed during processing"
+        response["error"] = job.error or "Job failed during processing"
         
     return response
