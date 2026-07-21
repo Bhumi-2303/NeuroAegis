@@ -8,7 +8,7 @@ import type {
   Alert
 } from '@neuroaegis/model-contracts';
 
-import { generateMockPrediction } from './mock/mockPredictions';
+
 import { generateMockEEGWindow } from './mock/mockEEG';
 import { generateMockFrequencyBands } from './mock/mockFrequencyBands';
 import { generateMockEvaluationMetrics } from './mock/mockEvaluationMetrics';
@@ -70,6 +70,7 @@ class ModelService implements IModelService {
     // TODO: Integrate Trained Model
     return this.simulateLatency(generateMockFrequencyBands(), 200);
   }
+
 
   async getEvaluationMetrics(modelName: 'random_forest' | 'xgboost' | 'lightgbm'): Promise<EvaluationMetrics> {
     const response = await fetch(API_ENDPOINTS.MODEL_INFO);
