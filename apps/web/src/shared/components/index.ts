@@ -7,6 +7,7 @@ export * from './ConfidenceGauge';
 export * from './ShapBarChart';
 export * from './EmptyState';
 export * from './ErrorState';
+export * from './RouteErrorBoundary';
 export * from "./3d/Scene";
 export * from "./3d/HoloBrain";
 export * from "./3d/ParticleField";

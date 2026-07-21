@@ -12,6 +12,9 @@ import { ReportsPage } from '../features/reports';
 import { PatientsPage } from '../features/patients';
 import { SettingsPage } from '../features/settings';
 
+// Shared Components
+import { RouteErrorBoundary } from '../shared/components/RouteErrorBoundary';
+
 // Doctor V2
 import { DoctorDashboard } from '../doctor/pages/DoctorDashboard';
 
@@ -19,6 +22,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <DashboardShell />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,
