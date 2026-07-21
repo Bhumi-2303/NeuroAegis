@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart3, AlertCircle, FileText, Download, Calendar, User } from 'lucide-react';
+import { AlertCircle, FileText, Download, Calendar, User } from 'lucide-react';
 import {
   AreaChart,
   Area,
@@ -13,7 +13,7 @@ import {
 } from 'recharts';
 import { useEvaluationMetrics } from '../hooks/useEvaluationMetrics';
 import { GlassCard, SkeletonShimmer, EmptyState, ErrorState } from '../../../shared/components';
-import { pageTransition, fadeIn, slideUp, staggerChildren } from '../../../shared/lib/motion-presets';
+import { pageTransition, fadeIn } from '../../../shared/lib/motion-presets';
 
 export const ReportsPage = () => {
   const [modelName, setModelName] = useState<'random_forest' | 'xgboost' | 'lightgbm'>('random_forest');

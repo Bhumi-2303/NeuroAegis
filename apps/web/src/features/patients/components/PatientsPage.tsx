@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Search, Plus, User, Activity, Clock, Edit2, X, Save } from 'lucide-react';
 import { GlassCard, EmptyState } from '../../../shared/components';

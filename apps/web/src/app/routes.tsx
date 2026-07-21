@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { DashboardShell } from './layout';
 
 // Feature Pages
@@ -6,7 +6,7 @@ import { DashboardPage } from '../features/dashboard';
 import { BrainAnalysisPage } from '../features/brain-analysis';
 import { EEGMonitorPage } from '../features/eeg-monitor';
 import { FrequencyAnalysisPage } from '../features/frequency-analysis';
-import { SeizurePredictionPage } from '../features/seizure-prediction';
+
 import { ExplainabilityPage } from '../features/explainability';
 import { ReportsPage } from '../features/reports';
 import { PatientsPage } from '../features/patients';
@@ -42,7 +42,7 @@ export const router = createBrowserRouter([
       },
       {
         path: 'prediction',
-        element: <SeizurePredictionPage />,
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'explainability',

@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { Lightbulb, Activity, BrainCircuit } from 'lucide-react';
 import { 
   GlassCard, 
-  SkeletonShimmer, 
+ 
   EmptyState, 
   ErrorState, 
   ShapBarChart 
 } from '../../../shared/components';
-import { pageTransition, slideUp, staggerChildren, fadeIn } from '../../../shared/lib/motion-presets';
+import { pageTransition, slideUp, staggerChildren } from '../../../shared/lib/motion-presets';
 import type { ModelOutput } from '@neuroaegis/model-contracts';
 
 export const ExplainabilityPage: React.FC = () => {
