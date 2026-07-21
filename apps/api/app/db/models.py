@@ -41,6 +41,11 @@ class PredictionJob(Base):
     confidence_band = Column(String, nullable=True)
     shap_explanation = Column(JSON, nullable=True)
     
+    # Dataset detection info
+    detected_dataset = Column(String, nullable=True)
+    detection_confidence = Column(Float, nullable=True)
+    selected_model = Column(String, nullable=True)
+    
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     

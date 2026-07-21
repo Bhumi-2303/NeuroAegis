@@ -1,0 +1,21 @@
+models:
+  bonn:
+    enabled: true
+    path: models/bonn
+    default_model: lightgbm
+    display_name: "Bonn University EEG"
+    expected_channels: 1
+    sampling_rate: 173.61
+    window_length: 4097
+    feature_count: 5
+    supported_extensions: [".csv", ".txt"]
+  chbmit:
+    enabled: true
+    path: models/chbmit
+    default_model: lightgbm
+    display_name: "CHB-MIT Scalp EEG"
+    expected_channels: 23
+    sampling_rate: 256.0
+    window_length: 15360
+    feature_count: 36864
+    supported_extensions: [".csv"]

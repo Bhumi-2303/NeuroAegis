@@ -1,0 +1,15 @@
+{
+    "model": "LightGBM",
+    "dataset": "CHB-MIT",
+    "features": 36864,
+    "accuracy": 0.959,
+    "precision": 0.686,
+    "recall": 0.6385,
+    "f1_score": 0.6614,
+    "roc_auc": 0.9386,
+    "pr_auc": 0.6957,
+    "mcc": 0.64,
+    "sampling_frequency": 256,
+    "window_type": "EEG Segment",
+    "framework": "NeuroAegis"
+}

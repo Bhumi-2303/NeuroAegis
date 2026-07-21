@@ -8,12 +8,12 @@ from typing import Dict, Any
 
 from app.db.database import get_db
 from app.db.models import PredictionJob, Patient
-from app.services.model_service import ml_model_service
+from app.services.prediction.prediction_router import prediction_router
 from app.core.config import settings
 
 router = APIRouter()
 
-def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, db: Session):
+def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, dataset: str, model_name: str, db: Session):
     try:
         # Update status to processing
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
@@ -23,10 +23,12 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, db: Se
             db.commit()
 
         # Run model
-        result = ml_model_service.get_prediction(
+        predictor = prediction_router.get_predictor(dataset)
+        result = predictor.get_prediction(
             eeg_data=eeg_data,
             channel_names=channel_names,
-            fs=fs
+            fs=fs,
+            model_name=model_name
         )
         
         # Save results
@@ -55,16 +57,20 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, db: Se
 async def predict_eeg(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    sampling_rate: float = Form(256.0),
+    sampling_rate: Optional[float] = Form(None),
     channels: Optional[str] = Form(None),
     patient_id: Optional[str] = Form(None),
+    dataset: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """
     Accepts an uploaded EEG file, runs it through the full exact pipeline asynchronously,
     and returns a job_id for tracking.
     """
-    if not ml_model_service.is_loaded:
+    from app.services.dataset_detection.detector import dataset_detector
+
+    if not prediction_router.is_loaded:
         raise HTTPException(status_code=503, detail="Model is not loaded on the backend")
         
     if file.size > settings.MAX_UPLOAD_SIZE:
@@ -77,13 +83,39 @@ async def predict_eeg(
         contents = await file.read()
         df = pd.read_csv(io.BytesIO(contents))
         
-        # Input Validation: Check if there's any non-numeric data
-        if not all(pd.api.types.is_numeric_dtype(dtype) for dtype in df.dtypes):
-            raise ValueError("All columns in the CSV must be numeric EEG data")
+        # 1. Dataset Detection (if not explicitly provided)
+        detected_dataset = dataset
+        confidence = 1.0
+        matched_rules = []
+        
+        if not detected_dataset:
+            provided_fs = sampling_rate or 0.0
+            det_ds, conf, rules = dataset_detector.detect(df, provided_fs)
             
-        if len(df) == 0:
-            raise ValueError("CSV file is empty")
+            if conf < 0.70:
+                raise ValueError("Unable to determine EEG dataset. Confidence is too low.")
+            elif conf < 0.90:
+                # We proceed but we might want to flag a warning. 
+                # For now, we will include the warning in the rules/logs.
+                import logging
+                logging.getLogger("neuroaegis").warning(f"Dataset detected with low confidence: {conf}")
+                
+            detected_dataset = det_ds
+            confidence = conf
+            matched_rules = rules
             
+        # 2. Get default model if not provided
+        selected_model = model
+        if not selected_model:
+            predictor = prediction_router.get_predictor(detected_dataset)
+            selected_model = predictor.default_model
+            
+        # 3. Input Validation based on detected dataset
+        predictor_metadata = prediction_router.get_available_models().get(detected_dataset, {}).get("dataset_info", {})
+        
+        # Use detected sampling rate if none provided
+        final_sampling_rate = sampling_rate or predictor_metadata.get("sampling_rate", 256.0)
+
         eeg_data = df.values.T 
         channel_names = df.columns.tolist()
             
@@ -93,7 +125,7 @@ async def predict_eeg(
                 raise ValueError("Number of provided channels does not match CSV columns")
                 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid CSV file: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid CSV file or detection failed: {str(e)}")
         
     try:
         # Verify patient exists if provided
@@ -108,17 +140,30 @@ async def predict_eeg(
             id=job_id,
             patient_id=patient_id,
             status="Validating",
-            progress=0
+            progress=0,
+            # We assume the schema is updated to support these if possible, 
+            # or we store in a JSON column if supported.
+            # If the columns don't exist yet, we will add them.
+            detected_dataset=detected_dataset,
+            detection_confidence=confidence,
+            selected_model=selected_model
         )
         db.add(job)
         db.commit()
         
         background_tasks.add_task(
             process_and_save_prediction, 
-            job_id, eeg_data, channel_names, sampling_rate, db
+            job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset, selected_model, db
         )
         
-        return {"job_id": job_id}
+        return {
+            "job_id": job_id,
+            "detected_dataset": detected_dataset,
+            "confidence": confidence,
+            "matched_rules": matched_rules,
+            "selected_model": selected_model
+        }
+
         
     except HTTPException:
         raise

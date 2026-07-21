@@ -1,9 +1,30 @@
-node_modules
-dist
+# Environments
 .env
-.DS_Store
-build
-
+.env.*
+.venv/
+venv/
+env/
 .uv/
+
+# Node/React Frontend
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+dist/
+build/
+.next/
+out/
+
+# Python/FastAPI Backend
 __pycache__/
 .venv*/
+# Training datasets
+apps/api/models/chbmit/*.parquet
+
+# Training reports
+apps/api/models/chbmit/*.csv
+
+# Notebook/workspace directories
+NeuroAegis_bonn_dataset_model/
+neuroaegis_chbmit_project(1)/

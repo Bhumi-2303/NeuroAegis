@@ -16,8 +16,21 @@ const MAX_FILE_SIZE = 52 * 1024 * 1024; // 52MB
 type JobStep = 'Validating' | 'Preprocessing' | 'Inference' | 'SHAP';
 const STEPS: JobStep[] = ['Validating', 'Preprocessing', 'Inference', 'SHAP'];
 
+interface AvailableModels {
+  [dataset: string]: {
+    loaded: boolean;
+    models: string[];
+    default_model: string;
+    metadata: any;
+  }
+}
+
 export const SeizurePredictionPage: React.FC = () => {
-  const [selectedModel, setSelectedModel] = useState<'random_forest' | 'xgboost' | 'lightgbm'>('random_forest');
+  const [availableModels, setAvailableModels] = useState<AvailableModels>({});
+  const [datasetName, setDatasetName] = useState<string | null>(null);
+  const [detectionConfidence, setDetectionConfidence] = useState<number | null>(null);
+  const [modelName, setModelName] = useState<string | null>(null);
+  
   const [file, setFile] = useState<File | null>(null);
   const [samplingRate, setSamplingRate] = useState<number>(256);
   const [channels, setChannels] = useState<string>('EEG-Fpz-Cz, EEG-Pz-Oz');
@@ -29,6 +42,22 @@ export const SeizurePredictionPage: React.FC = () => {
   const [isError, setIsError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const res = await fetch('/api/v1/models/');
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableModels(data);
+          const datasets = Object.keys(data).filter(k => data[k].loaded);
+        }
+      } catch (err) {
+        console.error("Failed to fetch available models", err);
+      }
+    };
+    fetchModels();
+  }, []);
+  // Datasets are fetched, but we no longer pre-select or require them in standard workflow.
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -58,6 +87,9 @@ export const SeizurePredictionPage: React.FC = () => {
       formData.append('file', file);
       formData.append('sampling_rate', samplingRate.toString());
       formData.append('channels', channels);
+      // Not explicitly appending dataset and model so backend auto-detects
+      // formData.append('dataset', selectedDataset);
+      // formData.append('model', selectedModel);
 
       const res = await fetch('/api/v1/predict', {
         method: 'POST',
@@ -96,6 +128,9 @@ export const SeizurePredictionPage: React.FC = () => {
             explanation: statusData.result.shap_explanation,
             generatedAt: new Date().toISOString()
           };
+          setDatasetName(statusData.datasetName || 'Unknown');
+          setDetectionConfidence(statusData.detectionConfidence || 0);
+          setModelName(statusData.modelName || 'Unknown');
           setData(responseData);
           break;
         } else if (statusData.status === 'Failed' || statusData.error) {
@@ -112,6 +147,8 @@ export const SeizurePredictionPage: React.FC = () => {
       setCurrentStep(null);
     }
   };
+
+  const loadedDatasets = Object.keys(availableModels).filter(k => availableModels[k].loaded);
 
   return (
     <motion.div {...pageTransition} className="p-6 space-y-6">
@@ -159,8 +196,9 @@ export const SeizurePredictionPage: React.FC = () => {
                 )}
               </div>
 
-              {/* Form Controls */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Form Controls - Removed Dataset and Model selectors for automatic mode */}
+              
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Sampling Rate (Hz)</label>
                   <input 
@@ -169,18 +207,6 @@ export const SeizurePredictionPage: React.FC = () => {
                     onChange={e => setSamplingRate(Number(e.target.value))}
                     className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Model</label>
-                  <select 
-                    value={selectedModel}
-                    onChange={e => setSelectedModel(e.target.value as any)}
-                    className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
-                  >
-                    <option value="random_forest">Random Forest</option>
-                    <option value="xgboost">XGBoost</option>
-                    <option value="lightgbm">LightGBM</option>
-                  </select>
                 </div>
               </div>
 
@@ -197,7 +223,7 @@ export const SeizurePredictionPage: React.FC = () => {
 
               <button 
                 onClick={handlePredict}
-                disabled={isUploading || !file}
+                disabled={isUploading || !file || loadedDatasets.length === 0}
                 className="w-full py-3 rounded-lg bg-[var(--accent-primary)] text-[var(--bg-1)] font-[var(--font-body)] font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
                 {isUploading ? <Activity className="w-4 h-4 animate-spin" /> : <Brain className="w-4 h-4" />}
@@ -312,7 +338,8 @@ export const SeizurePredictionPage: React.FC = () => {
                 </motion.div>
                 
                 <div className="mt-4 p-4 bg-[var(--bg-2)] rounded-xl border border-[var(--bg-3)] text-xs text-[var(--text-secondary)] font-[var(--font-mono)] flex flex-col gap-1">
-                  <span>Model: {data.modelName}</span>
+                  <span>Dataset: {datasetName?.toUpperCase()} (Conf: {(detectionConfidence! * 100).toFixed(1)}%)</span>
+                  <span>Model: {modelName?.replace('_', ' ').toUpperCase()}</span>
                   <span>Generated: {new Date(data.generatedAt).toLocaleTimeString()}</span>
                 </div>
               </GlassCard>

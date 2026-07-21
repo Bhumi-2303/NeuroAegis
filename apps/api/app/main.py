@@ -19,17 +19,18 @@ logger = logging.getLogger("neuroaegis")
 async def lifespan(app: FastAPI):
     """
     Lifecycle manager for the FastAPI app.
-    Loads the ML model and SHAP explainer exactly once during startup.
+    Loads the ML models and SHAP explainers exactly once during startup.
     """
     logger.info("Application startup: Creating database tables...")
     Base.metadata.create_all(bind=engine)
     
-    logger.info("Application startup: Loading ML artifacts...")
-    success = ml_model_service.load_artifacts()
+    logger.info("Application startup: Loading ML artifacts via Prediction Router...")
+    from app.services.prediction.prediction_router import prediction_router
+    success = prediction_router.load_all_models()
     if success:
-        logger.info("ML artifacts loaded successfully.")
+        logger.info("ML models loaded successfully.")
     else:
-        logger.warning("Failed to load ML artifacts. API will start in degraded mode.")
+        logger.warning("Failed to load some or all ML models. API will start in degraded mode.")
         
     yield
     

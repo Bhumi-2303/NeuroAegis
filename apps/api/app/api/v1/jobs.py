@@ -17,7 +17,9 @@ def get_latest_job(db: Session = Depends(get_db)):
         "job_id": job.id,
         "status": job.status,
         "progress": job.progress,
-        "modelName": "random_forest", # Required by frontend ModelOutput schema
+        "modelName": job.selected_model or "random_forest", # Required by frontend ModelOutput schema
+        "datasetName": job.detected_dataset,
+        "detectionConfidence": job.detection_confidence,
         "generatedAt": job.completed_at.isoformat() if job.completed_at else job.created_at.isoformat()
     }
     
@@ -56,7 +58,10 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
     response = {
         "job_id": job.id,
         "status": job.status,
-        "progress": job.progress
+        "progress": job.progress,
+        "datasetName": job.detected_dataset,
+        "detectionConfidence": job.detection_confidence,
+        "modelName": job.selected_model
     }
     
     if job.status == "Completed":
