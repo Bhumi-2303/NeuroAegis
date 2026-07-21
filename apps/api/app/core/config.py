@@ -4,11 +4,15 @@ import os
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
+    API_V2_STR: str = "/api/v2"
     PROJECT_NAME: str = "NeuroAegis API"
     
     # Environment
     ENVIRONMENT: str = "development"
     LOG_LEVEL: str = "info"
+    
+    # Database
+    DATABASE_URL: str = "sqlite:///./neuroaegis.db"
     
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]

@@ -13,6 +13,21 @@ services:
       - MODEL_ASSETS_DIR=/app/models/bonn
       - LOG_LEVEL=info
       - CORS_ORIGINS=["http://localhost:5173"]
+      - DATABASE_URL=postgresql://neuroaegis:password@db:5432/neuroaegis_db
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: neuroaegis
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: neuroaegis_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   web:
@@ -24,3 +39,6 @@ services:
     depends_on:
       - api
     restart: unless-stopped
+
+volumes:
+  postgres_data:

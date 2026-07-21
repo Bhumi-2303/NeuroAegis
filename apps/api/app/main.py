@@ -4,8 +4,14 @@ from contextlib import asynccontextmanager
 import logging
 
 from app.core.config import settings
-from app.api.v1.router import api_router
+from app.api.v1.router import api_router as api_v1_router
+try:
+    from app.api.v2.router import api_router as api_v2_router
+except ImportError:
+    api_v2_router = None # Will implement v2 router soon
 from app.services.model_service import ml_model_service
+from app.db.database import engine, Base
+from app.db.models import Patient, PredictionJob
 
 logger = logging.getLogger("neuroaegis")
 
@@ -15,6 +21,9 @@ async def lifespan(app: FastAPI):
     Lifecycle manager for the FastAPI app.
     Loads the ML model and SHAP explainer exactly once during startup.
     """
+    logger.info("Application startup: Creating database tables...")
+    Base.metadata.create_all(bind=engine)
+    
     logger.info("Application startup: Loading ML artifacts...")
     success = ml_model_service.load_artifacts()
     if success:
@@ -43,7 +52,10 @@ if settings.CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(api_v1_router, prefix=settings.API_V1_STR)
+
+if api_v2_router:
+    app.include_router(api_v2_router, prefix=settings.API_V2_STR)
 
 if __name__ == "__main__":
     import uvicorn
