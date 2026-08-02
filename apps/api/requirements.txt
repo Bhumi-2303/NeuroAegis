@@ -7,6 +7,8 @@ numpy==1.26.4
 pandas==2.2.1
 scipy==1.12.0
 lightgbm==4.3.0
+# Pinned to 0.45.0 because TreeExplainer output shapes (list vs ndarray) 
+# vary between versions and our normalize_shap_output function relies on this specific API behavior.
 shap==0.45.0
 joblib==1.3.2
 PyWavelets==1.5.0
