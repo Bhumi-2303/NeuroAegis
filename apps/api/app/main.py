@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 import logging
 
 from app.core.config import settings
@@ -28,8 +29,10 @@ async def lifespan(app: FastAPI):
     from app.services.prediction.prediction_router import prediction_router
     success = prediction_router.load_all_models()
     if success:
+        prediction_router.last_load_time = datetime.now(timezone.utc).isoformat()
         logger.info("ML models loaded successfully.")
     else:
+        prediction_router.last_load_time = None
         logger.warning("Failed to load some or all ML models. API will start in degraded mode.")
         
     yield
