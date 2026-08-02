@@ -78,28 +78,36 @@ async def predict_eeg(
     """
     from app.services.dataset_detection.detector import dataset_detector
 
+    import os
+    import re
+    from fastapi import HTTPException
+    
     if not prediction_router.is_loaded:
         raise HTTPException(status_code=503, detail="Model is not loaded on the backend")
         
     if file.size > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail="File too large")
         
-    if not (file.filename.endswith(".csv") or file.filename.endswith(".txt") or file.filename.endswith(".edf")):
+    # Filename sanitization
+    safe_filename = os.path.basename(file.filename)
+    safe_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '', safe_filename)
+    
+    if not (safe_filename.endswith(".csv") or safe_filename.endswith(".txt") or safe_filename.endswith(".edf")):
         raise HTTPException(status_code=400, detail="Only .csv, .txt, and .edf files are supported currently")
         
     try:
-        logger.info(f"Received predict request. File: {file.filename}, Size: {file.size}, Provided dataset: {dataset}")
+        logger.info(f"Received predict request. File: {safe_filename}, Size: {file.size}, Provided dataset: {dataset}")
         contents = await file.read()
-        logger.info(f"File {file.filename} read successfully. Size: {len(contents)} bytes")
+        logger.info(f"File {safe_filename} read successfully. Size: {len(contents)} bytes")
         
-        if file.filename.endswith(".csv"):
+        if safe_filename.endswith(".csv"):
             df = pd.read_csv(io.BytesIO(contents), on_bad_lines='skip')
-        elif file.filename.endswith(".txt"):
+        elif safe_filename.endswith(".txt"):
             try:
                 df = pd.read_csv(io.BytesIO(contents), sep=r'\s+|,', engine='python', on_bad_lines='skip')
             except Exception:
                 df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python', on_bad_lines='skip')
-        elif file.filename.endswith(".edf"):
+        elif safe_filename.endswith(".edf"):
             import mne
             import tempfile
             import os

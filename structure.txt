@@ -1,0 +1,455 @@
+.
+├── ./apps
+│   ├── ./apps/api
+│   │   ├── ./apps/api/app
+│   │   │   ├── ./apps/api/app/api
+│   │   │   │   ├── ./apps/api/app/api/v1
+│   │   │   │   │   ├── ./apps/api/app/api/v1/health.py
+│   │   │   │   │   ├── ./apps/api/app/api/v1/jobs.py
+│   │   │   │   │   ├── ./apps/api/app/api/v1/model_info.py
+│   │   │   │   │   ├── ./apps/api/app/api/v1/models_api.py
+│   │   │   │   │   ├── ./apps/api/app/api/v1/patients.py
+│   │   │   │   │   ├── ./apps/api/app/api/v1/predict.py
+│   │   │   │   │   └── ./apps/api/app/api/v1/router.py
+│   │   │   │   └── ./apps/api/app/api/v2
+│   │   │   │       ├── ./apps/api/app/api/v2/predict.py
+│   │   │   │       └── ./apps/api/app/api/v2/router.py
+│   │   │   ├── ./apps/api/app/core
+│   │   │   │   ├── ./apps/api/app/core/config.py
+│   │   │   │   └── ./apps/api/app/core/logging.py
+│   │   │   ├── ./apps/api/app/db
+│   │   │   │   ├── ./apps/api/app/db/database.py
+│   │   │   │   └── ./apps/api/app/db/models.py
+│   │   │   ├── ./apps/api/app/main.py
+│   │   │   ├── ./apps/api/app/schemas
+│   │   │   │   ├── ./apps/api/app/schemas/eeg.py
+│   │   │   │   ├── ./apps/api/app/schemas/health.py
+│   │   │   │   ├── ./apps/api/app/schemas/metrics.py
+│   │   │   │   ├── ./apps/api/app/schemas/patient.py
+│   │   │   │   └── ./apps/api/app/schemas/prediction.py
+│   │   │   └── ./apps/api/app/services
+│   │   │       ├── ./apps/api/app/services/dataset_detection
+│   │   │       │   ├── ./apps/api/app/services/dataset_detection/detector.py
+│   │   │       │   ├── ./apps/api/app/services/dataset_detection/__init__.py
+│   │   │       │   ├── ./apps/api/app/services/dataset_detection/metadata.py
+│   │   │       │   ├── ./apps/api/app/services/dataset_detection/rules.py
+│   │   │       │   └── ./apps/api/app/services/dataset_detection/validator.py
+│   │   │       ├── ./apps/api/app/services/explainer.py
+│   │   │       ├── ./apps/api/app/services/job_service.py
+│   │   │       ├── ./apps/api/app/services/model_service.py
+│   │   │       ├── ./apps/api/app/services/pipelines
+│   │   │       │   ├── ./apps/api/app/services/pipelines/bonn
+│   │   │       │   │   ├── ./apps/api/app/services/pipelines/bonn/feature_extraction.py
+│   │   │       │   │   ├── ./apps/api/app/services/pipelines/bonn/feature_selection.py
+│   │   │       │   │   ├── ./apps/api/app/services/pipelines/bonn/__init__.py
+│   │   │       │   │   └── ./apps/api/app/services/pipelines/bonn/preprocessing.py
+│   │   │       │   ├── ./apps/api/app/services/pipelines/chbmit
+│   │   │       │   │   ├── ./apps/api/app/services/pipelines/chbmit/feature_extraction.py
+│   │   │       │   │   ├── ./apps/api/app/services/pipelines/chbmit/__init__.py
+│   │   │       │   │   └── ./apps/api/app/services/pipelines/chbmit/preprocessing.py
+│   │   │       │   └── ./apps/api/app/services/pipelines/__init__.py
+│   │   │       └── ./apps/api/app/services/prediction
+│   │   │           ├── ./apps/api/app/services/prediction/base_predictor.py
+│   │   │           ├── ./apps/api/app/services/prediction/bonn_predictor.py
+│   │   │           ├── ./apps/api/app/services/prediction/chbmit_predictor.py
+│   │   │           ├── ./apps/api/app/services/prediction/__init__.py
+│   │   │           └── ./apps/api/app/services/prediction/prediction_router.py
+│   │   ├── ./apps/api/config
+│   │   │   └── ./apps/api/config/models.yaml
+│   │   ├── ./apps/api/Dockerfile
+│   │   ├── ./apps/api/models
+│   │   │   ├── ./apps/api/models/bonn
+│   │   │   │   ├── ./apps/api/models/bonn/feature_names.json
+│   │   │   │   ├── ./apps/api/models/bonn/final_lightgbm_full_dataset.pkl
+│   │   │   │   ├── ./apps/api/models/bonn/metadata.json
+│   │   │   │   └── ./apps/api/models/bonn/selected_features.json
+│   │   │   └── ./apps/api/models/chbmit
+│   │   │       ├── ./apps/api/models/chbmit/feature_names.json
+│   │   │       ├── ./apps/api/models/chbmit/lightgbm_baseline.pkl
+│   │   │       ├── ./apps/api/models/chbmit/metadata.json
+│   │   │       ├── ./apps/api/models/chbmit/model
+│   │   │       │   ├── ./apps/api/models/chbmit/model/feature_names.json
+│   │   │       │   ├── ./apps/api/models/chbmit/model/lightgbm_model.pkl
+│   │   │       │   ├── ./apps/api/models/chbmit/model/metadata.json
+│   │   │       │   └── ./apps/api/models/chbmit/model/threshold.json
+│   │   │       ├── ./apps/api/models/chbmit/random_forest_baseline.pkl
+│   │   │       ├── ./apps/api/models/chbmit/rf_confusion_matrix.png
+│   │   │       ├── ./apps/api/models/chbmit/rf_pr_curve.png
+│   │   │       ├── ./apps/api/models/chbmit/rf_roc_curve.png
+│   │   │       ├── ./apps/api/models/chbmit/rf_top25_feature_importance.png
+│   │   │       ├── ./apps/api/models/chbmit/selected_features.json
+│   │   │       ├── ./apps/api/models/chbmit/shap_bar_plot.png
+│   │   │       ├── ./apps/api/models/chbmit/shap_summary_plot.png
+│   │   │       └── ./apps/api/models/chbmit/xgboost_baseline.pkl
+│   │   ├── ./apps/api/neuroaegis.db
+│   │   ├── ./apps/api/pyproject.toml
+│   │   ├── ./apps/api/README.md
+│   │   ├── ./apps/api/requirements.txt
+│   │   ├── ./apps/api/test_patients.py
+│   │   └── ./apps/api/tests
+│   │       ├── ./apps/api/tests/__init__.py
+│   │       ├── ./apps/api/tests/test_dataset_detection.py
+│   │       └── ./apps/api/tests/test_parity.py
+│   └── ./apps/web
+│       ├── ./apps/web/Dockerfile
+│       ├── ./apps/web/index.html
+│       ├── ./apps/web/package 2.json
+│       ├── ./apps/web/package.json
+│       ├── ./apps/web/postcss.config 2.js
+│       ├── ./apps/web/postcss.config.js
+│       ├── ./apps/web/public
+│       │   ├── ./apps/web/public/favicon.svg
+│       │   └── ./apps/web/public/icons.svg
+│       ├── ./apps/web/README 2.md
+│       ├── ./apps/web/README.md
+│       ├── ./apps/web/src
+│       │   ├── ./apps/web/src/app
+│       │   │   ├── ./apps/web/src/app/layout
+│       │   │   │   ├── ./apps/web/src/app/layout/DashboardShell.tsx
+│       │   │   │   ├── ./apps/web/src/app/layout/index.ts
+│       │   │   │   ├── ./apps/web/src/app/layout/Sidebar.tsx
+│       │   │   │   └── ./apps/web/src/app/layout/TopNav.tsx
+│       │   │   ├── ./apps/web/src/app/providers
+│       │   │   │   ├── ./apps/web/src/app/providers/index.ts
+│       │   │   │   ├── ./apps/web/src/app/providers/QueryProvider.tsx
+│       │   │   │   ├── ./apps/web/src/app/providers/StoreProvider.tsx
+│       │   │   │   └── ./apps/web/src/app/providers/ThemeProvider.tsx
+│       │   │   ├── ./apps/web/src/app/routes 2.tsx
+│       │   │   └── ./apps/web/src/app/routes.tsx
+│       │   ├── ./apps/web/src/App 2.tsx
+│       │   ├── ./apps/web/src/App.tsx
+│       │   ├── ./apps/web/src/assets
+│       │   │   ├── ./apps/web/src/assets/hero.png
+│       │   │   ├── ./apps/web/src/assets/react 2.svg
+│       │   │   ├── ./apps/web/src/assets/react.svg
+│       │   │   └── ./apps/web/src/assets/vite.svg
+│       │   ├── ./apps/web/src/core
+│       │   │   ├── ./apps/web/src/core/services
+│       │   │   │   ├── ./apps/web/src/core/services/api
+│       │   │   │   │   ├── ./apps/web/src/core/services/api/endpoints 2.ts
+│       │   │   │   │   ├── ./apps/web/src/core/services/api/endpoints.ts
+│       │   │   │   │   ├── ./apps/web/src/core/services/api/http-client 2.ts
+│       │   │   │   │   ├── ./apps/web/src/core/services/api/http-client.ts
+│       │   │   │   │   ├── ./apps/web/src/core/services/api/index 2.ts
+│       │   │   │   │   └── ./apps/web/src/core/services/api/index.ts
+│       │   │   │   └── ./apps/web/src/core/services/model
+│       │   │   │       ├── ./apps/web/src/core/services/model/config
+│       │   │   │       │   └── ./apps/web/src/core/services/model/config/model.config.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/index 2.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/index.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/mock
+│       │   │   │       │   ├── ./apps/web/src/core/services/model/mock/mockAlerts.ts
+│       │   │   │       │   ├── ./apps/web/src/core/services/model/mock/mockEEG.ts
+│       │   │   │       │   ├── ./apps/web/src/core/services/model/mock/mockEvaluationMetrics.ts
+│       │   │   │       │   ├── ./apps/web/src/core/services/model/mock/mockFrequencyBands.ts
+│       │   │   │       │   └── ./apps/web/src/core/services/model/mock/mockPredictions.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/ModelService 2.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/ModelService.interface 2.ts
+│       │   │   │       ├── ./apps/web/src/core/services/model/ModelService.interface.ts
+│       │   │   │       └── ./apps/web/src/core/services/model/ModelService.ts
+│       │   │   ├── ./apps/web/src/core/state
+│       │   │   │   ├── ./apps/web/src/core/state/index 2.ts
+│       │   │   │   ├── ./apps/web/src/core/state/index.ts
+│       │   │   │   ├── ./apps/web/src/core/state/useAppStore 2.ts
+│       │   │   │   └── ./apps/web/src/core/state/useAppStore.ts
+│       │   │   └── ./apps/web/src/core/validation
+│       │   │       ├── ./apps/web/src/core/validation/index 2.ts
+│       │   │       ├── ./apps/web/src/core/validation/index.ts
+│       │   │       ├── ./apps/web/src/core/validation/schemas 2.ts
+│       │   │       └── ./apps/web/src/core/validation/schemas.ts
+│       │   ├── ./apps/web/src/design-system
+│       │   │   ├── ./apps/web/src/design-system/primitives
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/GlassPanel 2.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/GlassPanel.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/HoloRing 2.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/HoloRing.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/index 2.ts
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/index.ts
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/NeonBorder 2.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/NeonBorder.tsx
+│       │   │   │   ├── ./apps/web/src/design-system/primitives/ParticleField 2.tsx
+│       │   │   │   └── ./apps/web/src/design-system/primitives/ParticleField.tsx
+│       │   │   ├── ./apps/web/src/design-system/theme 2.css
+│       │   │   └── ./apps/web/src/design-system/theme.css
+│       │   ├── ./apps/web/src/doctor
+│       │   │   ├── ./apps/web/src/doctor/components
+│       │   │   │   ├── ./apps/web/src/doctor/components/AnalysisProgress.tsx
+│       │   │   │   ├── ./apps/web/src/doctor/components/PatientForm.tsx
+│       │   │   │   └── ./apps/web/src/doctor/components/ResultDashboard.tsx
+│       │   │   └── ./apps/web/src/doctor/pages
+│       │   │       └── ./apps/web/src/doctor/pages/DoctorDashboard.tsx
+│       │   ├── ./apps/web/src/features
+│       │   │   ├── ./apps/web/src/features/brain-analysis
+│       │   │   │   ├── ./apps/web/src/features/brain-analysis/components
+│       │   │   │   │   ├── ./apps/web/src/features/brain-analysis/components/BrainAnalysisPage 2.tsx
+│       │   │   │   │   └── ./apps/web/src/features/brain-analysis/components/BrainAnalysisPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/brain-analysis/index 2.ts
+│       │   │   │   └── ./apps/web/src/features/brain-analysis/index.ts
+│       │   │   ├── ./apps/web/src/features/dashboard
+│       │   │   │   ├── ./apps/web/src/features/dashboard/components
+│       │   │   │   │   ├── ./apps/web/src/features/dashboard/components/DashboardPage.test.tsx
+│       │   │   │   │   └── ./apps/web/src/features/dashboard/components/DashboardPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/dashboard/hooks
+│       │   │   │   │   └── ./apps/web/src/features/dashboard/hooks/useDashboardData.ts
+│       │   │   │   ├── ./apps/web/src/features/dashboard/index 2.ts
+│       │   │   │   └── ./apps/web/src/features/dashboard/index.ts
+│       │   │   ├── ./apps/web/src/features/eeg-monitor
+│       │   │   │   ├── ./apps/web/src/features/eeg-monitor/components
+│       │   │   │   │   └── ./apps/web/src/features/eeg-monitor/components/EEGMonitorPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/eeg-monitor/hooks
+│       │   │   │   │   └── ./apps/web/src/features/eeg-monitor/hooks/useEEGStream.ts
+│       │   │   │   ├── ./apps/web/src/features/eeg-monitor/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/eeg-monitor/index.ts
+│       │   │   │   └── ./apps/web/src/features/eeg-monitor/store
+│       │   │   │       └── ./apps/web/src/features/eeg-monitor/store/index.ts
+│       │   │   ├── ./apps/web/src/features/explainability
+│       │   │   │   ├── ./apps/web/src/features/explainability/components
+│       │   │   │   │   └── ./apps/web/src/features/explainability/components/ExplainabilityPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/explainability/hooks
+│       │   │   │   │   └── ./apps/web/src/features/explainability/hooks/useExplanation.ts
+│       │   │   │   ├── ./apps/web/src/features/explainability/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/explainability/index.ts
+│       │   │   │   └── ./apps/web/src/features/explainability/store
+│       │   │   │       └── ./apps/web/src/features/explainability/store/index.ts
+│       │   │   ├── ./apps/web/src/features/frequency-analysis
+│       │   │   │   ├── ./apps/web/src/features/frequency-analysis/components
+│       │   │   │   │   └── ./apps/web/src/features/frequency-analysis/components/FrequencyAnalysisPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/frequency-analysis/hooks
+│       │   │   │   │   └── ./apps/web/src/features/frequency-analysis/hooks/useFrequencyBands.ts
+│       │   │   │   ├── ./apps/web/src/features/frequency-analysis/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/frequency-analysis/index.ts
+│       │   │   │   └── ./apps/web/src/features/frequency-analysis/store
+│       │   │   │       └── ./apps/web/src/features/frequency-analysis/store/index.ts
+│       │   │   ├── ./apps/web/src/features/patients
+│       │   │   │   ├── ./apps/web/src/features/patients/components
+│       │   │   │   │   └── ./apps/web/src/features/patients/components/PatientsPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/patients/hooks
+│       │   │   │   │   └── ./apps/web/src/features/patients/hooks/useAlerts.ts
+│       │   │   │   ├── ./apps/web/src/features/patients/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/patients/index.ts
+│       │   │   │   └── ./apps/web/src/features/patients/store
+│       │   │   │       └── ./apps/web/src/features/patients/store/index.ts
+│       │   │   ├── ./apps/web/src/features/reports
+│       │   │   │   ├── ./apps/web/src/features/reports/components
+│       │   │   │   │   └── ./apps/web/src/features/reports/components/ReportsPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/reports/hooks
+│       │   │   │   │   └── ./apps/web/src/features/reports/hooks/useEvaluationMetrics.ts
+│       │   │   │   ├── ./apps/web/src/features/reports/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/reports/index.ts
+│       │   │   │   └── ./apps/web/src/features/reports/store
+│       │   │   │       └── ./apps/web/src/features/reports/store/index.ts
+│       │   │   ├── ./apps/web/src/features/seizure-prediction
+│       │   │   │   ├── ./apps/web/src/features/seizure-prediction/components
+│       │   │   │   │   └── ./apps/web/src/features/seizure-prediction/components/SeizurePredictionPage.tsx
+│       │   │   │   ├── ./apps/web/src/features/seizure-prediction/hooks
+│       │   │   │   │   └── ./apps/web/src/features/seizure-prediction/hooks/usePrediction.ts
+│       │   │   │   ├── ./apps/web/src/features/seizure-prediction/index 2.ts
+│       │   │   │   ├── ./apps/web/src/features/seizure-prediction/index.ts
+│       │   │   │   └── ./apps/web/src/features/seizure-prediction/store
+│       │   │   │       └── ./apps/web/src/features/seizure-prediction/store/index.ts
+│       │   │   └── ./apps/web/src/features/settings
+│       │   │       ├── ./apps/web/src/features/settings/components
+│       │   │       │   └── ./apps/web/src/features/settings/components/SettingsPage.tsx
+│       │   │       ├── ./apps/web/src/features/settings/index 2.ts
+│       │   │       └── ./apps/web/src/features/settings/index.ts
+│       │   ├── ./apps/web/src/index 2.css
+│       │   ├── ./apps/web/src/index.css
+│       │   ├── ./apps/web/src/main 2.tsx
+│       │   ├── ./apps/web/src/main.tsx
+│       │   ├── ./apps/web/src/setupTests.ts
+│       │   └── ./apps/web/src/shared
+│       │       ├── ./apps/web/src/shared/components
+│       │       │   ├── ./apps/web/src/shared/components/3d
+│       │       │   │   ├── ./apps/web/src/shared/components/3d/HoloBrain.tsx
+│       │       │   │   ├── ./apps/web/src/shared/components/3d/ParticleField.tsx
+│       │       │   │   └── ./apps/web/src/shared/components/3d/Scene.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ConfidenceGauge 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ConfidenceGauge.tsx
+│       │       │   ├── ./apps/web/src/shared/components/EmptyState 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/EmptyState.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ErrorState 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ErrorState.tsx
+│       │       │   ├── ./apps/web/src/shared/components/GlassCard 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/GlassCard.tsx
+│       │       │   ├── ./apps/web/src/shared/components/index 2.ts
+│       │       │   ├── ./apps/web/src/shared/components/index.ts
+│       │       │   ├── ./apps/web/src/shared/components/NeonBadge 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/NeonBadge.tsx
+│       │       │   ├── ./apps/web/src/shared/components/RouteErrorBoundary.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ShapBarChart 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/ShapBarChart.tsx
+│       │       │   ├── ./apps/web/src/shared/components/SkeletonShimmer 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/SkeletonShimmer.tsx
+│       │       │   ├── ./apps/web/src/shared/components/StatusBadge 2.tsx
+│       │       │   ├── ./apps/web/src/shared/components/StatusBadge.tsx
+│       │       │   ├── ./apps/web/src/shared/components/WaveformSparkline 2.tsx
+│       │       │   └── ./apps/web/src/shared/components/WaveformSparkline.tsx
+│       │       ├── ./apps/web/src/shared/hooks
+│       │       │   ├── ./apps/web/src/shared/hooks/index 2.ts
+│       │       │   ├── ./apps/web/src/shared/hooks/index.ts
+│       │       │   ├── ./apps/web/src/shared/hooks/useModelService 2.ts
+│       │       │   ├── ./apps/web/src/shared/hooks/useModelService.ts
+│       │       │   └── ./apps/web/src/shared/hooks/usePredictionFlow.ts
+│       │       └── ./apps/web/src/shared/lib
+│       │           ├── ./apps/web/src/shared/lib/motion-presets 2.ts
+│       │           └── ./apps/web/src/shared/lib/motion-presets.ts
+│       ├── ./apps/web/tailwind.config 2.ts
+│       ├── ./apps/web/tailwind.config.ts
+│       ├── ./apps/web/tsconfig 2.json
+│       ├── ./apps/web/tsconfig.app 2.json
+│       ├── ./apps/web/tsconfig.app.json
+│       ├── ./apps/web/tsconfig.json
+│       ├── ./apps/web/tsconfig.node 2.json
+│       ├── ./apps/web/tsconfig.node.json
+│       ├── ./apps/web/vite.config 2.ts
+│       └── ./apps/web/vite.config.ts
+├── ./compare_denoise.py
+├── ./CONTRACT.md
+├── ./docker-compose.yml
+├── ./docs
+│   ├── ./docs/AGENT.md
+│   ├── ./docs/ARCHITECTURE 2.md
+│   ├── ./docs/ARCHITECTURE.md
+│   ├── ./docs/DESIGN 2.md
+│   ├── ./docs/DESIGN.md
+│   ├── ./docs/IMPLEMENTATIONPLAN 2.md
+│   ├── ./docs/IMPLEMENTATIONPLAN.md
+│   ├── ./docs/MEMORY 2.md
+│   ├── ./docs/MEMORY.md
+│   ├── ./docs/PHASES.md
+│   ├── ./docs/PRD.md
+│   ├── ./docs/RULES.md
+│   └── ./docs/TRD.md
+├── ./extracted_notebook.py
+├── ./LICENSE
+├── ./NeuroAegis_bonn_dataset_model
+│   ├── ./NeuroAegis_bonn_dataset_model/features
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/bonn_raw_dataset.npz
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/coif3_denoised_dataset.npz
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/feature_matrix.npz
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/feature_names.json
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/features.csv
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/metadata.csv
+│   │   ├── ./NeuroAegis_bonn_dataset_model/features/selected_features.json
+│   │   └── ./NeuroAegis_bonn_dataset_model/features/train_test_split.npz
+│   ├── ./NeuroAegis_bonn_dataset_model/models
+│   │   ├── ./NeuroAegis_bonn_dataset_model/models/best_baseline_model.pkl
+│   │   ├── ./NeuroAegis_bonn_dataset_model/models/final_lightgbm_full_dataset.pkl
+│   │   ├── ./NeuroAegis_bonn_dataset_model/models/lightgbm_baseline.pkl
+│   │   ├── ./NeuroAegis_bonn_dataset_model/models/lightgbm_optimized.pkl
+│   │   ├── ./NeuroAegis_bonn_dataset_model/models/random_forest_baseline.pkl
+│   │   └── ./NeuroAegis_bonn_dataset_model/models/xgboost_baseline.pkl
+│   ├── ./NeuroAegis_bonn_dataset_model/plots
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/accuracy_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/class_distribution.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/correlation_heatmap.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/example_signals.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/f1_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/fft_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/kappa_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/lightgbm_confusion_matrix.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/lightgbm_optimized_confusion_matrix.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/lightgbm_optimized_roc_curve.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/lightgbm_roc_curve.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/mcc_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/mean_signals.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/original_vs_denoised.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/precision_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/psd_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/random_forest_confusion_matrix.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/random_forest_roc_curve.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/recall_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/roc_auc_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/signal_std_distribution.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/top20_feature_importance.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/wavelet_comparison.png
+│   │   ├── ./NeuroAegis_bonn_dataset_model/plots/xgboost_confusion_matrix.png
+│   │   └── ./NeuroAegis_bonn_dataset_model/plots/xgboost_roc_curve.png
+│   ├── ./NeuroAegis_bonn_dataset_model/README.txt
+│   └── ./NeuroAegis_bonn_dataset_model/reports
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/correlation_matrix.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/dataset_audit.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/dominant_frequencies.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/feature_importance.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/feature_importance.png
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/feature_ranking.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/feature_variance.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/FINAL_REPORT.md
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/high_correlation_pairs.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/lightgbm_metrics.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/lightgbm_optimized_metrics.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/lightgbm_random_search_results.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/model_comparison.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/random_forest_metrics.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/shap_beeswarm.png
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/shap_dependence.png
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/shap_feature_importance.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/shap_summary_bar.png
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/shap_values.pkl
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/signal_statistics.csv
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/training_metadata.json
+│       ├── ./NeuroAegis_bonn_dataset_model/reports/wavelet_benchmark.csv
+│       └── ./NeuroAegis_bonn_dataset_model/reports/xgboost_metrics.csv
+├── ./neuroaegis_chbmit_project(1)
+│   └── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT
+│       ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/EEG_Clean.parquet
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/EEG_Scaled_data_optimized.parquet
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/feature_importance.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/feature_selection_results.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/feature_subset_results.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/final_model_comparison.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/lightgbm_baseline.pkl
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/lightgbm_feature_importance.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/model
+│       │   │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/model/feature_names.json
+│       │   │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/model/lightgbm_model.pkl
+│       │   │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/model/metadata.json
+│       │   │   └── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/model/threshold.json
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/random_forest_baseline.pkl
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_confusion_matrix.png
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_feature_importance.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_metrics.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_pr_curve.png
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_predictions.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_roc_curve.png
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_threshold_analysis.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/rf_top25_feature_importance.png
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/shap_bar_plot.png
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/shap_feature_importance.csv
+│       │   ├── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/shap_summary_plot.png
+│       │   └── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/artifacts/xgboost_baseline.pkl
+│       └── ./neuroaegis_chbmit_project(1)/NeuroAegis_CHB_MIT/config.json
+├── ./neuroaegis-v1.ipynb
+├── ./package.json
+├── ./package-lock.json
+├── ./packages
+│   └── ./packages/model-contracts
+│       ├── ./packages/model-contracts/package.json
+│       └── ./packages/model-contracts/src
+│           ├── ./packages/model-contracts/src/alerts.types.ts
+│           ├── ./packages/model-contracts/src/eeg.types.ts
+│           ├── ./packages/model-contracts/src/explanation.types.ts
+│           ├── ./packages/model-contracts/src/index.ts
+│           ├── ./packages/model-contracts/src/metrics.types.ts
+│           └── ./packages/model-contracts/src/prediction.types.ts
+├── ./print_features.py
+├── ./print_mismatches.py
+├── ./README.md
+├── ./sample_eeg_data
+│   ├── ./sample_eeg_data/S001_seizure.txt
+│   ├── ./sample_eeg_data/S002_seizure.csv
+│   ├── ./sample_eeg_data/S003_seizure.csv
+│   ├── ./sample_eeg_data/Z001_healthy.txt
+│   └── ./sample_eeg_data/Z002_healthy.txt
+├── ./structure.txt
+├── ./test_parity2.py
+├── ./test_parity3.py
+├── ./test_parity_denoised.py
+├── ./test_parity_final_11500.py
+├── ./test_parity_final_metrics.py
+├── ./test_parity_final.py
+├── ./test_parity_metrics.py
+└── ./test_parity.py
+
+93 directories, 360 files

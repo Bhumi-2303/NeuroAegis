@@ -36,9 +36,14 @@ async def create_prediction_job(
     if file.size > settings.MAX_UPLOAD_SIZE:
         raise HTTPException(status_code=413, detail="File too large")
         
+    import os
+    import re
+    safe_filename = os.path.basename(file.filename)
+    safe_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '', safe_filename)
+    
     try:
         contents = await file.read()
-        if file.filename.endswith((".csv", ".txt")):
+        if safe_filename.endswith((".csv", ".txt")):
             df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python')
             eeg_data = df.values.T 
             channel_names = df.columns.tolist()

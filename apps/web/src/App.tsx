@@ -9,6 +9,19 @@ function App() {
       <QueryProvider>
         <StoreProvider>
           <ParticleField count={40} />
+          
+          <div style={{
+            backgroundColor: '#ff9800',
+            color: '#fff',
+            padding: '8px 16px',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            position: 'relative',
+            zIndex: 1000
+          }}>
+            ⚠️ Not for clinical use — research prototype
+          </div>
+
           <RouterProvider router={router} />
         </StoreProvider>
       </QueryProvider>
