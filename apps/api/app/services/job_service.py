@@ -4,9 +4,7 @@ import logging
 from sqlalchemy.orm import Session
 from app.db.models import PredictionJob
 from app.services.model_service import ml_model_service
-from app.services.preprocessing import preprocess_eeg
-from app.services.feature_extraction import extract_all_features
-from app.services.feature_selection import select_and_order_features
+from app.services.features import preprocess_eeg, extract_features as extract_all_features, select_and_order_features
 from app.services.explainer import shap_service
 
 logger = logging.getLogger("neuroaegis.job_service")

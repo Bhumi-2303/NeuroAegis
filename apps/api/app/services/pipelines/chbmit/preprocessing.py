@@ -1,60 +1,24 @@
+"""CHB-MIT dataset preprocessing — thin wrapper around the shared features module."""
+
+from typing import List, Union
+
 import numpy as np
-import pywt
-from typing import Union, List
 import pandas as pd
 
-def wavelet_denoise(signal: np.ndarray, wavelet: str = "db4", level: int = 5) -> np.ndarray:
-    """
-    Apply Discrete Wavelet Transform (DWT) for denoising.
-    Dedicated production module for CHB-MIT.
-    """
-    coeffs = pywt.wavedec(
-        signal,
-        wavelet,
-        level=level
-    )
+from app.services.features import (
+    preprocess_eeg as _preprocess_eeg,
+    wavelet_denoise,  # re-export for backwards compatibility
+)
 
-    sigma = np.median(
-        np.abs(coeffs[-1])
-    ) / 0.6745
+# CHB-MIT-specific defaults: db4 wavelet, 5-level decomposition
+_CHBMIT_WAVELET = "db4"
+_CHBMIT_LEVEL = 5
 
-    threshold = sigma * np.sqrt(
-        2 * np.log(len(signal))
-    )
-
-    coeffs_denoised = [coeffs[0]]
-
-    for c in coeffs[1:]:
-        coeffs_denoised.append(
-            pywt.threshold(
-                c,
-                threshold,
-                mode="soft"
-            )
-        )
-
-    reconstructed = pywt.waverec(
-        coeffs_denoised,
-        wavelet
-    )
-
-    return reconstructed[:len(signal)]
 
 def preprocess_eeg(data: Union[np.ndarray, List[float], pd.DataFrame]) -> np.ndarray:
-    """
-    Preprocess the EEG data for CHB-MIT.
+    """Preprocess EEG data for CHB-MIT.
+
     1. Convert to numpy array
     2. Wavelet Denoising (db4, level 5 for CHB-MIT)
     """
-    if isinstance(data, list):
-        data = np.array(data)
-    elif isinstance(data, pd.DataFrame):
-        data = data.values
-        
-    if data.ndim > 1:
-        # Assuming single channel or flattened data based on previous setup
-        data = data.flatten()
-        
-    # Apply wavelet denoising
-    denoised_data = wavelet_denoise(data, wavelet="db4", level=5)
-    return denoised_data
+    return _preprocess_eeg(data, wavelet=_CHBMIT_WAVELET, level=_CHBMIT_LEVEL)

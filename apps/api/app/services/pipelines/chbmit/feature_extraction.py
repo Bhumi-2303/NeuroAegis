@@ -1,24 +1,42 @@
-import numpy as np
-import pandas as pd
-from typing import List, Dict, Any
+"""CHB-MIT dataset feature extraction — delegates to the shared features module."""
 
-def extract_all_features(signal: np.ndarray, channel_names: List[str], fs: float = 256.0) -> Dict[str, float]:
+import numpy as np
+from typing import Dict, List
+
+from app.services.features import extract_features, extract_features_multichannel
+
+# CHB-MIT-specific constants
+FS = 256.0
+
+
+def extract_all_features(
+    signal: np.ndarray,
+    channel_names: List[str],
+    fs: float = FS,
+) -> Dict[str, float]:
+    """Extract features from preprocessed CHB-MIT EEG signal.
+
+    For multi-channel data (2-D array with shape ``(n_channels, n_samples)``),
+    extracts per-channel features and concatenates them.  For 1-D data,
+    extracts a single set of features.
+
+    Parameters
+    ----------
+    signal : np.ndarray
+        Preprocessed EEG data — 1-D or 2-D ``(n_channels, n_samples)``.
+    channel_names : list of str
+        Channel labels.
+    fs : float
+        Sampling frequency in Hz (default 256.0 for CHB-MIT).
+
+    Returns
+    -------
+    dict
+        Feature name → value mapping.
     """
-    Extract features from the preprocessed EEG signal for CHB-MIT.
-    This module simulates the production feature engineering.
-    """
-    features = {}
-    
-    # Normally we would compute time, frequency, wavelet features here.
-    # We will map standard features if they exist, else generate random features for the sake of pipeline completeness.
-    # In a real environment, this should contain the exact functions from notebook.
-    
-    # We will generate features corresponding to the length of signal or mock them if we don't have the exact logic.
-    # The CHB-MIT model takes a very large feature vector (e.g., 36851).
-    # Assuming `signal` is already the flattened feature vector for the CHB-MIT model:
-    
-    if len(signal) > 0:
-        for i in range(len(signal)):
-            features[f"Channel_{i+1}"] = float(signal[i])
-            
-    return features
+    if signal.ndim > 1:
+        return extract_features_multichannel(
+            signal, channel_names=channel_names, fs=fs, wavelet="db4", level=5,
+        )
+
+    return extract_features(signal, fs=fs, wavelet="db4", level=5)
