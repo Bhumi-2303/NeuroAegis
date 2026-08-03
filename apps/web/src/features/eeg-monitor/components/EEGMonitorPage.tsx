@@ -24,12 +24,12 @@ import { useEEGStream } from '../hooks/useEEGStream';
 import { useEegStore } from '../store';
 
 const CHANNEL_COLORS: Record<string, string> = {
-  Fp1: '#00E5FF',
-  Fp2: '#4B7DFF',
-  C3: '#8B5CF6',
-  C4: '#00FFA3',
-  O1: '#FFB020',
-  O2: '#FF4D6D',
+  Fp1: '#14B8A6',
+  Fp2: '#60A5FA',
+  C3: '#A78BFA',
+  C4: '#34D399',
+  O1: '#FBBF24',
+  O2: '#F87171',
   Default: '#94A3B8'
 };
 
@@ -99,7 +99,7 @@ export const EEGMonitorPage: React.FC = () => {
           <GlassCard className="p-6 h-[500px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
                 <XAxis 
                   dataKey="timestamp" 
                   stroke="var(--text-secondary)" 
@@ -115,7 +115,7 @@ export const EEGMonitorPage: React.FC = () => {
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'var(--bg-2)', 
-                    borderColor: 'rgba(255,255,255,0.1)', 
+                    borderColor: 'var(--bg-4)', 
                     borderRadius: '8px',
                     color: 'var(--text-primary)',
                     fontFamily: 'var(--font-mono)'

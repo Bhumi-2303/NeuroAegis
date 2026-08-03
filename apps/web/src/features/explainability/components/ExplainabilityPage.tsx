@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Lightbulb, Activity, BrainCircuit } from 'lucide-react';
 import { 
@@ -17,13 +17,13 @@ export const ExplainabilityPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
 
-  const fetchExplanation = async () => {
+  const fetchExplanation = useCallback(async () => {
     setIsLoading(true);
     setIsError(false);
     setData(null);
 
     try {
-      const res = await fetch('/api/v1/jobs/latest');
+      const res = await fetch(`/api/v1/jobs/latest?model=${selectedModel}`);
       if (!res.ok) throw new Error('Failed to fetch latest job');
       const latestJob = await res.json();
       
@@ -46,12 +46,12 @@ export const ExplainabilityPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedModel]);
 
-  // Auto-fetch on mount
+  // Auto-fetch on mount & when model changes
   useEffect(() => {
     fetchExplanation();
-  }, []);
+  }, [fetchExplanation]);
 
   const chartFeatures = data?.explanation?.features.map(f => ({
     name: f.featureName,

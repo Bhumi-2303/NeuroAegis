@@ -15,7 +15,7 @@ export function Scene({ interactive = true }: SceneProps) {
         <PerspectiveCamera makeDefault position={[0, 0, 10]} fov={45} />
         
         <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} color="#00E5FF" />
+        <pointLight position={[10, 10, 10]} intensity={1} color="#14B8A6" />
         <pointLight position={[-10, -10, -10]} intensity={0.5} color="#8B5CF6" />
 
         <HoloBrain />
@@ -34,9 +34,9 @@ export function Scene({ interactive = true }: SceneProps) {
 
         <EffectComposer>
           <Bloom 
-            luminanceThreshold={0.2} 
+            luminanceThreshold={0.3} 
             mipmapBlur 
-            intensity={1.5} 
+            intensity={0.8} 
             radius={0.4}
           />
         </EffectComposer>

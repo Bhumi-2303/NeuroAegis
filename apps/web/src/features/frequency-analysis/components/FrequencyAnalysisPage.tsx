@@ -22,11 +22,11 @@ import { pageTransition, staggerChildren, slideUp } from '../../../shared/lib/mo
 import { useFrequencyBands } from '../hooks/useFrequencyBands';
 
 const BANDS = [
-  { name: 'gamma', color: '#FF4D6D', label: 'Gamma' },
-  { name: 'beta', color: '#FFB020', label: 'Beta' },
-  { name: 'alpha', color: '#00FFA3', label: 'Alpha' },
-  { name: 'theta', color: '#4B7DFF', label: 'Theta' },
-  { name: 'delta', color: '#8B5CF6', label: 'Delta' }
+  { name: 'gamma', color: '#F87171', label: 'Gamma' },
+  { name: 'beta', color: '#FBBF24', label: 'Beta' },
+  { name: 'alpha', color: '#34D399', label: 'Alpha' },
+  { name: 'theta', color: '#60A5FA', label: 'Theta' },
+  { name: 'delta', color: '#A78BFA', label: 'Delta' }
 ] as const;
 
 export const FrequencyAnalysisPage: React.FC = () => {
@@ -74,7 +74,7 @@ export const FrequencyAnalysisPage: React.FC = () => {
           <motion.div variants={slideUp}>
             <SkeletonShimmer className="h-64 w-full rounded-xl" />
           </motion.div>
-          <motion.div variants={slideUp} className="grid grid-cols-5 gap-4">
+          <motion.div variants={slideUp} className="grid grid-cols-2 md:grid-cols-5 gap-4">
             {BANDS.map(b => (
               <SkeletonShimmer key={b.name} className="h-24 w-full rounded-xl" />
             ))}
@@ -116,7 +116,7 @@ export const FrequencyAnalysisPage: React.FC = () => {
                     </linearGradient>
                   ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
                 <XAxis 
                   dataKey="timestamp" 
                   stroke="var(--text-secondary)" 
@@ -132,7 +132,7 @@ export const FrequencyAnalysisPage: React.FC = () => {
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: 'var(--bg-2)', 
-                    borderColor: 'rgba(255,255,255,0.1)', 
+                    borderColor: 'var(--bg-4)', 
                     borderRadius: '8px',
                     color: 'var(--text-primary)',
                     fontFamily: 'var(--font-mono)'

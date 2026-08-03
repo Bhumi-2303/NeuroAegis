@@ -91,7 +91,7 @@ export const ReportsPage = () => {
               onClick={() => setModelName(model)}
               className={`px-4 py-2 rounded-md font-body text-sm transition-all duration-300 ${
                 modelName === model 
-                  ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 shadow-[0_0_15px_rgba(0,229,255,0.2)]' 
+                  ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 shadow-[0_0_15px_rgba(20,184,166,0.2)]' 
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-3)]'
               }`}
             >

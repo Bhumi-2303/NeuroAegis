@@ -47,13 +47,13 @@ export const LiveMonitorPage: React.FC = () => {
   const [isAlertActive, setIsAlertActive] = useState(false);
   
   // Track interval
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Fetch initial data
   useEffect(() => {
     const fetchMonitorData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v2/demo/live-monitor-data`);
+        const response = await fetch('/api/v2/demo/live-monitor-data');
         if (!response.ok) throw new Error('Failed to fetch live monitor data');
         const json = await response.json();
         setData(json);
@@ -215,12 +215,12 @@ export const LiveMonitorPage: React.FC = () => {
               <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
                     <XAxis dataKey="time" stroke="var(--text-secondary)" fontSize={12} tickFormatter={(val) => `${val}s`} />
                     <YAxis stroke="var(--text-secondary)" fontSize={12} domain={[0, 100]} tickFormatter={(val) => `${val}%`} />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--bg-2)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} 
-                      formatter={(val: number) => [`${val.toFixed(1)}%`, 'Probability']}
+                      contentStyle={{ backgroundColor: 'var(--bg-2)', borderColor: 'var(--bg-4)', borderRadius: '8px' }} 
+                      formatter={(val: any) => [`${Number(val || 0).toFixed(1)}%`, 'Probability']}
                       labelFormatter={(label) => `Time: ${label}s`}
                     />
                     <ReferenceLine y={50} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
@@ -245,12 +245,12 @@ export const LiveMonitorPage: React.FC = () => {
               <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
                     <XAxis dataKey="time" stroke="var(--text-secondary)" fontSize={12} tickFormatter={(val) => `${val}s`} />
                     <YAxis stroke="var(--text-secondary)" fontSize={12} domain={['auto', 'auto']} />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--bg-2)', borderColor: 'rgba(255,255,255,0.1)', borderRadius: '8px' }} 
-                      formatter={(val: number) => [val.toExponential(2), 'Energy']}
+                      contentStyle={{ backgroundColor: 'var(--bg-2)', borderColor: 'var(--bg-4)', borderRadius: '8px' }} 
+                      formatter={(val: any) => [Number(val || 0).toExponential(2), 'Energy']}
                       labelFormatter={(label) => `Time: ${label}s`}
                     />
                     <Line 

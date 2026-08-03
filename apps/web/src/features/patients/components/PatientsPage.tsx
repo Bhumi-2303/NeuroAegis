@@ -155,10 +155,10 @@ export const PatientsPage = () => {
                         </h3>
                         <span className="text-xs font-[var(--font-mono)] text-[var(--text-secondary)]">{patient.id}</span>
                       </div>
-                      <div className={`w-2 h-2 rounded-full ${
-                        patient.status === 'active' ? 'bg-[var(--state-danger)]' : 
-                        patient.status === 'monitoring' ? 'bg-[var(--state-warning)]' : 'bg-[var(--state-success)]'
-                      }`} />
+                      <div className={`w-2.5 h-2.5 rounded-full ${
+                        patient.status === 'active' ? 'bg-[var(--state-success)]' : 
+                        patient.status === 'monitoring' ? 'bg-[var(--state-warning)]' : 'bg-[var(--text-muted)]'
+                      }`} title={`Status: ${patient.status}`} />
                     </div>
                     
                     <div className="space-y-2 text-sm font-[var(--font-body)] text-[var(--text-secondary)]">
