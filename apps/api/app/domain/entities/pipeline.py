@@ -1,7 +1,10 @@
+from __future__ import annotations
+from typing import Any
 from uuid import UUID
+
 from pydantic import BaseModel, model_validator
-from typing import Dict, Any
 from typing_extensions import Self
+
 
 class Pipeline(BaseModel):
     """
@@ -10,7 +13,7 @@ class Pipeline(BaseModel):
     id: UUID
     task_id: str
     dataset_id: str
-    configuration: Dict[str, Any]
+    configuration: dict[str, Any]
 
     @model_validator(mode="after")
     def validate_configuration(self) -> Self:

@@ -1,6 +1,9 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Any
+
 import numpy as np
+
 
 class BasePredictor(ABC):
     def __init__(self, model_dir: str, default_model: str):
@@ -17,29 +20,24 @@ class BasePredictor(ABC):
     @abstractmethod
     def load_model(self) -> bool:
         """Loads model artifacts."""
-        pass
 
     @abstractmethod
     def preprocess(self, data: np.ndarray) -> np.ndarray:
         """Preprocesses the raw EEG data."""
-        pass
 
     @abstractmethod
-    def extract_features(self, data: np.ndarray, channel_names: List[str], fs: float) -> tuple[np.ndarray, Dict[str, float]]:
+    def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> tuple[np.ndarray, dict[str, float]]:
         """Extracts features from preprocessed data."""
-        pass
 
     @abstractmethod
-    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
+    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         """Runs inference and returns probabilities and labels."""
-        pass
 
     @abstractmethod
-    def generate_explanation(self, feature_vector: np.ndarray, raw_features: Dict[str, float], model_name: str = None) -> Dict[str, Any]:
+    def generate_explanation(self, feature_vector: np.ndarray, raw_features: dict[str, float], model_name: str = None) -> dict[str, Any]:
         """Generates SHAP explanation."""
-        pass
 
-    def get_prediction(self, eeg_data: np.ndarray, channel_names: List[str], fs: float, model_name: str = None) -> Dict[str, Any]:
+    def get_prediction(self, eeg_data: np.ndarray, channel_names: list[str], fs: float, model_name: str = None) -> dict[str, Any]:
         """Runs the full pipeline."""
         if not self.is_loaded:
             raise RuntimeError("Model is not loaded.")

@@ -1,7 +1,11 @@
-from typing import Protocol, runtime_checkable, Dict, Any, List
+from __future__ import annotations
+from typing import Protocol, runtime_checkable
+
 import numpy as np
-from .plugin_protocol import PluginProtocol
+
 from .model_protocol import ModelProtocol
+from .plugin_protocol import PluginProtocol
+
 
 @runtime_checkable
 class ExplainerProtocol(PluginProtocol, Protocol):
@@ -14,8 +18,8 @@ class ExplainerProtocol(PluginProtocol, Protocol):
         self, 
         model: ModelProtocol, 
         features: np.ndarray, 
-        feature_names: List[str]
-    ) -> Dict[str, float]:
+        feature_names: list[str]
+    ) -> dict[str, float]:
         """
         Generate feature importance scores.
         

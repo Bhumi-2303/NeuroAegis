@@ -1,7 +1,11 @@
 import numpy as np
 import pytest
+
 from app.services.pipelines.bonn.preprocessing import preprocess_eeg as bonn_preprocess
-from app.services.pipelines.chbmit.preprocessing import preprocess_eeg as chbmit_preprocess
+from app.services.pipelines.chbmit.preprocessing import (
+    preprocess_eeg as chbmit_preprocess,
+)
+
 
 @pytest.fixture
 def sample_signal():

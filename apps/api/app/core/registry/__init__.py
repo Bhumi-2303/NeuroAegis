@@ -1,3 +1,4 @@
+from __future__ import annotations
 from .base_registry import BaseRegistry
 from .hub import RegistryHub
 

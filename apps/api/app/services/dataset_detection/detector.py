@@ -1,17 +1,20 @@
-import pandas as pd
+from __future__ import annotations
 import logging
-from typing import Tuple, Dict, Any, List
+
+import pandas as pd
+
+from app.core.config import settings
+
 from .metadata import DatasetMetadata
 from .rules import DefaultDatasetScorer
 from .validator import DatasetValidator
-from app.core.config import settings
 
 logger = logging.getLogger("neuroaegis.dataset_detector")
 
 class DatasetDetector:
     def __init__(self):
         self.scorer = DefaultDatasetScorer()
-        self.datasets: Dict[str, DatasetMetadata] = {}
+        self.datasets: dict[str, DatasetMetadata] = {}
         self._load_metadata()
 
     def _load_metadata(self):
@@ -38,7 +41,7 @@ class DatasetDetector:
             except Exception as e:
                 logger.error(f"Failed to load metadata for dataset {dataset_id}: {e}")
 
-    def detect(self, df: pd.DataFrame, provided_fs: float = 0.0) -> Tuple[str, float, List[str]]:
+    def detect(self, df: pd.DataFrame, provided_fs: float = 0.0) -> tuple[str, float, list[str]]:
         """
         Validates the dataset and detects which dataset pipeline it belongs to.
         Returns:

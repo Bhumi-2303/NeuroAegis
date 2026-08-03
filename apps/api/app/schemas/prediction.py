@@ -1,9 +1,12 @@
+from __future__ import annotations
+from typing import Any, Literal
+
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Literal, Optional
+
 
 class PredictionResultSchema(BaseModel):
     label: Literal["seizure", "non_seizure"]
-    probabilities: Dict[Literal["seizure", "non_seizure"], float]
+    probabilities: dict[Literal["seizure", "non_seizure"], float]
 
 class ConfidenceScoreSchema(BaseModel):
     value: float = Field(..., ge=0, le=1.0)
@@ -12,20 +15,20 @@ class ConfidenceScoreSchema(BaseModel):
 class ShapFeatureContributionSchema(BaseModel):
     featureName: str
     value: float
-    rawValue: Optional[float] = None
-    referenceRange: Optional[List[float]] = None
+    rawValue: float | None = None
+    referenceRange: list[float] | None = None
 
 class ShapExplanationSchema(BaseModel):
     baseValue: float
-    features: List[ShapFeatureContributionSchema]
+    features: list[ShapFeatureContributionSchema]
 
 class ModelInputSchema(BaseModel):
     sessionId: str
-    signalWindow: List[float]
-    channelIds: List[str]
+    signalWindow: list[float]
+    channelIds: list[str]
     samplingRateHz: float
     timestamp: str
-    metadata: Optional[Dict[str, Any]] = None
+    metadata: dict[str, Any] | None = None
 
 class ModelOutputSchema(BaseModel):
     modelName: Literal["random_forest", "xgboost", "lightgbm"]

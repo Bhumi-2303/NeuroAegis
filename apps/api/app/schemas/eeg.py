@@ -1,14 +1,16 @@
+from __future__ import annotations
+
 from pydantic import BaseModel
-from typing import List, Optional
+
 
 class GraphDataPointSchema(BaseModel):
     timestamp: str
     value: float
-    channel: Optional[str] = None
+    channel: str | None = None
 
 class FrequencyBandDataSchema(BaseModel):
-    gamma: List[GraphDataPointSchema]
-    beta: List[GraphDataPointSchema]
-    alpha: List[GraphDataPointSchema]
-    theta: List[GraphDataPointSchema]
-    delta: List[GraphDataPointSchema]
+    gamma: list[GraphDataPointSchema]
+    beta: list[GraphDataPointSchema]
+    alpha: list[GraphDataPointSchema]
+    theta: list[GraphDataPointSchema]
+    delta: list[GraphDataPointSchema]

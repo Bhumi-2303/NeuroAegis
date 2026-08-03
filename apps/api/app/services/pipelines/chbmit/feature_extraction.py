@@ -1,7 +1,8 @@
+from __future__ import annotations
 """CHB-MIT dataset feature extraction — delegates to the shared features module."""
 
+
 import numpy as np
-from typing import Dict, List
 
 from app.services.features import extract_features, extract_features_multichannel
 
@@ -11,9 +12,9 @@ FS = 256.0
 
 def extract_all_features(
     signal: np.ndarray,
-    channel_names: List[str],
+    channel_names: list[str],
     fs: float = FS,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Extract features from preprocessed CHB-MIT EEG signal.
 
     For multi-channel data (2-D array with shape ``(n_channels, n_samples)``),

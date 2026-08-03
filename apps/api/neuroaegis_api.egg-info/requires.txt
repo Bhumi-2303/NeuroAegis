@@ -13,3 +13,4 @@ PyWavelets
 mne
 pyyaml
 sqlalchemy
+pyarrow>=21.0.0

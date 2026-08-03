@@ -1,9 +1,10 @@
-import pytest
-import pandas as pd
 import numpy as np
+import pandas as pd
+import pytest
+
 from app.services.dataset_detection.detector import DatasetDetector
 from app.services.dataset_detection.metadata import DatasetMetadata
-from app.services.dataset_detection.rules import DefaultDatasetScorer
+
 
 @pytest.fixture
 def mock_datasets():

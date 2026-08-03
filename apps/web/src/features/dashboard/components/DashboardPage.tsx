@@ -1,36 +1,39 @@
 import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, Upload, FileText, Activity, CheckCircle, Clock } from 'lucide-react';
-import { 
-  GlassCard, 
-
-  ErrorState, 
-  ConfidenceGauge, 
-  StatusBadge,
-  WaveformSparkline
-} from '../../../shared/components';
+import { Brain, Upload, FileText } from 'lucide-react';
+import { ErrorState } from '../../../shared/components';
 import { pageTransition, staggerChildren, fadeIn } from '../../../shared/lib/motion-presets';
-import { usePredictionFlow, STEPS } from '../../../shared/hooks';
-import { ShapWaterfall } from '../../explainability/components/ShapWaterfall';
+import { usePredictionFlow } from '../../../shared/hooks';
+
+// New Widgets
+import { WidgetCard } from './widgets/WidgetCard';
+import { DatasetDetectionCard } from './widgets/DatasetDetectionCard';
+import { SignalQualityCard } from './widgets/SignalQualityCard';
+import { ModelInfoCard } from './widgets/ModelInfoCard';
+import { PredictionSummaryCard } from './widgets/PredictionSummaryCard';
+import { EEGViewer } from './widgets/EEGViewer';
+import { RawFilteredComparison } from './widgets/RawFilteredComparison';
+import { FeatureSummaryCard } from './widgets/FeatureSummaryCard';
+import { TimeFrequencyAnalysis } from './widgets/TimeFrequencyAnalysis';
+import { EnhancedShapPanel } from './widgets/EnhancedShapPanel';
+import { GlobalFeatureImportance } from './widgets/GlobalFeatureImportance';
+import { ClinicalSummaryReport } from './widgets/ClinicalSummaryReport';
+import { SystemPerformance } from './widgets/SystemPerformance';
+import { ExportPanel } from './widgets/ExportPanel';
+import { LoadingPipeline } from './widgets/LoadingPipeline';
 
 export function DashboardPage(): React.JSX.Element {
   const {
     file,
-
     samplingRate,
     setSamplingRate,
     channels,
     setChannels,
     validationError,
-
     isUploading,
-    currentStep,
     data,
     isError,
     errorMessage,
-    datasetName,
-    detectionConfidence,
-    modelName,
     handleFileChange,
     resetAnalysis,
     handlePredict
@@ -38,10 +41,8 @@ export function DashboardPage(): React.JSX.Element {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Since we don't have the real uploaded data available immediately for the waveform,
-  // we'll simulate a static segment representing the analyzed signal.
-  const mockStaticWaveform = Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.5) * 50 + (Math.random() * 20 - 10));
-
+  // Mock static waveform
+  const mockStaticWaveform = Array.from({ length: 400 }, (_, i) => Math.sin(i * 0.1) * 50 + (Math.random() * 20 - 10));
   const [rawSignal, setRawSignal] = React.useState<number[]>([]);
 
   React.useEffect(() => {
@@ -55,7 +56,7 @@ export function DashboardPage(): React.JSX.Element {
           for (const line of lines) {
              const val = parseFloat(line.trim());
              if (!isNaN(val)) vals.push(val);
-             if (vals.length >= 1000) break; // Limit to 1000 samples for the waveform
+             if (vals.length >= 1000) break;
           }
           setRawSignal(vals.length > 0 ? vals : mockStaticWaveform);
         }
@@ -67,32 +68,33 @@ export function DashboardPage(): React.JSX.Element {
   }, [file, data]);
 
   return (
-    <motion.div {...pageTransition} className="flex flex-col gap-6">
+    <motion.div {...pageTransition} className="flex flex-col gap-6 pb-20">
       {/* Page Title */}
-      <div className="flex items-center gap-3">
-        <Brain size={28} strokeWidth={1.5} className="text-[var(--accent-primary)]" />
+      <div className="flex items-center gap-3 mb-2">
+        <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+          <Brain size={24} strokeWidth={2} />
+        </div>
         <div>
-          <h1 id="dashboard-title" className="text-2xl font-display font-bold text-[var(--text-primary)] m-0">
-            NeuroAegis
+          <h1 id="dashboard-title" className="text-xl font-bold text-gray-900 m-0 tracking-tight">
+            NeuroAegis Analysis Interface
           </h1>
-          <p className="text-sm text-[var(--text-secondary)] m-0 mt-0.5">
-            Seizure detection dashboard.
+          <p className="text-[13px] text-gray-500 m-0 mt-0.5 font-medium">
+            Biomedical research software for EEG pattern recognition.
           </p>
         </div>
       </div>
 
       <AnimatePresence mode="wait">
-        {/* Idle State: File Upload Form + Scene Hero */}
+        {/* Idle State: File Upload Form */}
         {!isUploading && !isError && !data && (
           <motion.div key="idle" {...fadeIn} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            {/* Upload Form */}
-            <GlassCard title="EEG Upload" className="p-8 lg:col-span-1 h-fit">
+            <WidgetCard title="Signal Input Configuration" className="lg:col-span-1 h-fit shadow-sm">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-2">EEG File (.csv, .txt, .edf)</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Source File</label>
                   <div 
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10' : 'border-[var(--bg-3)] hover:border-[var(--accent-secondary)] hover:bg-[var(--bg-2)]'}`}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-blue-400 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <input 
@@ -104,46 +106,44 @@ export function DashboardPage(): React.JSX.Element {
                     />
                     {file ? (
                       <div className="flex flex-col items-center gap-2">
-                        <FileText className="w-10 h-10 text-[var(--accent-primary)]" />
-                        <span className="text-sm font-[var(--font-body)] text-[var(--text-primary)]">{file.name}</span>
-                        <span className="text-xs text-[var(--text-secondary)]">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        <FileText className="w-8 h-8 text-blue-600" />
+                        <span className="text-sm font-semibold text-gray-900">{file.name}</span>
+                        <span className="text-xs text-gray-500 font-mono">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-3">
-                        <Upload className="w-10 h-10 text-[var(--text-secondary)]" />
-                        <span className="text-sm font-[var(--font-body)] text-[var(--text-secondary)]">Click to upload or drag and drop</span>
-                        <span className="text-xs text-[var(--text-secondary)] opacity-70">Max size 52MB</span>
+                        <Upload className="w-8 h-8 text-gray-400" />
+                        <span className="text-sm font-medium text-gray-600">Drop EEG file here</span>
+                        <span className="text-xs text-gray-400 font-mono">.edf, .csv, .txt (Max 52MB)</span>
                       </div>
                     )}
                   </div>
                   {validationError && (
-                    <p className="mt-2 text-xs text-[var(--state-danger)] font-[var(--font-body)]">{validationError}</p>
+                    <p className="mt-2 text-xs text-red-500 font-medium">{validationError}</p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-[var(--text-secondary)]">Sampling Rate (Hz)</label>
-                      <span className="text-xs text-[var(--text-secondary)] opacity-70">Optional</span>
-                    </div>
-                    <input 
-                      type="number" 
-                      placeholder="e.g. 256"
-                      value={samplingRate}
-                      onChange={e => setSamplingRate(e.target.value)}
-                      className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
-                    />
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Sampling Rate</label>
+                    <span className="text-[10px] text-gray-400 font-mono">Hz</span>
                   </div>
+                  <input 
+                    type="number" 
+                    placeholder="Auto-detect"
+                    value={samplingRate}
+                    onChange={e => setSamplingRate(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-shadow"
+                  />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Channels (comma separated)</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Channels</label>
                   <input 
                     type="text" 
                     value={channels}
                     onChange={e => setChannels(e.target.value)}
-                    className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
+                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-shadow"
                     placeholder="e.g. EEG-Fpz-Cz"
                   />
                 </div>
@@ -151,70 +151,31 @@ export function DashboardPage(): React.JSX.Element {
                 <button 
                   onClick={handlePredict}
                   disabled={isUploading || !file}
-                  className="w-full py-4 rounded-lg bg-[var(--accent-primary)] text-[var(--bg-1)] font-[var(--font-body)] font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-4"
+                  className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md mt-4"
                 >
-                  <Brain className="w-5 h-5" />
-                  Run Prediction
+                  <Brain className="w-4 h-4" />
+                  Initialize Analysis
                 </button>
               </div>
-            </GlassCard>
+            </WidgetCard>
 
-            {/* Instructions Area */}
-            <GlassCard
-              className="lg:col-span-2 min-h-[400px] h-full p-8 flex flex-col justify-center items-center text-center bg-[var(--bg-2)] border-[var(--bg-3)]"
-              role="region"
-              aria-label="Instructions"
-            >
-              <div className="flex flex-col items-center gap-4 max-w-md">
-                 <div className="w-16 h-16 rounded-2xl bg-[var(--bg-3)] flex items-center justify-center text-[var(--accent-primary)]">
-                   <Brain size={32} strokeWidth={1.5} />
-                 </div>
-                 <h2 className="text-xl font-semibold text-[var(--text-primary)]">Ready for Analysis</h2>
-                 <p className="text-sm text-[var(--text-secondary)]">Upload an EEG file containing neural data to begin the prediction pipeline. The system will process the signals and evaluate seizure likelihood.</p>
-              </div>
-            </GlassCard>
+            <div className="lg:col-span-2 flex flex-col justify-center items-center p-8 bg-gray-50/50 rounded-2xl border border-gray-100/50 border-dashed">
+               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mb-6">
+                 <Brain size={32} className="text-gray-300" />
+               </div>
+               <h2 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Research Framework Ready</h2>
+               <p className="text-sm text-gray-500 text-center max-w-sm leading-relaxed">
+                 Upload multi-channel or single-channel EEG signals to begin automated feature extraction and inference.
+               </p>
+            </div>
             
           </motion.div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State: Pipeline */}
         {isUploading && (
-          <motion.div key="loading" {...fadeIn} className="max-w-xl mx-auto mt-20">
-            <GlassCard title="Analysis in Progress" className="p-10 flex flex-col justify-center">
-              <div className="w-full space-y-8">
-                {STEPS.map((step, idx) => {
-                  const isActive = step === currentStep;
-                  const isPast = STEPS.indexOf(currentStep!) > idx;
-                  
-                  return (
-                    <div key={step} className={`flex items-center gap-5 transition-all duration-300 ${isActive ? 'opacity-100 scale-105' : 'opacity-50'}`}>
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                        isPast ? 'bg-[var(--state-success)]/20 border-[var(--state-success)] text-[var(--state-success)]' :
-                        isActive ? 'bg-[var(--accent-primary)]/20 border-[var(--accent-primary)] text-[var(--accent-primary)]' :
-                        'bg-[var(--bg-3)] border-[var(--bg-3)] text-[var(--text-secondary)]'
-                      }`}>
-                        {isPast ? <CheckCircle className="w-5 h-5" /> : isActive ? <Activity className="w-5 h-5 animate-spin" /> : <Clock className="w-5 h-5" />}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className={`text-base font-[var(--font-body)] font-medium ${isActive || isPast ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}`}>
-                          {step}
-                        </h4>
-                        {isActive && (
-                          <div className="w-full bg-[var(--bg-3)] rounded-full h-1 mt-3 overflow-hidden">
-                            <motion.div 
-                              className="bg-[var(--accent-primary)] h-1 rounded-full" 
-                              initial={{ width: 0 }}
-                              animate={{ width: "100%" }}
-                              transition={{ duration: 10, ease: "linear" }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </GlassCard>
+          <motion.div key="loading" {...fadeIn}>
+            <LoadingPipeline />
           </motion.div>
         )}
 
@@ -222,115 +183,87 @@ export function DashboardPage(): React.JSX.Element {
         {isError && !isUploading && (
           <motion.div key="error" {...fadeIn} className="max-w-2xl mx-auto mt-20">
             <ErrorState 
-              title="Prediction Failed" 
-              message={errorMessage || "Unable to generate prediction. Please check your file and try again."} 
+              title="Pipeline Execution Failed" 
+              message={errorMessage || "An error occurred during feature extraction or inference."} 
               onRetry={resetAnalysis} 
-              retryLabel="Start Over" 
+              retryLabel="Reset Environment" 
             />
           </motion.div>
         )}
 
         {/* Results State */}
         {!isUploading && !isError && data && (
-          <motion.div key="results" {...staggerChildren} className="flex flex-col gap-6">
-            <div className="flex justify-between items-center bg-[var(--bg-2)] p-4 rounded-xl border border-[var(--bg-3)]">
-              <div className="flex flex-col">
-                <span className="text-xs text-[var(--text-secondary)] font-[var(--font-mono)] uppercase tracking-wider">Analysis Complete</span>
-                <span className="text-sm font-[var(--font-body)] text-[var(--text-primary)]">{file?.name}</span>
+          <motion.div key="results" {...staggerChildren} className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
+            
+            {/* Header / Upload again */}
+            <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <FileText size={20} />
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Active Workspace</span>
+                  <span className="block text-sm font-semibold text-gray-900">{file?.name}</span>
+                </div>
               </div>
               <button 
                 onClick={resetAnalysis}
-                className="px-5 py-2.5 rounded-lg bg-[var(--bg-3)] text-[var(--text-primary)] font-[var(--font-body)] text-sm flex items-center gap-2 hover:bg-[var(--bg-3)]/80 hover:text-[var(--accent-primary)] transition-all border border-[var(--bg-3)] shadow-sm"
+                className="px-4 py-2 rounded-lg bg-gray-50 text-gray-700 font-semibold text-xs flex items-center gap-2 hover:bg-gray-100 transition-colors border border-gray-200"
               >
-                <Upload className="w-4 h-4" />
-                Upload Another File
+                <Upload size={14} />
+                New Analysis
               </button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
-              {/* Confidence Gauge */}
-              <GlassCard title="Model Confidence" className="flex flex-col items-center justify-center p-8">
-                <ConfidenceGauge 
-                  value={Math.max(data.prediction.probabilities.seizure, data.prediction.probabilities.non_seizure) * 100} 
-                  size={180} 
-                />
-                <div className="mt-8">
-                  <StatusBadge 
-                    status={data.prediction.label === 'seizure' ? 'critical' : 'normal'} 
-                    label={data.prediction.label === 'seizure' ? 'Seizure Detected' : 'Normal Activity'} 
-                  />
-                </div>
-              </GlassCard>
+            {/* Row 1: Primary Prediction Summary */}
+            <PredictionSummaryCard 
+              probability={data.prediction.probabilities.seizure}
+              label={data.prediction.label}
+              datasetName={data.datasetName}
+              modelName={data.modelName}
+            />
 
-
-
-              {/* Prediction Probability */}
-              <GlassCard title="Probability Breakdown" className="p-6 flex flex-col justify-center gap-6">
-                <motion.div {...fadeIn}>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-[var(--font-body)] text-[var(--text-secondary)]">Seizure</span>
-                    <span className="font-[var(--font-mono)] text-[var(--text-primary)]">
-                      {(data.prediction.probabilities.seizure * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-[var(--bg-3)] rounded-full h-2">
-                    <div 
-                      className="bg-[var(--state-danger)] h-2 rounded-full transition-all duration-1000" 
-                      style={{ width: `${data.prediction.probabilities.seizure * 100}%` }}
-                    />
-                  </div>
-                </motion.div>
-
-                <motion.div {...fadeIn}>
-                  <div className="flex justify-between mb-2">
-                    <span className="font-[var(--font-body)] text-[var(--text-secondary)]">Non-Seizure</span>
-                    <span className="font-[var(--font-mono)] text-[var(--text-primary)]">
-                      {(data.prediction.probabilities.non_seizure * 100).toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-[var(--bg-3)] rounded-full h-2">
-                    <div 
-                      className="bg-[var(--state-success)] h-2 rounded-full transition-all duration-1000" 
-                      style={{ width: `${data.prediction.probabilities.non_seizure * 100}%` }}
-                    />
-                  </div>
-                </motion.div>
-                
-                <div className="mt-4 p-4 bg-[var(--bg-2)] rounded-xl border border-[var(--bg-3)] text-xs text-[var(--text-secondary)] font-[var(--font-mono)] flex flex-col gap-1">
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div>
-                      <span className="block text-[var(--text-secondary)]">Sampling Rate</span>
-                      <span className="block text-[var(--text-primary)]">{samplingRate || 'Auto-detected'}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[var(--text-secondary)]">Channels</span>
-                      <span className="block text-[var(--text-primary)]">{channels ? channels.split(',').length : 'Auto-detected'}</span>
-                    </div>
-                  </div>
-                  <span>Dataset: {datasetName?.toUpperCase()} (Conf: {(detectionConfidence! * 100).toFixed(1)}%)</span>
-                  <span>Model: {modelName?.replace('_', ' ').toUpperCase()}</span>
-                  <span>Generated: {new Date(data.generatedAt).toLocaleTimeString()}</span>
-                </div>
-              </GlassCard>
+            {/* Row 2: 3-column grid for Dataset, Signal Quality, Model Info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <DatasetDetectionCard 
+                datasetName={data.datasetName} 
+                confidence={data.detectionConfidence} 
+                samplingRate={samplingRate} 
+                channels={channels} 
+              />
+              <SignalQualityCard />
+              <ModelInfoCard modelName={data.modelName} />
             </div>
 
-            {/* Explainability and Waveform Section */}
-            {data.explanation && (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full mt-6">
-                <ShapWaterfall 
-                  baseValue={data.explanation.baseValue}
-                  features={data.explanation.features || []}
-                  finalProbability={data.prediction.probabilities.seizure}
-                />
-                
-                <GlassCard title="Analyzed signal segment" className="p-6 h-full flex flex-col justify-center">
-                  <div className="h-64 w-full">
-                     <WaveformSparkline data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} color="var(--accent-primary)" />
-                  </div>
-                </GlassCard>
-              </div>
-            )}
+            {/* Row 3: Signal Visualization */}
+            <EEGViewer data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} />
 
+            {/* Row 4: Raw vs Filtered */}
+            <RawFilteredComparison data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} />
+
+            {/* Row 5 & 6: Features & Time-Frequency */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <FeatureSummaryCard />
+              <TimeFrequencyAnalysis />
+            </div>
+
+            {/* Row 7: Explainability */}
+            <EnhancedShapPanel data={data} />
+
+            {/* Row 8: Global Importance & System Performance (split) */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div className="xl:col-span-2 h-full">
+                <GlobalFeatureImportance />
+              </div>
+              <div className="xl:col-span-1 flex flex-col gap-6">
+                <SystemPerformance />
+                <ExportPanel />
+              </div>
+            </div>
+
+            {/* Row 9: Clinical Report */}
+            <ClinicalSummaryReport data={data} file={file} />
+            
           </motion.div>
         )}
       </AnimatePresence>

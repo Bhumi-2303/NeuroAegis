@@ -1,6 +1,9 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from __future__ import annotations
 from datetime import datetime
+from typing import Any
+
+from pydantic import BaseModel
+
 
 class PatientBase(BaseModel):
     name: str
@@ -8,10 +11,10 @@ class PatientBase(BaseModel):
     gender: str
     weight: float
     height: float
-    medical_history: Optional[str] = None
-    vital_signs: Optional[Dict[str, Any]] = None
+    medical_history: str | None = None
+    vital_signs: dict[str, Any] | None = None
     status: str = "active"
-    last_visit: Optional[datetime] = None
+    last_visit: datetime | None = None
 
 class PatientCreate(PatientBase):
     pass

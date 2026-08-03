@@ -1,4 +1,6 @@
-from typing import Protocol, runtime_checkable, Dict, Any
+from __future__ import annotations
+from typing import Any, Protocol, runtime_checkable
+
 
 @runtime_checkable
 class PluginProtocol(Protocol):
@@ -7,7 +9,7 @@ class PluginProtocol(Protocol):
     Ensures every plugin exposes standard metadata for the dynamic registry.
     """
     
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         """
         Retrieve metadata about the plugin (e.g., version, author, compatibility).
         

@@ -1,7 +1,8 @@
-import pytest
 import numpy as np
-import pandas as pd
+import pytest
+
 from app.services.prediction.prediction_router import prediction_router
+
 
 @pytest.fixture(scope="module")
 def load_models():

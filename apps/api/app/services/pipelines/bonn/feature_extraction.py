@@ -1,16 +1,10 @@
+from __future__ import annotations
 """Bonn dataset feature extraction — thin wrapper around the shared features module."""
 
 import numpy as np
 
 from app.services.features import (
     extract_features,
-    hjorth_parameters,
-    zero_crossing_rate,
-    line_length,
-    bandpower,
-    frequency_features,
-    wavelet_features,
-    time_features,
 )
 
 # Bonn-specific constants

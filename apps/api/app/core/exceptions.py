@@ -1,10 +1,9 @@
+from __future__ import annotations
 class NeuroAegisError(Exception):
     """Base exception for all NeuroAegis platform errors."""
-    pass
 
 class PluginError(NeuroAegisError):
     """Base exception for plugin-related errors."""
-    pass
 
 class PluginNotFoundError(PluginError):
     """Raised when a requested plugin cannot be found in the registry."""
@@ -15,4 +14,3 @@ class PluginNotFoundError(PluginError):
 
 class PluginRegistrationError(PluginError):
     """Raised when a plugin fails to register (e.g., due to duplicate key)."""
-    pass

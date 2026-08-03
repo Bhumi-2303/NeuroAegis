@@ -1,11 +1,15 @@
+from __future__ import annotations
 from threading import Lock
-from .base_registry import BaseRegistry
+
 from apps.api.app.domain.protocols import (
-    ModelProtocol,
-    FeatureExtractorProtocol,
-    ExplainerProtocol,
     DatasetDetectorProtocol,
+    ExplainerProtocol,
+    FeatureExtractorProtocol,
+    ModelProtocol,
 )
+
+from .base_registry import BaseRegistry
+
 
 class RegistryHub:
     """
@@ -18,7 +22,7 @@ class RegistryHub:
     def __new__(cls) -> "RegistryHub":
         with cls._lock:
             if cls._instance is None:
-                cls._instance = super(RegistryHub, cls).__new__(cls)
+                cls._instance = super().__new__(cls)
                 cls._instance._initialize_registries()
         return cls._instance
 

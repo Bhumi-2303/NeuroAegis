@@ -1,12 +1,14 @@
-import pytest
 import threading
-from typing import Dict, Any
+from typing import Any
+
+import pytest
 from apps.api.app.core.exceptions import PluginNotFoundError, PluginRegistrationError
 from apps.api.app.core.registry.base_registry import BaseRegistry
 from apps.api.app.domain.protocols.plugin_protocol import PluginProtocol
 
+
 class DummyPlugin(PluginProtocol):
-    def get_metadata(self) -> Dict[str, Any]:
+    def get_metadata(self) -> dict[str, Any]:
         return {"name": "dummy"}
 
 def test_registry_registration_and_retrieval():

@@ -1,6 +1,9 @@
+from __future__ import annotations
 import asyncio
 import logging
-from typing import Callable, Dict, List, Any, Coroutine, Type
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from apps.api.app.domain.events.base import DomainEvent
 
 logger = logging.getLogger(__name__)
@@ -15,9 +18,9 @@ class EventBus:
     """
     def __init__(self):
         # Maps event class names to a list of handler coroutines
-        self._subscribers: Dict[str, List[EventHandler]] = {}
+        self._subscribers: dict[str, list[EventHandler]] = {}
 
-    def subscribe(self, event_type: Type[DomainEvent], handler: EventHandler) -> None:
+    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
         """
         Subscribe an async handler to a specific domain event type.
         

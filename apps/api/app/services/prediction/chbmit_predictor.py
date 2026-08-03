@@ -1,14 +1,17 @@
-import os
+from __future__ import annotations
 import json
-import joblib
 import logging
+import os
+from typing import Any
+
+import joblib
 import numpy as np
 import shap
-from typing import Dict, Any, List
+
+from app.services.pipelines.chbmit.feature_extraction import extract_all_features
+from app.services.pipelines.chbmit.preprocessing import preprocess_eeg
 
 from .base_predictor import BasePredictor
-from app.services.pipelines.chbmit.preprocessing import preprocess_eeg
-from app.services.pipelines.chbmit.feature_extraction import extract_all_features
 
 logger = logging.getLogger("neuroaegis.chbmit_predictor")
 
@@ -68,7 +71,7 @@ class CHBMITPredictor(BasePredictor):
     def preprocess(self, data: np.ndarray) -> np.ndarray:
         return preprocess_eeg(data)
 
-    def extract_features(self, data: np.ndarray, channel_names: List[str], fs: float) -> np.ndarray:
+    def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> np.ndarray:
         feature_dict = extract_all_features(data, channel_names, fs)
         # Ensure correct order based on selected_features
         vector = []
@@ -76,7 +79,7 @@ class CHBMITPredictor(BasePredictor):
             vector.append(feature_dict.get(feat, 0.0))
         return np.array([vector])
 
-    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
+    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
         if model_name not in self.models:
             raise ValueError(f"Model '{model_name}' not available for CHBMIT")
@@ -104,7 +107,7 @@ class CHBMITPredictor(BasePredictor):
             "probabilities": {"seizure": prob_seizure, "non_seizure": prob_non_seizure}
         }
 
-    def generate_explanation(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
+    def generate_explanation(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
         explainer = self.explainers.get(model_name)
         if not explainer:

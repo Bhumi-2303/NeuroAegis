@@ -1,12 +1,10 @@
-import pytest
-from fastapi.testclient import TestClient
-import io
 import sys
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
+from fastapi.testclient import TestClient
 
 # Bypass the config module naming conflict
-import pydantic
 mock_settings = MagicMock()
 mock_settings.PROJECT_NAME = "NeuroAegis"
 mock_settings.API_V1_STR = "/api/v1"
@@ -19,8 +17,8 @@ sys.modules['app.core.config'] = mock_config
 
 with patch("app.services.prediction.prediction_router.prediction_router") as mock_router:
     mock_router.is_loaded = True
-    from app.main import app
     from app.db.database import get_db
+    from app.main import app
     
 client = TestClient(app)
 

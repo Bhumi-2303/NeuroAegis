@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 from pydantic import BaseModel
-from typing import List
+
 
 class DatasetMetadata(BaseModel):
     id: str
@@ -11,4 +13,4 @@ class DatasetMetadata(BaseModel):
     sampling_rate: float
     window_length: int
     feature_count: int
-    supported_extensions: List[str]
+    supported_extensions: list[str]

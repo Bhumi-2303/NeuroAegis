@@ -1,5 +1,8 @@
+from __future__ import annotations
+from typing import Literal
+
 from pydantic import BaseModel
-from typing import List, Literal
+
 
 class RocPointSchema(BaseModel):
     fpr: float
@@ -18,7 +21,7 @@ class EvaluationMetricsSchema(BaseModel):
     recall: float
     f1Score: float
     rocAuc: float
-    rocCurve: List[RocPointSchema]
+    rocCurve: list[RocPointSchema]
     confusionMatrix: ConfusionMatrixSchema
 
 class ReportSchema(BaseModel):
@@ -26,4 +29,4 @@ class ReportSchema(BaseModel):
     title: str
     summary: str
     createdAt: str
-    metrics: List[EvaluationMetricsSchema]
+    metrics: list[EvaluationMetricsSchema]

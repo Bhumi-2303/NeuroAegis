@@ -1,15 +1,17 @@
-import pytest
-import numpy as np
 import sys
 from unittest.mock import MagicMock, patch
+
+import numpy as np
+import pytest
 
 # Mock app.core.config to prevent ImportError
 mock_config = MagicMock()
 mock_config.settings = MagicMock()
 sys.modules["app.core.config"] = mock_config
 
-from app.services.model_service import ModelService
 from app.schemas.prediction import ModelOutputSchema
+from app.services.model_service import ModelService
+
 
 @pytest.fixture
 def mock_prediction_result():

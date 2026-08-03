@@ -1,8 +1,11 @@
+from __future__ import annotations
+import platform
+
 from fastapi import APIRouter
+
 from app.schemas.health import HealthCheckSchema
 from app.services.model_service import ml_model_service
 from app.services.prediction.prediction_router import prediction_router
-import platform
 
 router = APIRouter()
 

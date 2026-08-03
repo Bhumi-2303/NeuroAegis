@@ -1,5 +1,6 @@
-from .prediction import Prediction
-from .pipeline import Pipeline
+from __future__ import annotations
 from .job import Job, JobStatus
+from .pipeline import Pipeline
+from .prediction import Prediction
 
-__all__ = ["Prediction", "Pipeline", "Job", "JobStatus"]
+__all__ = ["Job", "JobStatus", "Pipeline", "Prediction"]

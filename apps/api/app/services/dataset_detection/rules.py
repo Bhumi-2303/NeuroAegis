@@ -1,20 +1,22 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
+
 import pandas as pd
-from typing import Dict, Any, Tuple
+
 from .metadata import DatasetMetadata
+
 
 class DatasetRule(ABC):
     @abstractmethod
-    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> Tuple[float, list[str]]:
+    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> tuple[float, list[str]]:
         """
         Evaluate how well the dataframe matches the metadata.
         Returns:
             Tuple[float, list[str]]: A confidence score between 0.0 and 1.0, and a list of matched rules/reasons.
         """
-        pass
 
 class ChannelCountRule(DatasetRule):
-    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> Tuple[float, list[str]]:
+    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> tuple[float, list[str]]:
         actual_channels = len(df.columns)
         if actual_channels == metadata.expected_channels:
             return 1.0, [f"Exact match on channel count ({actual_channels} channels)"]
@@ -25,7 +27,7 @@ class ChannelCountRule(DatasetRule):
         return 0.0, []
 
 class SamplingRateRule(DatasetRule):
-    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> Tuple[float, list[str]]:
+    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> tuple[float, list[str]]:
         if not provided_fs:
             return 0.0, []
         
@@ -39,7 +41,7 @@ class SamplingRateRule(DatasetRule):
         return 0.0, []
 
 class SignalLengthRule(DatasetRule):
-    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> Tuple[float, list[str]]:
+    def evaluate(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> tuple[float, list[str]]:
         actual_samples = len(df)
         if actual_samples == metadata.window_length:
             return 1.0, [f"Exact match on signal length ({actual_samples} samples)"]
@@ -63,7 +65,7 @@ class DefaultDatasetScorer:
             (SignalLengthRule(), 0.20)
         ]
         
-    def score(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> Tuple[float, list[str]]:
+    def score(self, df: pd.DataFrame, provided_fs: float, metadata: DatasetMetadata) -> tuple[float, list[str]]:
         total_score = 0.0
         all_reasons = []
         for rule, weight in self.rules:

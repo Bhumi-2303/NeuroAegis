@@ -1,35 +1,6 @@
 import { Outlet } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
-import { GlassCard } from '../../shared/components';
-import { Activity, Brain, Signal } from 'lucide-react';
-import { staggerChildren } from '../../shared/lib/motion-presets';
-
-// ── Bottom Metric Cards ──
-interface MetricCardProps {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  accentColor: string;
-}
-
-function MetricCard({ label, value, icon, accentColor }: MetricCardProps): React.JSX.Element {
-  return (
-    <GlassCard className="flex flex-row items-center gap-3 p-3 min-w-0">
-      <div
-        className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0"
-        style={{ backgroundColor: `color-mix(in srgb, ${accentColor} 12%, transparent)` }}
-      >
-        <span style={{ color: accentColor }}>{icon}</span>
-      </div>
-      <div className="flex flex-col min-w-0">
-        <span className="text-xs text-[var(--text-secondary)] truncate">{label}</span>
-        <span className="text-lg font-semibold font-mono text-[var(--text-primary)]">{value}</span>
-      </div>
-    </GlassCard>
-  );
-}
 
 export const DashboardShell = () => {
   return (

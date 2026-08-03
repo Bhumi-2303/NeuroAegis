@@ -1,6 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Search, Bell, User, Brain } from 'lucide-react';
-import { GlassPanel } from '../../design-system/primitives';
 
 const TOP_LINKS = [
   { path: '/', label: 'Dashboard' },

@@ -3,15 +3,15 @@ import {
   LayoutDashboard, 
   Brain, 
   Activity, 
-  BarChart2, 
-  Cpu
+  Cpu,
+  MonitorPlay
 } from 'lucide-react';
-import { GlassPanel } from '../../design-system/primitives';
 
 const NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/analysis', icon: Brain, label: 'Brain Analysis' },
   { path: '/eeg', icon: Activity, label: 'Neural Activity' },
+  { path: '/live-monitor', icon: MonitorPlay, label: 'Live Monitor' },
   { path: '/prediction', icon: Cpu, label: 'AI Models' },
 ];
 

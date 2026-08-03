@@ -1,9 +1,11 @@
-from uuid import UUID
-from datetime import datetime, timezone
-from pydantic import BaseModel, Field, model_validator
-from typing import Dict
+from __future__ import annotations
 import math
+from datetime import datetime, timezone
+from uuid import UUID
+
+from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Self
+
 
 class Prediction(BaseModel):
     """
@@ -15,7 +17,7 @@ class Prediction(BaseModel):
     model_version: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     label: str
-    probabilities: Dict[str, float]
+    probabilities: dict[str, float]
 
     @model_validator(mode="after")
     def validate_probabilities(self) -> Self:

@@ -19,7 +19,7 @@ export function AnalysisProgress({ jobId, onComplete }: AnalysisProgressProps) {
   useEffect(() => {
     const pollInterval = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v2/predict/status/${jobId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v2/predict/status/${jobId}`);
         if (!res.ok) throw new Error("Failed to fetch status");
         const data = await res.json();
         

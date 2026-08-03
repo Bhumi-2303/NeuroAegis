@@ -1,13 +1,14 @@
-from .plugin_protocol import PluginProtocol
-from .model_protocol import ModelProtocol
-from .feature_extractor_protocol import FeatureExtractorProtocol
-from .explainer_protocol import ExplainerProtocol
+from __future__ import annotations
 from .dataset_detector_protocol import DatasetDetectorProtocol
+from .explainer_protocol import ExplainerProtocol
+from .feature_extractor_protocol import FeatureExtractorProtocol
+from .model_protocol import ModelProtocol
+from .plugin_protocol import PluginProtocol
 
 __all__ = [
-    "PluginProtocol",
-    "ModelProtocol",
-    "FeatureExtractorProtocol",
-    "ExplainerProtocol",
     "DatasetDetectorProtocol",
+    "ExplainerProtocol",
+    "FeatureExtractorProtocol",
+    "ModelProtocol",
+    "PluginProtocol",
 ]

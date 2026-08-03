@@ -1,18 +1,19 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from __future__ import annotations
+import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-import logging
 
-from app.core.config import settings
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.api.v1.router import api_router as api_v1_router
+from app.core.config import settings
+
 try:
     from app.api.v2.router import api_router as api_v2_router
 except ImportError:
     api_v2_router = None # Will implement v2 router soon
-from app.services.model_service import ml_model_service
-from app.db.database import engine, Base
-from app.db.models import Patient, PredictionJob
+from app.db.database import Base, engine
 
 logger = logging.getLogger("neuroaegis")
 

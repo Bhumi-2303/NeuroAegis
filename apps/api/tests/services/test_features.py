@@ -1,19 +1,21 @@
 import numpy as np
 import pytest
+
 from app.services.features import (
-    wavelet_denoise,
-    preprocess_eeg,
-    hjorth_parameters,
-    zero_crossing_rate,
-    line_length,
     bandpower,
-    time_features,
-    frequency_features,
-    wavelet_features,
     extract_features,
     extract_features_multichannel,
-    select_and_order_features
+    frequency_features,
+    hjorth_parameters,
+    line_length,
+    preprocess_eeg,
+    select_and_order_features,
+    time_features,
+    wavelet_denoise,
+    wavelet_features,
+    zero_crossing_rate,
 )
+
 
 @pytest.fixture
 def sample_signal():

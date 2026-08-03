@@ -1,8 +1,9 @@
+
 import pytest
 import yaml
-from pathlib import Path
-from pydantic import ValidationError
 from apps.api.app.core.config.manager import ConfigurationManager
+from pydantic import ValidationError
+
 
 @pytest.fixture
 def valid_yaml_content():

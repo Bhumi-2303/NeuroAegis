@@ -17,3 +17,4 @@ Requires-Dist: PyWavelets
 Requires-Dist: mne
 Requires-Dist: pyyaml
 Requires-Dist: sqlalchemy
+Requires-Dist: pyarrow>=21.0.0

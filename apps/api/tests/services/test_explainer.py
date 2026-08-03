@@ -1,6 +1,7 @@
-import pytest
 import numpy as np
+
 from app.services.explainer import normalize_shap_output
+
 
 def test_normalize_shap_output_list_of_arrays():
     # Typically returned by LGBMClassifier for binary classification

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from typing import List
+from __future__ import annotations
 import uuid
 from datetime import datetime
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.db.models import Patient
@@ -28,7 +29,7 @@ def create_patient(patient_in: PatientCreate, db: Session = Depends(get_db)):
     db.refresh(db_patient)
     return db_patient
 
-@router.get("/", response_model=List[PatientResponse])
+@router.get("/", response_model=list[PatientResponse])
 def get_patients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     patients = db.query(Patient).offset(skip).limit(limit).all()
     return patients

@@ -1,10 +1,12 @@
-import pytest
 from uuid import uuid4
-from pydantic import ValidationError
-from apps.api.app.domain.value_objects.confidence import ConfidenceScore, ConfidenceBand
-from apps.api.app.domain.entities.prediction import Prediction
-from apps.api.app.domain.entities.pipeline import Pipeline
+
+import pytest
 from apps.api.app.domain.entities.job import Job, JobStatus
+from apps.api.app.domain.entities.pipeline import Pipeline
+from apps.api.app.domain.entities.prediction import Prediction
+from apps.api.app.domain.value_objects.confidence import ConfidenceBand, ConfidenceScore
+from pydantic import ValidationError
+
 
 def test_confidence_score_valid():
     score = ConfidenceScore(value=0.85, band=ConfidenceBand.HIGH)

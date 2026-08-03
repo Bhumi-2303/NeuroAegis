@@ -1,15 +1,18 @@
-import os
+from __future__ import annotations
 import json
-import joblib
 import logging
-import numpy as np
-from typing import Dict, Any, List
+import os
+from typing import Any
 
-from .base_predictor import BasePredictor
-from app.services.pipelines.bonn.preprocessing import preprocess_eeg
+import joblib
+import numpy as np
+
+from app.services.explainer import shap_service
 from app.services.pipelines.bonn.feature_extraction import extract_all_features
 from app.services.pipelines.bonn.feature_selection import select_and_order_features
-from app.services.explainer import shap_service
+from app.services.pipelines.bonn.preprocessing import preprocess_eeg
+
+from .base_predictor import BasePredictor
 
 logger = logging.getLogger("neuroaegis.bonn_predictor")
 
@@ -57,14 +60,14 @@ class BonnPredictor(BasePredictor):
     def preprocess(self, data: np.ndarray) -> np.ndarray:
         return preprocess_eeg(data)
 
-    def extract_features(self, data: np.ndarray, channel_names: List[str], fs: float) -> tuple[np.ndarray, Dict[str, float]]:
+    def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> tuple[np.ndarray, dict[str, float]]:
         all_features = extract_all_features(data, channel_names, fs)
         feature_vector = select_and_order_features(all_features, self.selected_features)
         if self.scaler:
             feature_vector = self.scaler.transform(feature_vector)
         return feature_vector, all_features
 
-    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
+    def predict(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
         if model_name not in self.models:
             raise ValueError(f"Model '{model_name}' not available for Bonn")
@@ -90,7 +93,7 @@ class BonnPredictor(BasePredictor):
             "probabilities": {"seizure": prob_seizure, "non_seizure": prob_non_seizure}
         }
 
-    def generate_explanation(self, feature_vector: np.ndarray, raw_features: Dict[str, float], model_name: str = None) -> Dict[str, Any]:
+    def generate_explanation(self, feature_vector: np.ndarray, raw_features: dict[str, float], model_name: str = None) -> dict[str, Any]:
         # Using the shared shap_service as it was initialized in load_model
         explanation = shap_service.explain_prediction(feature_vector, top_n=10)
         

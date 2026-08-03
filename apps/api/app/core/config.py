@@ -1,7 +1,10 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List, Dict, Any
+from __future__ import annotations
 import os
+from typing import Any
+
 import yaml
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
@@ -16,7 +19,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./neuroaegis.db"
     
     # CORS
-    CORS_ORIGINS: List[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     
     # Model Configuration
     # Uses absolute path calculation based on project root if running locally
@@ -35,7 +38,7 @@ class Settings(BaseSettings):
     )
 
     @property
-    def MODELS_CONFIG(self) -> Dict[str, Any]:
+    def MODELS_CONFIG(self) -> dict[str, Any]:
         config_path = os.path.join(self.BASE_DIR, "config", "models.yaml")
         try:
             with open(config_path, "r") as f:

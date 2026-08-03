@@ -1,6 +1,9 @@
+from __future__ import annotations
 from enum import Enum
-from pydantic import BaseModel, Field, model_validator, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Self
+
 
 class ConfidenceBand(str, Enum):
     LOW = "low"

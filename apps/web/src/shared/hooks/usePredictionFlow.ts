@@ -80,7 +80,7 @@ export function usePredictionFlow() {
         try {
           const errorData = await res.json();
           errorMsg = errorData.detail || errorMsg;
-        } catch (e) {
+        } catch {
           // If response isn't JSON, it might be a gateway error
         }
         throw new Error(errorMsg);

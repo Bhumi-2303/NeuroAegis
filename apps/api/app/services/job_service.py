@@ -1,13 +1,16 @@
+from __future__ import annotations
 import asyncio
-import numpy as np
 import logging
+
+import numpy as np
 from sqlalchemy.orm import Session
-from app.db.models import PredictionJob
-from app.services.model_service import ml_model_service
-from app.services.features import preprocess_eeg, extract_features as extract_all_features, select_and_order_features
+
 from app.db.database import SessionLocal
-from app.services.prediction.prediction_router import prediction_router
+from app.db.models import PredictionJob
 from app.services.explainer import shap_service
+from app.services.features import extract_features as extract_all_features
+from app.services.features import preprocess_eeg, select_and_order_features
+from app.services.prediction.prediction_router import prediction_router
 
 logger = logging.getLogger("neuroaegis.job_service")
 
@@ -102,6 +105,6 @@ async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_nam
             
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
-        update_job_status(db, job_id, f"Failed: {str(e)}", 0)
+        update_job_status(db, job_id, f"Failed: {e!s}", 0)
     finally:
         db.close()

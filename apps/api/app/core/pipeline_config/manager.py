@@ -1,7 +1,10 @@
-import yaml
+from __future__ import annotations
 from pathlib import Path
-from typing import Dict, List
+
+import yaml
+
 from .schemas import PipelineConfig
+
 
 class ConfigurationManager:
     """
@@ -9,7 +12,7 @@ class ConfigurationManager:
     """
     def __init__(self, config_dir: str):
         self.config_dir = Path(config_dir)
-        self._configs: Dict[str, PipelineConfig] = {}
+        self._configs: dict[str, PipelineConfig] = {}
         
     def load_all(self) -> None:
         """Scan the config directory and load all .yaml/.yml files."""
@@ -37,6 +40,6 @@ class ConfigurationManager:
             raise KeyError(f"Pipeline config '{pipeline_id}' not found.")
         return self._configs[pipeline_id]
         
-    def list_pipelines(self) -> List[str]:
+    def list_pipelines(self) -> list[str]:
         """List all loaded pipeline IDs."""
         return list(self._configs.keys())

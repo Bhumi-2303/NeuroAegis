@@ -1,7 +1,10 @@
-import shap
-import numpy as np
+from __future__ import annotations
+from typing import Any
+
 import lightgbm as lgb
-from typing import List, Dict, Any
+import numpy as np
+import shap
+
 
 def normalize_shap_output(shap_values: Any, expected_value: Any) -> tuple[Any, float]:
     """
@@ -53,12 +56,12 @@ class ShapExplainerService:
         self.explainer = None
         self.feature_names = []
 
-    def initialize(self, model: lgb.Booster, feature_names: List[str]):
+    def initialize(self, model: lgb.Booster, feature_names: list[str]):
         """Initialize the TreeExplainer once at startup"""
         self.explainer = shap.TreeExplainer(model)
         self.feature_names = feature_names
 
-    def explain_prediction(self, feature_vector: np.ndarray, top_n: int = 10) -> Dict[str, Any]:
+    def explain_prediction(self, feature_vector: np.ndarray, top_n: int = 10) -> dict[str, Any]:
         """
         Generate SHAP values for a single prediction and return the top_n most important features.
         """

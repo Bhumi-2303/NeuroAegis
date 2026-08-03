@@ -62,7 +62,7 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v2/predict/status/${jobId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v2/predict/status/${jobId}`);
         const result = await res.json();
         setData(result.result);
       } catch (e) {

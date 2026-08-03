@@ -1,10 +1,13 @@
+from __future__ import annotations
+from typing import Any
+
 from fastapi import APIRouter
+
 from app.services.model_service import ml_model_service
-from typing import Dict, Any
 
 router = APIRouter()
 
-@router.get("/info", response_model=Dict[str, Any])
+@router.get("/info", response_model=dict[str, Any])
 async def get_model_info():
     """Returns metadata about the loaded model and its required features"""
     return {

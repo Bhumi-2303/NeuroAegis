@@ -1,16 +1,24 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form, BackgroundTasks, Depends
-from sqlalchemy.orm import Session
-from typing import Optional, List
-import pandas as pd
-import numpy as np
+from __future__ import annotations
 import io
-import uuid
 import json
+import uuid
 
+import pandas as pd
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from sqlalchemy.orm import Session
+
+from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Patient, PredictionJob
 from app.services.job_service import run_prediction_pipeline
-from app.core.config import settings
 from app.services.model_service import ml_model_service
 
 router = APIRouter()
@@ -27,7 +35,7 @@ async def create_prediction_job(
     vital_signs: str = Form(...), # JSON string
     file: UploadFile = File(...),
     sampling_rate: float = Form(256.0),
-    channels: Optional[str] = Form(None),
+    channels: str | None = Form(None),
     db: Session = Depends(get_db)
 ):
     if not ml_model_service.is_loaded:

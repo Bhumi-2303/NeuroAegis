@@ -1,7 +1,11 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, JSON
-from sqlalchemy.orm import relationship
+from __future__ import annotations
 from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
+
 from app.db.database import Base
+
 
 class Patient(Base):
     __tablename__ = "patients"

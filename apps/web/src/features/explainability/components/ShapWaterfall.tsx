@@ -1,7 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GlassCard } from '../../../shared/components';
-import { ArrowRight, ArrowDown, ArrowUp } from 'lucide-react';
 
 export interface ShapFeature {
   featureName: string;
@@ -68,7 +67,6 @@ export function ShapWaterfall({ baseValue, features, finalProbability }: ShapWat
         {/* Feature Contributions */}
         {steps.map((step, idx) => {
           const isPositive = step.value > 0;
-          const color = isPositive ? 'var(--state-danger)' : 'var(--state-success)';
           const bgClass = isPositive ? 'bg-[var(--state-danger)]/20' : 'bg-[var(--state-success)]/20';
           const textClass = isPositive ? 'text-[var(--state-danger)]' : 'text-[var(--state-success)]';
           

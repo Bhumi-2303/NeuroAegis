@@ -6,7 +6,7 @@ import { DashboardPage } from '../features/dashboard';
 import { BrainAnalysisPage } from '../features/brain-analysis';
 import { EEGMonitorPage } from '../features/eeg-monitor';
 import { FrequencyAnalysisPage } from '../features/frequency-analysis';
-
+import { LiveMonitorPage } from '../features/live-monitor';
 
 import { ReportsPage } from '../features/reports';
 
@@ -37,6 +37,10 @@ export const router = createBrowserRouter([
       {
         path: 'frequency',
         element: <FrequencyAnalysisPage />,
+      },
+      {
+        path: 'live-monitor',
+        element: <LiveMonitorPage />,
       },
       {
         path: 'prediction',

@@ -1,6 +1,10 @@
-from typing import Protocol, runtime_checkable, Dict, Any
+from __future__ import annotations
+from typing import Protocol, runtime_checkable
+
 import numpy as np
+
 from .plugin_protocol import PluginProtocol
+
 
 @runtime_checkable
 class ModelProtocol(PluginProtocol, Protocol):
@@ -18,7 +22,7 @@ class ModelProtocol(PluginProtocol, Protocol):
         """
         ...
         
-    def predict(self, features: np.ndarray) -> Dict[str, float]:
+    def predict(self, features: np.ndarray) -> dict[str, float]:
         """
         Perform inference on extracted features.
         

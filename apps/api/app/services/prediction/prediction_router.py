@@ -1,14 +1,17 @@
-import os
+from __future__ import annotations
 import logging
-from typing import Dict, Any, Type
+import os
+from typing import Any
+
 from app.core.config import settings
+
 from .base_predictor import BasePredictor
 
 logger = logging.getLogger("neuroaegis.router")
 
 class PredictionRouter:
     def __init__(self):
-        self._predictors: Dict[str, BasePredictor] = {}
+        self._predictors: dict[str, BasePredictor] = {}
         self.is_loaded = False
 
     def load_all_models(self):
@@ -21,7 +24,7 @@ class PredictionRouter:
         from .bonn_predictor import BonnPredictor
         from .chbmit_predictor import CHBMITPredictor
         
-        registry_map: Dict[str, Type[BasePredictor]] = {
+        registry_map: dict[str, type[BasePredictor]] = {
             "bonn": BonnPredictor,
             "chbmit": CHBMITPredictor
         }
@@ -56,7 +59,7 @@ class PredictionRouter:
             raise ValueError(f"Dataset '{dataset}' is not supported or not loaded.")
         return self._predictors[dataset]
 
-    def get_available_models(self) -> Dict[str, Any]:
+    def get_available_models(self) -> dict[str, Any]:
         """Returns metadata about loaded models for the frontend."""
         available = {}
         config = settings.MODELS_CONFIG.get("models", {})

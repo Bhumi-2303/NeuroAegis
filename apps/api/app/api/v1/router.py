@@ -1,5 +1,7 @@
+from __future__ import annotations
 from fastapi import APIRouter
-from app.api.v1 import health, predict, model_info, patients, jobs, models_api
+
+from app.api.v1 import health, jobs, model_info, models_api, patients, predict
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])

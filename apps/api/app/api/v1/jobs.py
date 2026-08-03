@@ -1,13 +1,15 @@
+from __future__ import annotations
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Dict, Any
 
 from app.db.database import get_db
 from app.db.models import PredictionJob
 
 router = APIRouter()
 
-@router.get("/latest", response_model=Dict[str, Any])
+@router.get("/latest", response_model=dict[str, Any])
 def get_latest_job(db: Session = Depends(get_db)):
     job = db.query(PredictionJob).order_by(PredictionJob.created_at.desc()).first()
     if not job:
@@ -49,7 +51,7 @@ def get_latest_job(db: Session = Depends(get_db)):
         
     return response
 
-@router.get("/{job_id}", response_model=Dict[str, Any])
+@router.get("/{job_id}", response_model=dict[str, Any])
 def get_job(job_id: str, db: Session = Depends(get_db)):
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:

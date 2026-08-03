@@ -1,8 +1,11 @@
-from uuid import UUID
+from __future__ import annotations
 from datetime import datetime, timezone
-from pydantic import BaseModel, Field
-from typing import Dict, Any, Optional
 from enum import Enum
+from typing import Any
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+
 
 class JobStatus(str, Enum):
     QUEUED = "queued"
@@ -18,7 +21,7 @@ class Job(BaseModel):
     patient_id: UUID
     status: JobStatus = Field(default=JobStatus.QUEUED)
     progress: int = Field(default=0, ge=0, le=100)
-    prediction_label: Optional[str] = None
-    shap_explanation: Optional[Dict[str, Any]] = None
-    pipeline_trace: Optional[Dict[str, Any]] = None
+    prediction_label: str | None = None
+    shap_explanation: dict[str, Any] | None = None
+    pipeline_trace: dict[str, Any] | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

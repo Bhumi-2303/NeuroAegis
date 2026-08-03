@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import pandas as pd
-from typing import Tuple
+
 
 class DatasetValidator:
     @staticmethod
-    def validate(df: pd.DataFrame) -> Tuple[bool, str]:
+    def validate(df: pd.DataFrame) -> tuple[bool, str]:
         """
         Validates the fundamental integrity of the CSV DataFrame.
         """

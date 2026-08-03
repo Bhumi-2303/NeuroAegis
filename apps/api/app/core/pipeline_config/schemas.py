@@ -1,10 +1,13 @@
+from __future__ import annotations
+from typing import Any
+
 from pydantic import BaseModel, Field
-from typing import Dict, Any, List, Optional
+
 
 class PluginConfig(BaseModel):
     """Configuration for a specific plugin instance."""
     plugin_id: str
-    params: Dict[str, Any] = Field(default_factory=dict)
+    params: dict[str, Any] = Field(default_factory=dict)
 
 class PipelineConfig(BaseModel):
     """
@@ -15,5 +18,5 @@ class PipelineConfig(BaseModel):
     task: str
     dataset: str
     model: PluginConfig
-    feature_extractors: List[PluginConfig] = Field(min_length=1)
-    explainer: Optional[PluginConfig] = None
+    feature_extractors: list[PluginConfig] = Field(min_length=1)
+    explainer: PluginConfig | None = None

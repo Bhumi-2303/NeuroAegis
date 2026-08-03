@@ -1,5 +1,8 @@
-from typing import Protocol, runtime_checkable, Dict, Any, Optional
+from __future__ import annotations
+from typing import Any, Protocol, runtime_checkable
+
 from .plugin_protocol import PluginProtocol
+
 
 @runtime_checkable
 class DatasetDetectorProtocol(PluginProtocol, Protocol):
@@ -8,7 +11,7 @@ class DatasetDetectorProtocol(PluginProtocol, Protocol):
     Analyzes raw file headers/snippets to identify the dataset format.
     """
     
-    def detect(self, file_snippet: bytes) -> Optional[Dict[str, Any]]:
+    def detect(self, file_snippet: bytes) -> dict[str, Any] | None:
         """
         Identify if a file snippet matches this dataset format.
         

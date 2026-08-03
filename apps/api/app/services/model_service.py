@@ -1,8 +1,14 @@
+from __future__ import annotations
 import logging
-from typing import List, Dict, Any
+
 import numpy as np
 
-from app.schemas.prediction import ModelOutputSchema, PredictionResultSchema, ConfidenceScoreSchema, ShapExplanationSchema
+from app.schemas.prediction import (
+    ConfidenceScoreSchema,
+    ModelOutputSchema,
+    PredictionResultSchema,
+    ShapExplanationSchema,
+)
 from app.services.prediction.prediction_router import prediction_router
 
 logger = logging.getLogger("neuroaegis.model_service")
@@ -22,7 +28,7 @@ class ModelService:
     def load_artifacts(self) -> bool:
         return prediction_router.load_all_models()
 
-    def get_prediction(self, eeg_data: np.ndarray, channel_names: List[str], fs: float = 256.0) -> ModelOutputSchema:
+    def get_prediction(self, eeg_data: np.ndarray, channel_names: list[str], fs: float = 256.0) -> ModelOutputSchema:
         predictor = prediction_router.get_predictor("bonn")
         res = predictor.get_prediction(eeg_data, channel_names, fs, model_name="lightgbm")
         

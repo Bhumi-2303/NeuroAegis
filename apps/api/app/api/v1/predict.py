@@ -1,15 +1,24 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Form, BackgroundTasks, Depends
-from sqlalchemy.orm import Session
-from typing import Optional
-import pandas as pd
+from __future__ import annotations
 import io
 import uuid
-from typing import Dict, Any
+from typing import Any
 
-from app.db.database import get_db, SessionLocal
-from app.db.models import PredictionJob, Patient
-from app.services.prediction.prediction_router import prediction_router
+import pandas as pd
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+)
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
+from app.db.database import SessionLocal, get_db
+from app.db.models import Patient, PredictionJob
+from app.services.prediction.prediction_router import prediction_router
 
 router = APIRouter()
 
@@ -64,26 +73,25 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, datase
         db.close()
 
 
-@router.post("/", response_model=Dict[str, Any])
+@router.post("/", response_model=dict[str, Any])
 async def predict_eeg(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    sampling_rate: Optional[float] = Form(None),
-    channels: Optional[str] = Form(None),
-    patient_id: Optional[str] = Form(None),
-    dataset: Optional[str] = Form(None),
-    model: Optional[str] = Form(None),
+    sampling_rate: float | None = Form(None),
+    channels: str | None = Form(None),
+    patient_id: str | None = Form(None),
+    dataset: str | None = Form(None),
+    model: str | None = Form(None),
     db: Session = Depends(get_db)
 ):
     """
     Accepts an uploaded EEG file, runs it through the full exact pipeline asynchronously,
     and returns a job_id for tracking.
     """
-    from app.services.dataset_detection.detector import dataset_detector
-
     import os
     import re
-    from fastapi import HTTPException
+
+    from app.services.dataset_detection.detector import dataset_detector
     
     if not prediction_router.is_loaded:
         raise HTTPException(status_code=503, detail="Model is not loaded on the backend")
@@ -124,9 +132,10 @@ async def predict_eeg(
                 # It has normal string headers
                 pass
         elif safe_filename.endswith(".edf"):
-            import mne
-            import tempfile
             import os
+            import tempfile
+
+            import mne
             
             with tempfile.NamedTemporaryFile(delete=False, suffix=".edf") as tmp:
                 tmp.write(contents)
@@ -183,7 +192,7 @@ async def predict_eeg(
                 channel_names = channel_names_input
                 
     except Exception as e:
-        error_msg = f"Invalid CSV file or detection failed: {str(e)}"
+        error_msg = f"Invalid CSV file or detection failed: {e!s}"
         logger.error(error_msg)
         raise HTTPException(status_code=400, detail=error_msg)
         

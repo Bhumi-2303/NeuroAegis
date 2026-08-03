@@ -28,14 +28,11 @@ Feature selection:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
-
 import numpy as np
 import pandas as pd
 import pywt
 from scipy.signal import welch
 from scipy.stats import entropy, iqr, kurtosis, skew
-
 
 # ── Constants ────────────────────────────────────────────────────────
 DEFAULT_FS: float = 173.61
@@ -94,7 +91,7 @@ def wavelet_denoise(
 
 
 def preprocess_eeg(
-    data: Union[np.ndarray, List[float], pd.DataFrame],
+    data: np.ndarray | list[float] | pd.DataFrame,
     wavelet: str = DEFAULT_WAVELET,
     level: int = DEFAULT_LEVEL,
 ) -> np.ndarray:
@@ -129,7 +126,7 @@ def preprocess_eeg(
 # Feature Helpers
 # =====================================================================
 
-def hjorth_parameters(signal: np.ndarray) -> Tuple[float, float, float]:
+def hjorth_parameters(signal: np.ndarray) -> tuple[float, float, float]:
     """Compute Hjorth activity, mobility, and complexity.
 
     Parameters
@@ -215,7 +212,7 @@ def bandpower(
 # Feature Groups
 # =====================================================================
 
-def time_features(signal: np.ndarray) -> Dict[str, float]:
+def time_features(signal: np.ndarray) -> dict[str, float]:
     """Extract 22 time-domain features from an EEG segment.
 
     Includes statistical moments, Hjorth parameters, shape factors, and
@@ -270,7 +267,7 @@ def time_features(signal: np.ndarray) -> Dict[str, float]:
 def frequency_features(
     signal: np.ndarray,
     fs: float = DEFAULT_FS,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Extract 14 frequency-domain features from an EEG segment.
 
     Uses Welch's method for PSD estimation.  Computes absolute and relative
@@ -325,7 +322,7 @@ def wavelet_features(
     signal: np.ndarray,
     wavelet: str = DEFAULT_WAVELET,
     level: int = DEFAULT_LEVEL,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Extract 21 wavelet-domain features from an EEG segment.
 
     Decomposes *signal* with a DWT and computes per-level energy, relative
@@ -352,7 +349,7 @@ def wavelet_features(
     total_energy = sum(energies) + 1e-12
     probs = np.array(energies) / total_energy
 
-    features: Dict[str, float] = {}
+    features: dict[str, float] = {}
     features["wavelet_entropy"] = float(entropy(probs))
 
     for i, c in enumerate(coeffs):
@@ -373,7 +370,7 @@ def extract_features(
     fs: float = DEFAULT_FS,
     wavelet: str = DEFAULT_WAVELET,
     level: int = DEFAULT_LEVEL,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Extract the full 57-feature vector from a single EEG segment.
 
     Combines time-domain (22), frequency-domain (14), and wavelet-domain
@@ -395,7 +392,7 @@ def extract_features(
     dict
         Feature name → value mapping (57 entries).
     """
-    features: Dict[str, float] = {}
+    features: dict[str, float] = {}
     features.update(time_features(signal))
     features.update(frequency_features(signal, fs=fs))
     features.update(wavelet_features(signal, wavelet=wavelet, level=level))
@@ -404,11 +401,11 @@ def extract_features(
 
 def extract_features_multichannel(
     data: np.ndarray,
-    channel_names: Optional[List[str]] = None,
+    channel_names: list[str] | None = None,
     fs: float = DEFAULT_FS,
     wavelet: str = DEFAULT_WAVELET,
     level: int = DEFAULT_LEVEL,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Extract features from multi-channel EEG data.
 
     For each channel, extracts the full feature vector and prefixes each
@@ -440,7 +437,7 @@ def extract_features_multichannel(
     if channel_names is None or len(channel_names) != n_channels:
         channel_names = [f"Ch{i}" for i in range(n_channels)]
 
-    all_features: Dict[str, float] = {}
+    all_features: dict[str, float] = {}
     for ch_idx, ch_name in enumerate(channel_names):
         ch_features = extract_features(
             data[ch_idx], fs=fs, wavelet=wavelet, level=level
@@ -456,8 +453,8 @@ def extract_features_multichannel(
 # =====================================================================
 
 def select_and_order_features(
-    extracted_features: Dict[str, float],
-    selected_features: List[str],
+    extracted_features: dict[str, float],
+    selected_features: list[str],
 ) -> np.ndarray:
     """Select and order features to match the trained model's expectations.
 
