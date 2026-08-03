@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Server } from 'lucide-react';
 

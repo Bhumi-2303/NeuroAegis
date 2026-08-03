@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Database, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';

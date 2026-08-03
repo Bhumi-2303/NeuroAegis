@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Network, Activity, Waves, Zap, Hash, AlignCenter, Calculator } from 'lucide-react';
 

@@ -89,13 +89,18 @@ export function usePredictionFlow() {
       const { job_id } = await res.json();
       console.log(`[usePredictionFlow] Parsed response. Job ID: ${job_id}`);
       
-      while (true) {
+      const MAX_POLL_ATTEMPTS = 300; // 5 minutes max
+      let attempts = 0;
+      let completed = false;
+
+      while (attempts < MAX_POLL_ATTEMPTS) {
+        attempts++;
         const statusRes = await fetch(`/api/v1/jobs/${job_id}`);
         if (!statusRes.ok) throw new Error('Failed to fetch job status');
         const statusData = await statusRes.json();
         
         // Map backend stages to UI steps
-        const s = statusData.status;
+        const s = statusData.status || '';
         if (s.includes('Validating')) setCurrentStep('Validating');
         else if (s.includes('Feature') || s.includes('Processing')) setCurrentStep('Preprocessing');
         else if (s.includes('Inference') || s.includes('Graph')) setCurrentStep('Inference');
@@ -123,6 +128,7 @@ export function usePredictionFlow() {
           setModelName(statusData.modelName || 'Unknown');
           setData(responseData);
           console.log("[usePredictionFlow] Job completed successfully.");
+          completed = true;
           break;
         } else if (statusData.status === 'Failed' || statusData.error) {
            throw new Error(statusData.error || 'Job failed');
@@ -130,13 +136,18 @@ export function usePredictionFlow() {
         
         await new Promise(r => setTimeout(r, 1000));
       }
-    } catch (err: any) {
+
+      if (!completed) {
+        throw new Error('Prediction timed out after 5 minutes.');
+      }
+    } catch (err: unknown) {
       console.error("[usePredictionFlow] Error reason:", err);
       setIsError(true);
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+      const errObj = err instanceof Error ? err : new Error(String(err));
+      if (errObj.name === 'TypeError' && errObj.message.includes('fetch')) {
          setErrorMessage("Unable to connect to the NeuroAegis backend.");
       } else {
-         setErrorMessage(err.message || 'An unexpected error occurred.');
+         setErrorMessage(errObj.message || 'An unexpected error occurred.');
       }
     } finally {
       setIsUploading(false);

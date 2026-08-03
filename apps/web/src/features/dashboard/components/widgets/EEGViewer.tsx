@@ -48,7 +48,7 @@ export function EEGViewer({ data }: Props) {
               contentStyle={{ borderRadius: '8px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
               labelStyle={{ display: 'none' }}
               itemStyle={{ color: '#2563EB', fontSize: '12px', fontFamily: 'monospace' }}
-              formatter={(val: number) => [`${val.toFixed(2)} µV`, 'Amplitude']}
+              formatter={(val: any) => [`${Number(val || 0).toFixed(2)} µV`, 'Amplitude']}
             />
             <Line 
               type="step" 

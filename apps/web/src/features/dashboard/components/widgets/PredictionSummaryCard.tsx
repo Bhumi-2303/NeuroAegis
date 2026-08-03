@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { ConfidenceGauge } from '../../../../shared/components';
 import { ShieldAlert, ShieldCheck, Clock, Database, Cpu } from 'lucide-react';

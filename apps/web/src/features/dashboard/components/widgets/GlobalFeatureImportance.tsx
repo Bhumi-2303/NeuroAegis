@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { BarChart3 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -41,10 +40,10 @@ export function GlobalFeatureImportance() {
               cursor={{ fill: '#F3F4F6' }}
               contentStyle={{ borderRadius: '8px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
               itemStyle={{ color: '#111827', fontSize: '12px' }}
-              formatter={(val: number) => [`${(val * 100).toFixed(1)}%`, 'Relative Importance']}
+              formatter={(val: any) => [`${(Number(val || 0) * 100).toFixed(1)}%`, 'Relative Importance']}
             />
             <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={index < 3 ? '#2563EB' : '#93C5FD'} />
               ))}
             </Bar>

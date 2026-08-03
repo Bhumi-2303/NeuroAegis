@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Lightbulb, ArrowUpRight, ArrowDownRight, Fingerprint } from 'lucide-react';
 import { ShapWaterfall } from '../../../../features/explainability/components/ShapWaterfall';

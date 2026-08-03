@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CheckCircle2, CircleDashed } from 'lucide-react';
 import { WidgetCard } from './WidgetCard';

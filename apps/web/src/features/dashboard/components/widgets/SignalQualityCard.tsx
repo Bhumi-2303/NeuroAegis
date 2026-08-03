@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Activity } from 'lucide-react';
 import { motion } from 'framer-motion';

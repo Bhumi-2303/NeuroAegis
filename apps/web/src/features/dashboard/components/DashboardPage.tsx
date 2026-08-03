@@ -22,6 +22,8 @@ import { SystemPerformance } from './widgets/SystemPerformance';
 import { ExportPanel } from './widgets/ExportPanel';
 import { LoadingPipeline } from './widgets/LoadingPipeline';
 
+const MOCK_STATIC_WAVEFORM = Array.from({ length: 400 }, (_, i) => Math.sin(i * 0.1) * 50 + (Math.random() * 20 - 10));
+
 export function DashboardPage(): React.JSX.Element {
   const {
     file,
@@ -34,19 +36,52 @@ export function DashboardPage(): React.JSX.Element {
     data,
     isError,
     errorMessage,
+    datasetName,
+    detectionConfidence,
     handleFileChange,
     resetAnalysis,
     handlePredict
   } = usePredictionFlow();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Mock static waveform
-  const mockStaticWaveform = Array.from({ length: 400 }, (_, i) => Math.sin(i * 0.1) * 50 + (Math.random() * 20 - 10));
   const [rawSignal, setRawSignal] = React.useState<number[]>([]);
+
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      const syntheticEvent = {
+        target: { files: droppedFiles }
+      } as unknown as React.ChangeEvent<HTMLInputElement>;
+      handleFileChange(syntheticEvent);
+    }
+  };
 
   React.useEffect(() => {
     if (file && data) {
+      if (file.name.toLowerCase().endsWith('.edf')) {
+        // Binary EDF files cannot be parsed as plain text
+        setRawSignal(MOCK_STATIC_WAVEFORM);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         const content = e.target?.result as string;
@@ -58,7 +93,7 @@ export function DashboardPage(): React.JSX.Element {
              if (!isNaN(val)) vals.push(val);
              if (vals.length >= 1000) break;
           }
-          setRawSignal(vals.length > 0 ? vals : mockStaticWaveform);
+          setRawSignal(vals.length > 0 ? vals : MOCK_STATIC_WAVEFORM);
         }
       };
       reader.readAsText(file);
@@ -71,14 +106,14 @@ export function DashboardPage(): React.JSX.Element {
     <motion.div {...pageTransition} className="flex flex-col gap-6 pb-20">
       {/* Page Title */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+        <div className="p-2 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] rounded-xl">
           <Brain size={24} strokeWidth={2} />
         </div>
         <div>
-          <h1 id="dashboard-title" className="text-xl font-bold text-gray-900 m-0 tracking-tight">
+          <h1 id="dashboard-title" className="text-xl font-bold text-[var(--text-primary)] m-0 tracking-tight">
             NeuroAegis Analysis Interface
           </h1>
-          <p className="text-[13px] text-gray-500 m-0 mt-0.5 font-medium">
+          <p className="text-[13px] text-[var(--text-secondary)] m-0 mt-0.5 font-medium">
             Biomedical research software for EEG pattern recognition.
           </p>
         </div>
@@ -92,10 +127,19 @@ export function DashboardPage(): React.JSX.Element {
             <WidgetCard title="Signal Input Configuration" className="lg:col-span-1 h-fit shadow-sm">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wider">Source File</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-2 uppercase tracking-wider">Source File</label>
                   <div 
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${file ? 'border-blue-400 bg-blue-50/50' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}`}
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
+                      isDragging 
+                        ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/20 scale-[1.01]' 
+                        : file 
+                        ? 'border-[var(--accent-primary)] bg-[var(--accent-primary)]/10' 
+                        : 'border-[var(--bg-4)] hover:border-[var(--accent-primary)] hover:bg-[var(--bg-3)]'
+                    }`}
                     onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
                     <input 
                       type="file" 
@@ -106,44 +150,44 @@ export function DashboardPage(): React.JSX.Element {
                     />
                     {file ? (
                       <div className="flex flex-col items-center gap-2">
-                        <FileText className="w-8 h-8 text-blue-600" />
-                        <span className="text-sm font-semibold text-gray-900">{file.name}</span>
-                        <span className="text-xs text-gray-500 font-mono">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        <FileText className="w-8 h-8 text-[var(--accent-primary)]" />
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">{file.name}</span>
+                        <span className="text-xs text-[var(--text-secondary)] font-mono">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-3">
-                        <Upload className="w-8 h-8 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-600">Drop EEG file here</span>
-                        <span className="text-xs text-gray-400 font-mono">.edf, .csv, .txt (Max 52MB)</span>
+                        <Upload className="w-8 h-8 text-[var(--text-muted)]" />
+                        <span className="text-sm font-medium text-[var(--text-secondary)]">Drop EEG file here</span>
+                        <span className="text-xs text-[var(--text-muted)] font-mono">.edf, .csv, .txt (Max 52MB)</span>
                       </div>
                     )}
                   </div>
                   {validationError && (
-                    <p className="mt-2 text-xs text-red-500 font-medium">{validationError}</p>
+                    <p className="mt-2 text-xs text-[var(--state-danger)] font-medium">{validationError}</p>
                   )}
                 </div>
 
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider">Sampling Rate</label>
-                    <span className="text-[10px] text-gray-400 font-mono">Hz</span>
+                    <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider">Sampling Rate</label>
+                    <span className="text-[10px] text-[var(--text-muted)] font-mono">Hz</span>
                   </div>
                   <input 
                     type="number" 
                     placeholder="Auto-detect"
                     value={samplingRate}
                     onChange={e => setSamplingRate(e.target.value)}
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-shadow"
+                    className="w-full bg-[var(--bg-2)] border border-[var(--bg-4)] rounded-lg px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)] focus:ring-1 focus:ring-[var(--accent-secondary)] shadow-sm transition-shadow"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wider">Channels</label>
+                  <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1 uppercase tracking-wider">Channels</label>
                   <input 
                     type="text" 
                     value={channels}
                     onChange={e => setChannels(e.target.value)}
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 shadow-sm transition-shadow"
+                    className="w-full bg-[var(--bg-2)] border border-[var(--bg-4)] rounded-lg px-3 py-2.5 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)] focus:ring-1 focus:ring-[var(--accent-secondary)] shadow-sm transition-shadow"
                     placeholder="e.g. EEG-Fpz-Cz"
                   />
                 </div>
@@ -151,7 +195,7 @@ export function DashboardPage(): React.JSX.Element {
                 <button 
                   onClick={handlePredict}
                   disabled={isUploading || !file}
-                  className="w-full py-3 rounded-lg bg-gray-900 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-black disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md mt-4"
+                  className="w-full py-3 rounded-lg bg-[var(--accent-primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--accent-secondary)] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md mt-4"
                 >
                   <Brain className="w-4 h-4" />
                   Initialize Analysis
@@ -159,12 +203,12 @@ export function DashboardPage(): React.JSX.Element {
               </div>
             </WidgetCard>
 
-            <div className="lg:col-span-2 flex flex-col justify-center items-center p-8 bg-gray-50/50 rounded-2xl border border-gray-100/50 border-dashed">
-               <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mb-6">
-                 <Brain size={32} className="text-gray-300" />
+            <div className="lg:col-span-2 flex flex-col justify-center items-center p-8 bg-[var(--bg-3)] rounded-2xl border border-[var(--bg-4)] border-dashed">
+               <div className="w-16 h-16 bg-[var(--bg-2)] rounded-2xl shadow-sm border border-[var(--bg-4)] flex items-center justify-center mb-6">
+                 <Brain size={32} className="text-[var(--text-muted)]" />
                </div>
-               <h2 className="text-xl font-bold text-gray-900 mb-2 tracking-tight">Research Framework Ready</h2>
-               <p className="text-sm text-gray-500 text-center max-w-sm leading-relaxed">
+               <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">Research Framework Ready</h2>
+               <p className="text-sm text-[var(--text-secondary)] text-center max-w-sm leading-relaxed">
                  Upload multi-channel or single-channel EEG signals to begin automated feature extraction and inference.
                </p>
             </div>
@@ -196,19 +240,19 @@ export function DashboardPage(): React.JSX.Element {
           <motion.div key="results" {...staggerChildren} className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
             
             {/* Header / Upload again */}
-            <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex justify-between items-center bg-[var(--bg-2)] p-4 rounded-xl border border-[var(--bg-4)] shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                <div className="p-2 bg-[var(--state-success)]/10 text-[var(--state-success)] rounded-lg">
                   <FileText size={20} />
                 </div>
                 <div>
-                  <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Active Workspace</span>
-                  <span className="block text-sm font-semibold text-gray-900">{file?.name}</span>
+                  <span className="block text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-0.5">Active Workspace</span>
+                  <span className="block text-sm font-semibold text-[var(--text-primary)]">{file?.name}</span>
                 </div>
               </div>
               <button 
                 onClick={resetAnalysis}
-                className="px-4 py-2 rounded-lg bg-gray-50 text-gray-700 font-semibold text-xs flex items-center gap-2 hover:bg-gray-100 transition-colors border border-gray-200"
+                className="px-4 py-2 rounded-lg bg-[var(--bg-2)] text-[var(--text-secondary)] font-semibold text-xs flex items-center gap-2 hover:bg-[var(--bg-3)] transition-colors border border-[var(--bg-4)]"
               >
                 <Upload size={14} />
                 New Analysis
@@ -219,15 +263,15 @@ export function DashboardPage(): React.JSX.Element {
             <PredictionSummaryCard 
               probability={data.prediction.probabilities.seizure}
               label={data.prediction.label}
-              datasetName={data.datasetName}
+              datasetName={datasetName || undefined}
               modelName={data.modelName}
             />
 
             {/* Row 2: 3-column grid for Dataset, Signal Quality, Model Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <DatasetDetectionCard 
-                datasetName={data.datasetName} 
-                confidence={data.detectionConfidence} 
+                datasetName={datasetName || undefined} 
+                confidence={detectionConfidence || undefined} 
                 samplingRate={samplingRate} 
                 channels={channels} 
               />
@@ -236,10 +280,10 @@ export function DashboardPage(): React.JSX.Element {
             </div>
 
             {/* Row 3: Signal Visualization */}
-            <EEGViewer data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} />
+            <EEGViewer data={rawSignal.length > 0 ? rawSignal : MOCK_STATIC_WAVEFORM} />
 
             {/* Row 4: Raw vs Filtered */}
-            <RawFilteredComparison data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} />
+            <RawFilteredComparison data={rawSignal.length > 0 ? rawSignal : MOCK_STATIC_WAVEFORM} />
 
             {/* Row 5 & 6: Features & Time-Frequency */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

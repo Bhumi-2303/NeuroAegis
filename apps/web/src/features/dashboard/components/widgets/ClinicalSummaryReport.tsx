@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { FileText, AlertTriangle } from 'lucide-react';
 

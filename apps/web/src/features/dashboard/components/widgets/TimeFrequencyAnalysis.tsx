@@ -1,4 +1,3 @@
-import React from 'react';
 import { WidgetCard } from './WidgetCard';
 import { ActivitySquare, Lock } from 'lucide-react';
 
