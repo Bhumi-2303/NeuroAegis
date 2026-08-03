@@ -3,7 +3,7 @@ import {
   LayoutDashboard, 
   Brain, 
   Activity, 
-  Cpu,
+  Sparkles,
   MonitorPlay
 } from 'lucide-react';
 
@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { path: '/analysis', icon: Brain, label: 'Brain Analysis' },
   { path: '/eeg', icon: Activity, label: 'Neural Activity' },
   { path: '/live-monitor', icon: MonitorPlay, label: 'Live Monitor' },
-  { path: '/prediction', icon: Cpu, label: 'AI Models' },
+  { path: '/explainability', icon: Sparkles, label: 'Explainability (SHAP)' },
 ];
 
 export const Sidebar = () => {

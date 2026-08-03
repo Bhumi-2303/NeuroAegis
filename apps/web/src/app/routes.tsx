@@ -8,6 +8,9 @@ import { EEGMonitorPage } from '../features/eeg-monitor';
 import { FrequencyAnalysisPage } from '../features/frequency-analysis';
 import { LiveMonitorPage } from '../features/live-monitor';
 
+import { ExplainabilityPage } from '../features/explainability';
+import { PatientsPage } from '../features/patients';
+import { SettingsPage } from '../features/settings';
 import { ReportsPage } from '../features/reports';
 
 // Shared Components
@@ -43,12 +46,28 @@ export const router = createBrowserRouter([
         element: <LiveMonitorPage />,
       },
       {
+        path: 'explainability',
+        element: <ExplainabilityPage />,
+      },
+      {
+        path: 'patients',
+        element: <PatientsPage />,
+      },
+      {
+        path: 'settings',
+        element: <SettingsPage />,
+      },
+      {
         path: 'prediction',
         element: <Navigate to="/" replace />,
       },
       {
         path: 'reports',
         element: <ReportsPage />,
+      },
+      {
+        path: '*',
+        element: <Navigate to="/" replace />,
       },
     ],
   },

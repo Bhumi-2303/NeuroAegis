@@ -11,7 +11,8 @@ export const TopNav = () => {
   const location = useLocation();
 
   return (
-    <header className="fixed top-8 left-0 right-0 z-50 h-[72px] w-full px-6 flex items-center justify-between bg-[var(--bg-2)] border-b border-[var(--bg-3)]">
+    /* top-8 (32px) accommodates the fixed warning banner at top-0 (h-8) */
+    <header className="fixed top-8 left-0 right-0 z-50 h-[72px] w-full px-6 flex items-center justify-between bg-[var(--bg-2)] border-b border-[var(--bg-4)]">
       {/* Left — Brand */}
       <div className="flex items-center gap-3">
         <div className="text-[var(--accent-primary)]">
