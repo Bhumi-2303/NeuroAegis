@@ -1,0 +1,10 @@
+README.md
+pyproject.toml
+app/main.py
+neuroaegis_api.egg-info/PKG-INFO
+neuroaegis_api.egg-info/SOURCES.txt
+neuroaegis_api.egg-info/dependency_links.txt
+neuroaegis_api.egg-info/requires.txt
+neuroaegis_api.egg-info/top_level.txt
+tests/test_dataset_detection.py
+tests/test_parity.py

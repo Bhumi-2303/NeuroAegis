@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-multipart
+numpy
+pandas
+scipy
+lightgbm
+shap
+joblib
+PyWavelets
+mne
+pyyaml
+sqlalchemy

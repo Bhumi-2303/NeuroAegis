@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: neuroaegis-api
+Version: 0.1.0
+Summary: NeuroAegis ML Inference API
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: pydantic
+Requires-Dist: pydantic-settings
+Requires-Dist: python-multipart
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scipy
+Requires-Dist: lightgbm
+Requires-Dist: shap
+Requires-Dist: joblib
+Requires-Dist: PyWavelets
+Requires-Dist: mne
+Requires-Dist: pyyaml
+Requires-Dist: sqlalchemy
