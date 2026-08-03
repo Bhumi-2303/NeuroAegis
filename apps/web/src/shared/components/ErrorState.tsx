@@ -25,16 +25,16 @@ export const ErrorState = forwardRef<HTMLDivElement, ErrorStateProps>(
       <div
         ref={ref}
         className={`flex flex-col items-center justify-center gap-4 py-12 px-6 text-center
-                     border border-[rgba(255,77,109,0.2)] rounded-2xl ${className}`}
+                     border border-[var(--bg-3)] bg-[var(--bg-1)] rounded-2xl ${className}`}
         {...props}
       >
         <AlertTriangle
           size={48}
           strokeWidth={1}
-          className="text-[var(--state-danger)] opacity-80"
+          className="text-[var(--text-secondary)] opacity-80"
         />
         <div className="flex flex-col gap-1.5">
-          <h3 className="text-base font-medium text-[var(--state-danger)]">
+          <h3 className="text-base font-medium text-[var(--text-primary)]">
             {title}
           </h3>
           {message && (
@@ -47,8 +47,8 @@ export const ErrorState = forwardRef<HTMLDivElement, ErrorStateProps>(
           <button
             onClick={onRetry}
             className="mt-2 px-4 py-2 rounded-xl text-sm font-medium
-                       text-[var(--state-danger)] border border-[var(--state-danger)]
-                       bg-[rgba(255,77,109,0.06)] hover:bg-[rgba(255,77,109,0.12)]
+                       text-[var(--text-primary)] border border-[var(--bg-3)]
+                       bg-[var(--bg-2)] hover:bg-[var(--bg-3)]
                        transition-colors"
           >
             {retryLabel}

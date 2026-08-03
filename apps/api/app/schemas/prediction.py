@@ -12,6 +12,8 @@ class ConfidenceScoreSchema(BaseModel):
 class ShapFeatureContributionSchema(BaseModel):
     featureName: str
     value: float
+    rawValue: Optional[float] = None
+    referenceRange: Optional[List[float]] = None
 
 class ShapExplanationSchema(BaseModel):
     baseValue: float

@@ -32,7 +32,7 @@ export const SeizurePredictionPage: React.FC = () => {
   const [modelName, setModelName] = useState<string | null>(null);
   
   const [file, setFile] = useState<File | null>(null);
-  const [samplingRate, setSamplingRate] = useState<number>(256);
+  const [samplingRate, setSamplingRate] = useState<string>('');
   const [channels, setChannels] = useState<string>('EEG-Fpz-Cz, EEG-Pz-Oz');
   const [validationError, setValidationError] = useState<string | null>(null);
   
@@ -85,7 +85,9 @@ export const SeizurePredictionPage: React.FC = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('sampling_rate', samplingRate.toString());
+      if (samplingRate) {
+        formData.append('sampling_rate', samplingRate.toString());
+      }
       formData.append('channels', channels);
       // Not explicitly appending dataset and model so backend auto-detects
       // formData.append('dataset', selectedDataset);
@@ -208,11 +210,15 @@ export const SeizurePredictionPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Sampling Rate (Hz)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-[var(--text-secondary)]">Sampling Rate (Hz)</label>
+                      <span className="text-xs text-[var(--text-secondary)] opacity-70">Optional</span>
+                    </div>
                     <input 
                       type="number" 
+                      placeholder="e.g. 256"
                       value={samplingRate}
-                      onChange={e => setSamplingRate(Number(e.target.value))}
+                      onChange={e => setSamplingRate(e.target.value)}
                       className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
                     />
                   </div>

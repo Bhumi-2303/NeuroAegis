@@ -7,11 +7,11 @@ import {
   ErrorState, 
   ConfidenceGauge, 
   StatusBadge,
-  Scene,
   WaveformSparkline
 } from '../../../shared/components';
 import { pageTransition, staggerChildren, fadeIn } from '../../../shared/lib/motion-presets';
 import { usePredictionFlow, STEPS } from '../../../shared/hooks';
+import { ShapWaterfall } from '../../explainability/components/ShapWaterfall';
 
 export function DashboardPage(): React.JSX.Element {
   const {
@@ -40,7 +40,31 @@ export function DashboardPage(): React.JSX.Element {
 
   // Since we don't have the real uploaded data available immediately for the waveform,
   // we'll simulate a static segment representing the analyzed signal.
-  const mockStaticWaveform = Array.from({ length: 60 }, (_, i) => Math.sin(i * 0.5) * 50 + (Math.random() * 20 - 10));
+  const mockStaticWaveform = Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.5) * 50 + (Math.random() * 20 - 10));
+
+  const [rawSignal, setRawSignal] = React.useState<number[]>([]);
+
+  React.useEffect(() => {
+    if (file && data) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+        if (content) {
+          const lines = content.split('\n');
+          const vals: number[] = [];
+          for (const line of lines) {
+             const val = parseFloat(line.trim());
+             if (!isNaN(val)) vals.push(val);
+             if (vals.length >= 1000) break; // Limit to 1000 samples for the waveform
+          }
+          setRawSignal(vals.length > 0 ? vals : mockStaticWaveform);
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      setRawSignal([]);
+    }
+  }, [file, data]);
 
   return (
     <motion.div {...pageTransition} className="flex flex-col gap-6">
@@ -49,10 +73,10 @@ export function DashboardPage(): React.JSX.Element {
         <Brain size={28} strokeWidth={1.5} className="text-[var(--accent-primary)]" />
         <div>
           <h1 id="dashboard-title" className="text-2xl font-display font-bold text-[var(--text-primary)] m-0">
-            NeuroAegis Command Center
+            NeuroAegis
           </h1>
           <p className="text-sm text-[var(--text-secondary)] m-0 mt-0.5">
-            AI-Powered Epileptic Seizure Detection System
+            Seizure detection dashboard.
           </p>
         </div>
       </div>
@@ -99,11 +123,15 @@ export function DashboardPage(): React.JSX.Element {
 
                 <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <label className="block text-sm font-[var(--font-body)] text-[var(--text-secondary)] mb-1">Sampling Rate (Hz)</label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-[var(--text-secondary)]">Sampling Rate (Hz)</label>
+                      <span className="text-xs text-[var(--text-secondary)] opacity-70">Optional</span>
+                    </div>
                     <input 
                       type="number" 
+                      placeholder="e.g. 256"
                       value={samplingRate}
-                      onChange={e => setSamplingRate(Number(e.target.value))}
+                      onChange={e => setSamplingRate(e.target.value)}
                       className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-3 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-secondary)]"
                     />
                   </div>
@@ -131,21 +159,19 @@ export function DashboardPage(): React.JSX.Element {
               </div>
             </GlassCard>
 
-            {/* Scene Hero Background */}
+            {/* Instructions Area */}
             <GlassCard
-              className="lg:col-span-2 min-h-[400px] h-full p-0 overflow-hidden relative flex flex-col"
+              className="lg:col-span-2 min-h-[400px] h-full p-8 flex flex-col justify-center items-center text-center bg-[var(--bg-2)] border-[var(--bg-3)]"
               role="region"
-              aria-label="3D Brain Analysis View"
+              aria-label="Instructions"
             >
-              <div className="absolute top-6 left-6 flex flex-col gap-1 z-10">
-                 <div className="flex items-center gap-2">
-                   <Brain size={20} strokeWidth={1.5} className="text-[var(--accent-primary)]" />
-                   <span className="text-lg font-semibold text-[var(--text-primary)]">Ready for Analysis</span>
+              <div className="flex flex-col items-center gap-4 max-w-md">
+                 <div className="w-16 h-16 rounded-2xl bg-[var(--bg-3)] flex items-center justify-center text-[var(--accent-primary)]">
+                   <Brain size={32} strokeWidth={1.5} />
                  </div>
-                 <p className="text-sm text-[var(--text-secondary)]">Upload an EEG file to begin the prediction pipeline.</p>
+                 <h2 className="text-xl font-semibold text-[var(--text-primary)]">Ready for Analysis</h2>
+                 <p className="text-sm text-[var(--text-secondary)]">Upload an EEG file containing neural data to begin the prediction pipeline. The system will process the signals and evaluate seizure likelihood.</p>
               </div>
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#8B5CF6]/10 via-transparent to-transparent pointer-events-none" />
-              <Scene interactive={true} />
             </GlassCard>
             
           </motion.div>
@@ -221,13 +247,12 @@ export function DashboardPage(): React.JSX.Element {
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
               {/* Confidence Gauge */}
               <GlassCard title="Model Confidence" className="flex flex-col items-center justify-center p-8">
                 <ConfidenceGauge 
-                  value={data.confidence.value * 100} 
+                  value={Math.max(data.prediction.probabilities.seizure, data.prediction.probabilities.non_seizure) * 100} 
                   size={180} 
-                  label={`Band: ${data.confidence.band.toUpperCase()}`} 
                 />
                 <div className="mt-8">
                   <StatusBadge 
@@ -237,23 +262,7 @@ export function DashboardPage(): React.JSX.Element {
                 </div>
               </GlassCard>
 
-              {/* Static Waveform from File */}
-              <GlassCard title="Analyzed Signal Segment" className="p-6 flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <span className="text-xs text-[var(--text-secondary)]">File Waveform (Static Snapshot)</span>
-                  <WaveformSparkline data={mockStaticWaveform} className="h-32" />
-                </div>
-                <div className="mt-auto grid grid-cols-2 gap-4">
-                   <div className="p-3 bg-[var(--bg-2)] rounded-lg text-center">
-                     <span className="block text-xs text-[var(--text-secondary)]">Sampling Rate</span>
-                     <span className="block font-mono text-[var(--text-primary)]">{samplingRate} Hz</span>
-                   </div>
-                   <div className="p-3 bg-[var(--bg-2)] rounded-lg text-center">
-                     <span className="block text-xs text-[var(--text-secondary)]">Detected Ch</span>
-                     <span className="block font-mono text-[var(--text-primary)] truncate" title={channels}>{channels.split(',').length}</span>
-                   </div>
-                </div>
-              </GlassCard>
+
 
               {/* Prediction Probability */}
               <GlassCard title="Probability Breakdown" className="p-6 flex flex-col justify-center gap-6">
@@ -288,12 +297,40 @@ export function DashboardPage(): React.JSX.Element {
                 </motion.div>
                 
                 <div className="mt-4 p-4 bg-[var(--bg-2)] rounded-xl border border-[var(--bg-3)] text-xs text-[var(--text-secondary)] font-[var(--font-mono)] flex flex-col gap-1">
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <span className="block text-[var(--text-secondary)]">Sampling Rate</span>
+                      <span className="block text-[var(--text-primary)]">{samplingRate || 'Auto-detected'}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[var(--text-secondary)]">Channels</span>
+                      <span className="block text-[var(--text-primary)]">{channels ? channels.split(',').length : 'Auto-detected'}</span>
+                    </div>
+                  </div>
                   <span>Dataset: {datasetName?.toUpperCase()} (Conf: {(detectionConfidence! * 100).toFixed(1)}%)</span>
                   <span>Model: {modelName?.replace('_', ' ').toUpperCase()}</span>
                   <span>Generated: {new Date(data.generatedAt).toLocaleTimeString()}</span>
                 </div>
               </GlassCard>
             </div>
+
+            {/* Explainability and Waveform Section */}
+            {data.explanation && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full mt-6">
+                <ShapWaterfall 
+                  baseValue={data.explanation.baseValue}
+                  features={data.explanation.features || []}
+                  finalProbability={data.prediction.probabilities.seizure}
+                />
+                
+                <GlassCard title="Analyzed signal segment" className="p-6 h-full flex flex-col justify-center">
+                  <div className="h-64 w-full">
+                     <WaveformSparkline data={rawSignal.length > 0 ? rawSignal : mockStaticWaveform} color="var(--accent-primary)" />
+                  </div>
+                </GlassCard>
+              </div>
+            )}
+
           </motion.div>
         )}
       </AnimatePresence>

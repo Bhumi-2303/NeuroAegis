@@ -12,8 +12,8 @@ export function usePredictionFlow() {
   const [modelName, setModelName] = useState<string | null>(null);
   
   const [file, setFile] = useState<File | null>(null);
-  const [samplingRate, setSamplingRate] = useState<number>(256);
-  const [channels, setChannels] = useState<string>('EEG-Fpz-Cz, EEG-Pz-Oz');
+  const [samplingRate, setSamplingRate] = useState<string>('');
+  const [channels, setChannels] = useState<string>('');
   const [validationError, setValidationError] = useState<string | null>(null);
   
   const [isUploading, setIsUploading] = useState(false);
@@ -61,7 +61,9 @@ export function usePredictionFlow() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+    if (samplingRate) {
       formData.append('sampling_rate', samplingRate.toString());
+    }
       formData.append('channels', channels);
 
       console.log("[usePredictionFlow] Upload started. API URL: /api/v1/predict");

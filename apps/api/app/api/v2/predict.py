@@ -43,16 +43,37 @@ async def create_prediction_job(
     
     try:
         contents = await file.read()
-        if safe_filename.endswith((".csv", ".txt")):
-            df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python')
-            eeg_data = df.values.T 
-            channel_names = df.columns.tolist()
+        if safe_filename.endswith(".csv"):
+            df = pd.read_csv(io.BytesIO(contents), on_bad_lines='skip')
+        elif safe_filename.endswith(".txt"):
+            try:
+                df = pd.read_csv(io.BytesIO(contents), sep=r'\s+|,', engine='python', on_bad_lines='skip')
+            except Exception:
+                df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python', on_bad_lines='skip')
         else:
             raise HTTPException(status_code=400, detail="Only .csv and .txt files are supported currently")
             
-        if channels:
-            channel_names = channels.split(",")
+        # Check if headers are just numeric data (headerless file)
+        try:
+            [float(c) for c in df.columns]
+            # If we succeed, it means all columns are numeric -> no header was present
+            first_row = pd.DataFrame([df.columns], columns=df.columns)
+            df = pd.concat([first_row, df], ignore_index=True)
+            df = df.astype(float)
+            df.columns = [str(i) for i in range(len(df.columns))]
+        except ValueError:
+            # It has normal string headers
+            pass
             
+        eeg_data = df.values.T 
+        channel_names = df.columns.tolist()
+            
+        if channels and channels.strip():
+            channel_names_input = [c.strip() for c in channels.split(",") if c.strip()]
+            if len(channel_names_input) > 0:
+                if len(channel_names_input) != len(df.columns):
+                    raise HTTPException(status_code=400, detail=f"Number of provided channels ({len(channel_names_input)}) does not match CSV columns ({len(df.columns)})")
+                channel_names = channel_names_input
         # Parse JSON fields
         try:
             parsed_medical_history = json.loads(medical_history)
@@ -86,7 +107,7 @@ async def create_prediction_job(
         db.commit()
         
         # Start background task
-        background_tasks.add_task(run_prediction_pipeline, job_id, eeg_data, channel_names, sampling_rate, db)
+        background_tasks.add_task(run_prediction_pipeline, job_id, eeg_data, channel_names, sampling_rate)
         
         return {"job_id": job_id, "patient_id": patient_id}
         

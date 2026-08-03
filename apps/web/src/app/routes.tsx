@@ -7,10 +7,8 @@ import { BrainAnalysisPage } from '../features/brain-analysis';
 import { EEGMonitorPage } from '../features/eeg-monitor';
 import { FrequencyAnalysisPage } from '../features/frequency-analysis';
 
-import { ExplainabilityPage } from '../features/explainability';
+
 import { ReportsPage } from '../features/reports';
-import { PatientsPage } from '../features/patients';
-import { SettingsPage } from '../features/settings';
 
 // Shared Components
 import { RouteErrorBoundary } from '../shared/components/RouteErrorBoundary';
@@ -45,20 +43,8 @@ export const router = createBrowserRouter([
         element: <Navigate to="/" replace />,
       },
       {
-        path: 'explainability',
-        element: <ExplainabilityPage />,
-      },
-      {
         path: 'reports',
         element: <ReportsPage />,
-      },
-      {
-        path: 'patients',
-        element: <PatientsPage />,
-      },
-      {
-        path: 'settings',
-        element: <SettingsPage />,
       },
     ],
   },

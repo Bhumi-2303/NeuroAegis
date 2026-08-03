@@ -6,14 +6,13 @@ const TOP_LINKS = [
   { path: '/', label: 'Dashboard' },
   { path: '/analysis', label: 'Analysis' },
   { path: '/reports', label: 'Reports' },
-  { path: '/settings', label: 'Settings' },
 ];
 
 export const TopNav = () => {
   const location = useLocation();
 
   return (
-    <GlassPanel className="fixed top-0 left-0 right-0 z-50 h-[72px] w-full px-6 flex items-center justify-between rounded-none border-x-0 border-t-0">
+    <header className="fixed top-8 left-0 right-0 z-50 h-[72px] w-full px-6 flex items-center justify-between bg-[var(--bg-2)] border-b border-[var(--bg-3)]">
       {/* Left — Brand */}
       <div className="flex items-center gap-3">
         <div className="text-[var(--accent-primary)]">
@@ -49,18 +48,18 @@ export const TopNav = () => {
       <div className="flex items-center gap-5">
         <button className="flex items-center gap-2 text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors group">
           <Search size={20} strokeWidth={1.5} />
-          <span className="hidden lg:inline-flex border border-[rgba(255,255,255,0.1)] rounded px-1.5 py-0.5 text-xs bg-[var(--bg-2)] group-hover:border-[var(--accent-primary)] transition-colors">
+          <span className="hidden lg:inline-flex border border-[var(--bg-3)] rounded px-1.5 py-0.5 text-xs bg-[var(--bg-1)] group-hover:border-[var(--accent-primary)] transition-colors">
             ⌘K
           </span>
         </button>
         <button className="relative text-[var(--text-secondary)] hover:text-[var(--accent-primary)] transition-colors">
           <Bell size={20} strokeWidth={1.5} />
-          <span className="absolute top-0 right-0 w-2 h-2 bg-[var(--state-danger)] rounded-full border border-[var(--bg-1)]"></span>
+          <span className="absolute top-0 right-0 w-2 h-2 bg-[var(--state-danger)] rounded-full border border-[var(--bg-2)]"></span>
         </button>
-        <button className="w-8 h-8 rounded-full bg-[var(--bg-3)] border border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-colors">
+        <button className="w-8 h-8 rounded-full bg-[var(--bg-1)] border border-[var(--bg-3)] flex items-center justify-center text-[var(--text-secondary)] hover:text-[var(--accent-primary)] hover:border-[var(--accent-primary)] transition-colors">
           <User size={16} strokeWidth={1.5} />
         </button>
       </div>
-    </GlassPanel>
+    </header>
   );
 };

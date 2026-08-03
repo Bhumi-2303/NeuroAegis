@@ -57,12 +57,12 @@ class BonnPredictor(BasePredictor):
     def preprocess(self, data: np.ndarray) -> np.ndarray:
         return preprocess_eeg(data)
 
-    def extract_features(self, data: np.ndarray, channel_names: List[str], fs: float) -> np.ndarray:
+    def extract_features(self, data: np.ndarray, channel_names: List[str], fs: float) -> tuple[np.ndarray, Dict[str, float]]:
         all_features = extract_all_features(data, channel_names, fs)
         feature_vector = select_and_order_features(all_features, self.selected_features)
         if self.scaler:
             feature_vector = self.scaler.transform(feature_vector)
-        return feature_vector
+        return feature_vector, all_features
 
     def predict(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
         model_name = model_name or self.default_model
@@ -90,8 +90,19 @@ class BonnPredictor(BasePredictor):
             "probabilities": {"seizure": prob_seizure, "non_seizure": prob_non_seizure}
         }
 
-    def generate_explanation(self, feature_vector: np.ndarray, model_name: str = None) -> Dict[str, Any]:
+    def generate_explanation(self, feature_vector: np.ndarray, raw_features: Dict[str, float], model_name: str = None) -> Dict[str, Any]:
         # Using the shared shap_service as it was initialized in load_model
-        # Ideally, each predictor should have its own SHAP instance if they can be called concurrently.
-        # But for now, we'll keep the logic the same as previous.
-        return shap_service.explain_prediction(feature_vector, top_n=10)
+        explanation = shap_service.explain_prediction(feature_vector, top_n=10)
+        
+        for feat in explanation.get("features", []):
+            name = feat["featureName"]
+            feat["rawValue"] = raw_features.get(name)
+            
+            if self.scaler and name in self.selected_features:
+                idx = self.selected_features.index(name)
+                if hasattr(self.scaler, 'mean_') and hasattr(self.scaler, 'scale_'):
+                    mean = float(self.scaler.mean_[idx])
+                    std = float(self.scaler.scale_[idx])
+                    feat["referenceRange"] = [mean - std, mean + std]
+                    
+        return explanation

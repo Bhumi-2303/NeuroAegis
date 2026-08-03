@@ -20,6 +20,8 @@ dependencies = [
     "joblib",
     "PyWavelets",
     "mne",
+    "pyyaml",
+    "sqlalchemy",
 ]
 
 [tool.pytest.ini_options]
@@ -28,3 +30,6 @@ addopts = "-ra -q"
 testpaths = [
     "tests",
 ]
+
+[tool.setuptools]
+packages = ["app", "models", "config"]

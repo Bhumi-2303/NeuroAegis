@@ -6,7 +6,7 @@ import io
 import uuid
 from typing import Dict, Any
 
-from app.db.database import get_db
+from app.db.database import get_db, SessionLocal
 from app.db.models import PredictionJob, Patient
 from app.services.prediction.prediction_router import prediction_router
 from app.core.config import settings
@@ -17,7 +17,8 @@ import logging
 
 logger = logging.getLogger("neuroaegis")
 
-def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, dataset: str, model_name: str, db: Session):
+def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, dataset: str, model_name: str):
+    db = SessionLocal()
     try:
         # Update status to processing
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
@@ -59,6 +60,8 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, datase
             job.progress = 0
             job.error = str(e)
             db.commit()
+    finally:
+        db.close()
 
 
 @router.post("/", response_model=Dict[str, Any])
@@ -107,6 +110,19 @@ async def predict_eeg(
                 df = pd.read_csv(io.BytesIO(contents), sep=r'\s+|,', engine='python', on_bad_lines='skip')
             except Exception:
                 df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python', on_bad_lines='skip')
+                
+        if not safe_filename.endswith(".edf"):
+            # Check if headers are just numeric data (headerless file)
+            try:
+                [float(c) for c in df.columns]
+                # If we succeed, it means all columns are numeric -> no header was present
+                first_row = pd.DataFrame([df.columns], columns=df.columns)
+                df = pd.concat([first_row, df], ignore_index=True)
+                df = df.astype(float)
+                df.columns = [str(i) for i in range(len(df.columns))]
+            except ValueError:
+                # It has normal string headers
+                pass
         elif safe_filename.endswith(".edf"):
             import mne
             import tempfile
@@ -159,10 +175,12 @@ async def predict_eeg(
         eeg_data = df.values.T 
         channel_names = df.columns.tolist()
             
-        if channels:
-            channel_names = channels.split(",")
-            if len(channel_names) != len(df.columns):
-                raise ValueError("Number of provided channels does not match CSV columns")
+        if channels and channels.strip():
+            channel_names_input = [c.strip() for c in channels.split(",") if c.strip()]
+            if len(channel_names_input) > 0:
+                if len(channel_names_input) != len(df.columns):
+                    raise ValueError(f"Number of provided channels ({len(channel_names_input)}) does not match CSV columns ({len(df.columns)})")
+                channel_names = channel_names_input
                 
     except Exception as e:
         error_msg = f"Invalid CSV file or detection failed: {str(e)}"
@@ -198,7 +216,7 @@ async def predict_eeg(
         
         background_tasks.add_task(
             process_and_save_prediction, 
-            job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset, selected_model, db
+            job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset, selected_model
         )
         logger.info(f"[{job_id}] Response sent for prediction task.")
         
