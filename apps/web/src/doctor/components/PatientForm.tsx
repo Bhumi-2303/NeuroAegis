@@ -23,18 +23,29 @@ type PatientFormData = z.infer<typeof patientSchema>;
 export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema) as any,
     defaultValues: {
-      age: 0, weight: 0, height: 0, heart_rate: 0, spo2: 0, temperature: 0
+      name: "John Doe",
+      age: 35,
+      gender: "Male",
+      weight: 70,
+      height: 170,
+      medical_history: "No prior seizure history",
+      heart_rate: 75,
+      blood_pressure: "120/80",
+      spo2: 98,
+      temperature: 36.6
     }
   });
 
   const onSubmit = async (data: PatientFormData) => {
+    setFormError(null);
     if (!file) {
-      alert("Please upload an EEG file");
+      setFormError("Please upload an EEG file before submitting.");
       return;
     }
 
@@ -61,7 +72,7 @@ export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: stri
       formData.append('file', file);
       formData.append('sampling_rate', '256');
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v2/predict`, {
+      const response = await fetch('/api/v2/predict', {
         method: 'POST',
         body: formData,
       });
@@ -73,9 +84,9 @@ export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: stri
       const result = await response.json();
       onStartAnalysis(result.job_id);
 
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      alert("Error starting analysis. Ensure the backend is running.");
+    } catch (e: any) {
+      console.error(e);
+      setFormError(e.message || "Error starting analysis. Please check backend connection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -201,6 +212,7 @@ export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: stri
           </div>
           
           {!file && <p className="text-red-400 text-xs mt-4 text-center">An EEG file is required to proceed</p>}
+          {formError && <p className="text-red-400 text-xs mt-2 text-center font-medium bg-red-500/10 p-2 rounded-lg border border-red-500/20">{formError}</p>}
 
           <button 
             type="submit" 

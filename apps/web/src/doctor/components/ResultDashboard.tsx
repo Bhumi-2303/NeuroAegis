@@ -62,7 +62,7 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
   useEffect(() => {
     const fetchReport = async () => {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/v2/predict/status/${jobId}`);
+        const res = await fetch(`/api/v2/predict/status/${jobId}`);
         const result = await res.json();
         setData(result.result);
       } catch (e) {
@@ -73,7 +73,7 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
   }, [jobId]);
 
   if (!data) {
-    return <div className="h-96 flex items-center justify-center">Loading results...</div>;
+    return <div className="h-96 flex items-center justify-center text-[var(--text-secondary)]">Loading results...</div>;
   }
 
   const isHighRisk = data.prediction_label === 'seizure';
@@ -86,14 +86,24 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
     value: Number(value)
   })).sort((a, b) => Math.abs(b.value) - Math.abs(a.value)).slice(0, 8); // top 8
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header Actions */}
       <div className="flex justify-end gap-4 mb-4">
-        <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm transition-colors border border-white/10">
+        <button 
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-2)] hover:bg-[var(--bg-3)] rounded-lg text-sm transition-colors border border-[var(--bg-4)] text-[var(--text-primary)]"
+        >
           <Download className="w-4 h-4" /> PDF Report
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm transition-colors border border-white/10">
+        <button 
+          onClick={handlePrint}
+          className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-2)] hover:bg-[var(--bg-3)] rounded-lg text-sm transition-colors border border-[var(--bg-4)] text-[var(--text-primary)]"
+        >
           <Printer className="w-4 h-4" /> Print
         </button>
       </div>
