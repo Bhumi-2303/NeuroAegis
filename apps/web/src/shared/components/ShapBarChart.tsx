@@ -50,13 +50,16 @@ export const ShapBarChart = forwardRef<HTMLDivElement, ShapBarChartProps>(
           const color = isPositive ? 'var(--accent-primary)' : 'var(--state-danger)';
 
           return (
-            <div key={`${feature.name}-${i}`} className="flex items-center gap-4 text-xs font-mono">
-              <div className="w-24 shrink-0 truncate text-right text-text-secondary">
+            <div key={`${feature.name}-${i}`} className="flex items-center gap-3 text-xs font-mono">
+              <div 
+                className="w-36 md:w-48 shrink-0 truncate text-right text-[var(--text-secondary)] font-medium"
+                title={feature.name}
+              >
                 {feature.name}
               </div>
               <div className="relative flex-1 h-3 flex items-center">
                 {/* Center line */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-text-secondary/20" />
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[var(--bg-4)]" />
                 
                 <div className="w-1/2 flex justify-end pr-1">
                   {!isPositive && (
@@ -87,6 +90,9 @@ export const ShapBarChart = forwardRef<HTMLDivElement, ShapBarChartProps>(
                     />
                   )}
                 </div>
+              </div>
+              <div className="w-14 shrink-0 font-mono text-[10px] text-right font-semibold" style={{ color }}>
+                {isPositive ? '+' : ''}{feature.value.toFixed(3)}
               </div>
             </div>
           );

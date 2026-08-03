@@ -28,7 +28,15 @@ export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
     const dashOffset = arcLength - (clampedValue / 100) * arcLength;
 
     return (
-      <div ref={ref} className={`flex flex-col items-center justify-center ${className}`} {...props}>
+      <div 
+        ref={ref} 
+        className={`flex flex-col items-center justify-center ${className}`} 
+        role="progressbar" 
+        aria-valuenow={clampedValue} 
+        aria-valuemin={0} 
+        aria-valuemax={100}
+        {...props}
+      >
         <div className="relative" style={{ width: size, height: size }}>
           <svg width={size} height={size} style={{ transform: 'rotate(135deg)' }}>
             <circle
@@ -36,7 +44,7 @@ export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
               cy={center}
               r={radius}
               fill="none"
-              stroke="rgba(255,255,255,0.06)"
+              stroke="rgba(255,255,255,0.12)"
               strokeWidth={strokeWidth}
               strokeDasharray={dashArray}
               strokeLinecap="round"
@@ -55,12 +63,12 @@ export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
               transition={{ duration: 1, ease: 'easeOut' }}
             />
           </svg>
-          <div className="absolute inset-0 flex items-center justify-center font-mono text-xl font-bold text-text-primary">
+          <div className="absolute inset-0 flex items-center justify-center font-mono text-xl font-bold text-[var(--text-primary)]">
             {Math.round(clampedValue)}%
           </div>
         </div>
         {label && (
-          <div className="mt-2 text-sm text-text-secondary text-center font-body">
+          <div className="mt-2 text-sm text-[var(--text-secondary)] text-center font-body">
             {label}
           </div>
         )}

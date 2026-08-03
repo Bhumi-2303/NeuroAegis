@@ -12,7 +12,7 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(
     return (
       <div
         ref={ref}
-        className={`glass-card relative overflow-hidden ${interactive ? 'cursor-pointer hover:shadow-[0_0_30px_rgba(0,229,255,0.1)] hover:-translate-y-[2px]' : ''} ${className}`}
+        className={`glass-card relative overflow-hidden ${interactive ? 'cursor-pointer hover:shadow-[0_0_24px_rgba(20,184,166,0.12)] hover:-translate-y-[2px]' : ''} ${className}`}
         {...props}
       >
         {children}
@@ -23,4 +23,4 @@ export const GlassPanel = forwardRef<HTMLDivElement, GlassPanelProps>(
 
 GlassPanel.displayName = 'GlassPanel';
 
-export const MotionGlassPanel = motion(GlassPanel);
+export const MotionGlassPanel = motion.create(GlassPanel);

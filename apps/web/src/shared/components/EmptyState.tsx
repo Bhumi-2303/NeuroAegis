@@ -41,7 +41,8 @@ export const EmptyState = forwardRef<HTMLDivElement, EmptyStateProps>(
             onClick={action.onClick}
             className="mt-2 px-4 py-2 rounded-xl text-sm font-medium
                        text-[var(--accent-primary)] border border-[var(--accent-primary)]
-                       bg-[rgba(0,229,255,0.06)] hover:bg-[rgba(0,229,255,0.12)]
+                       bg-[rgba(20,184,166,0.1)] hover:bg-[rgba(20,184,166,0.2)]
+                       focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)]
                        transition-colors"
           >
             {action.label}

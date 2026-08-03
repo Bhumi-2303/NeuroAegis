@@ -8,7 +8,7 @@ export const cardFloat = {
 };
 
 export const hoverElevate = {
-  whileHover: { y: -2, boxShadow: '0 0 30px rgba(0,229,255,0.10)' },
+  whileHover: { y: -2, boxShadow: '0 0 24px rgba(20,184,166,0.12)' },
   transition: { duration: 0.3, ease: 'easeOut' as const },
 };
 
@@ -27,9 +27,9 @@ export const slideUp = {
 export const pulseGlow = {
   animate: {
     boxShadow: [
-      '0 0 10px rgba(0,229,255,0.05)',
-      '0 0 25px rgba(0,229,255,0.12)',
-      '0 0 10px rgba(0,229,255,0.05)',
+      '0 0 10px rgba(20,184,166,0.05)',
+      '0 0 25px rgba(20,184,166,0.15)',
+      '0 0 10px rgba(20,184,166,0.05)',
     ],
   },
   transition: { duration: 3, repeat: Infinity, ease: 'easeInOut' as const },

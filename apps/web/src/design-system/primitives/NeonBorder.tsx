@@ -6,12 +6,12 @@ export interface NeonBorderProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const colorMap = {
-  primary: 'rgba(0, 229, 255, 0.5)',
-  secondary: 'rgba(75, 125, 255, 0.5)',
-  highlight: 'rgba(139, 92, 246, 0.5)',
-  success: 'rgba(0, 255, 163, 0.5)',
-  warning: 'rgba(255, 176, 32, 0.5)',
-  danger: 'rgba(255, 77, 109, 0.5)',
+  primary: 'var(--accent-primary)',
+  secondary: 'var(--accent-secondary)',
+  highlight: 'var(--accent-highlight)',
+  success: 'var(--state-success)',
+  warning: 'var(--state-warning)',
+  danger: 'var(--state-danger)',
 };
 
 export const NeonBorder = forwardRef<HTMLDivElement, NeonBorderProps>(

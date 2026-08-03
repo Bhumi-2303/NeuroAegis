@@ -1,36 +1,42 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-1: #F8FAFC;
-  --color-bg-2: #FFFFFF;
-  --color-bg-3: #F1F5F9;
-  --color-accent-primary: #2563EB;
-  --color-accent-secondary: #3B82F6;
-  --color-accent-highlight: #4F46E5;
-  --color-state-success: #10B981;
-  --color-state-warning: #F59E0B;
-  --color-state-danger: #EF4444;
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
+  /* Tailwind v4 Utility Class Mappings */
+  --color-bg-1: #0B1120;
+  --color-bg-2: #111827;
+  --color-bg-3: #1E293B;
+  --color-bg-4: #334155;
+  --color-accent-primary: #14B8A6;
+  --color-accent-secondary: #2DD4BF;
+  --color-accent-highlight: #8B5CF6;
+  --color-state-success: #34D399;
+  --color-state-warning: #FBBF24;
+  --color-state-danger: #F87171;
+  --color-text-primary: #F1F5F9;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
 
   --font-display: 'SF Pro Display', 'Geist', 'Inter', system-ui, sans-serif;
   --font-body: 'Inter', 'IBM Plex Sans', 'Geist', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'Geist Mono', ui-monospace, monospace;
+  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', 'Geist Mono', ui-monospace, monospace;
 }
 
 @layer base {
+  /* Canonical CSS Custom Properties for var(--...) references */
   :root {
-    --bg-1: #F8FAFC;
-    --bg-2: #FFFFFF;
-    --bg-3: #F1F5F9;
-    --accent-primary: #2563EB;
-    --accent-secondary: #3B82F6;
-    --accent-highlight: #4F46E5;
-    --state-success: #10B981;
-    --state-warning: #F59E0B;
-    --state-danger: #EF4444;
-    --text-primary: #0F172A;
-    --text-secondary: #475569;
+    --bg-1: #0B1120;
+    --bg-2: #111827;
+    --bg-3: #1E293B;
+    --bg-4: #334155;
+    --accent-primary: #14B8A6;
+    --accent-secondary: #2DD4BF;
+    --accent-highlight: #8B5CF6;
+    --state-success: #34D399;
+    --state-warning: #FBBF24;
+    --state-danger: #F87171;
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
   }
 
   body {
@@ -44,26 +50,26 @@
 }
 
 @layer components {
-  /* 4 Glass Card Specification - converted to flat solid card */
+  /* Glass Card — dark surface with subtle border */
   .glass-card {
     background: var(--bg-2);
-    border-radius: 12px;
-    border: 1px solid #E2E8F0; /* slate-200 */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+    border: 1px solid var(--bg-4);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
   .glass-card:hover {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   /* Nested glass cards */
   .glass-card .glass-card {
     background: var(--bg-3);
-    border: 1px solid #CBD5E1; /* slate-300 */
+    border: 1px solid var(--bg-4);
     box-shadow: none;
   }
-  
+
   .glass-card .glass-card:hover {
     box-shadow: none;
   }
@@ -72,5 +78,11 @@
 @keyframes shimmer {
   100% {
     transform: translateX(100%);
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
   }
 }
