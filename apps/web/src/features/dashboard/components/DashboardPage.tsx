@@ -43,6 +43,7 @@ export function DashboardPage(): React.JSX.Element {
   const mockStaticWaveform = Array.from({ length: 100 }, (_, i) => Math.sin(i * 0.5) * 50 + (Math.random() * 20 - 10));
 
   const [rawSignal, setRawSignal] = React.useState<number[]>([]);
+  const [computedChannels, setComputedChannels] = React.useState<number | null>(null);
 
   React.useEffect(() => {
     if (file && data) {
@@ -51,6 +52,13 @@ export function DashboardPage(): React.JSX.Element {
         const content = e.target?.result as string;
         if (content) {
           const lines = content.split('\n');
+          
+          // Compute number of channels from the first data line
+          if (lines.length > 0) {
+            const cols = lines[0].trim().split(/,|\s+/).filter(Boolean);
+            setComputedChannels(cols.length);
+          }
+
           const vals: number[] = [];
           for (const line of lines) {
              const val = parseFloat(line.trim());
@@ -63,6 +71,7 @@ export function DashboardPage(): React.JSX.Element {
       reader.readAsText(file);
     } else {
       setRawSignal([]);
+      setComputedChannels(null);
     }
   }, [file, data]);
 
@@ -249,12 +258,15 @@ export function DashboardPage(): React.JSX.Element {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
               {/* Confidence Gauge */}
-              <GlassCard title="Model Confidence" className="flex flex-col items-center justify-center p-8">
+              <GlassCard title="Probability of Seizure" className="flex flex-col items-center justify-center p-8">
                 <ConfidenceGauge 
-                  value={Math.max(data.prediction.probabilities.seizure, data.prediction.probabilities.non_seizure) * 100} 
+                  value={data.prediction.probabilities.seizure * 100} 
                   size={180} 
                 />
-                <div className="mt-8">
+                <div className="mt-4 text-sm font-medium text-[var(--text-secondary)] text-center">
+                  Likelihood of seizure activity
+                </div>
+                <div className="mt-4">
                   <StatusBadge 
                     status={data.prediction.label === 'seizure' ? 'critical' : 'normal'} 
                     label={data.prediction.label === 'seizure' ? 'Seizure Detected' : 'Normal Activity'} 
@@ -300,11 +312,11 @@ export function DashboardPage(): React.JSX.Element {
                   <div className="grid grid-cols-2 gap-2 mb-2">
                     <div>
                       <span className="block text-[var(--text-secondary)]">Sampling Rate</span>
-                      <span className="block text-[var(--text-primary)]">{samplingRate || 'Auto-detected'}</span>
+                      <span className="block text-[var(--text-primary)]">{samplingRate || (datasetName?.toLowerCase() === 'bonn' ? '173.61 Hz' : datasetName?.toLowerCase().includes('chb') ? '256 Hz' : 'Auto-detected')}</span>
                     </div>
                     <div>
                       <span className="block text-[var(--text-secondary)]">Channels</span>
-                      <span className="block text-[var(--text-primary)]">{channels ? channels.split(',').length : 'Auto-detected'}</span>
+                      <span className="block text-[var(--text-primary)]">{channels ? channels.split(',').length : (computedChannels || 'Auto-detected')}</span>
                     </div>
                   </div>
                   <span>Dataset: {datasetName?.toUpperCase()} (Conf: {(detectionConfidence! * 100).toFixed(1)}%)</span>

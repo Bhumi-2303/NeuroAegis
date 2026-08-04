@@ -319,12 +319,15 @@ export const SeizurePredictionPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
-              <GlassCard title="Model Confidence" className="flex flex-col items-center justify-center p-8">
+              <GlassCard title="Probability of Seizure" className="flex flex-col items-center justify-center p-8">
                 <ConfidenceGauge 
-                  value={data.confidence.value * 100} 
+                  value={data.prediction.probabilities.seizure * 100} 
                   size={180} 
                   label={`Band: ${data.confidence.band.toUpperCase()}`} 
                 />
+                <div className="mt-4 text-sm font-medium text-[var(--text-secondary)] text-center">
+                  Likelihood of seizure activity
+                </div>
                 <div className="mt-8">
                   <StatusBadge 
                     status={data.prediction.label === 'seizure' ? 'critical' : 'normal'} 
