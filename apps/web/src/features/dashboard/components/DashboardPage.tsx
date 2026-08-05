@@ -45,6 +45,7 @@ export function DashboardPage(): React.JSX.Element {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [rawSignal, setRawSignal] = React.useState<number[]>([]);
+  const [computedChannels, setComputedChannels] = React.useState<number | null>(null);
 
   const [isDragging, setIsDragging] = React.useState(false);
 
@@ -87,6 +88,13 @@ export function DashboardPage(): React.JSX.Element {
         const content = e.target?.result as string;
         if (content) {
           const lines = content.split('\n');
+          
+          // Compute number of channels from the first data line
+          if (lines.length > 0) {
+            const cols = lines[0].trim().split(/,|\s+/).filter(Boolean);
+            setComputedChannels(cols.length);
+          }
+
           const vals: number[] = [];
           for (const line of lines) {
              const val = parseFloat(line.trim());
@@ -99,6 +107,7 @@ export function DashboardPage(): React.JSX.Element {
       reader.readAsText(file);
     } else {
       setRawSignal([]);
+      setComputedChannels(null);
     }
   }, [file, data]);
 
@@ -277,6 +286,7 @@ export function DashboardPage(): React.JSX.Element {
               />
               <SignalQualityCard />
               <ModelInfoCard modelName={data.modelName} />
+            </div>
             </div>
 
             {/* Row 3: Signal Visualization */}

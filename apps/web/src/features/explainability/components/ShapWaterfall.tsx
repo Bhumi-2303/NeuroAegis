@@ -38,22 +38,38 @@ export function ShapWaterfall({ baseValue, features, finalProbability }: ShapWat
     <GlassCard title="SHAP Feature Explanations" className="p-6">
       <div className="flex flex-col gap-6 w-full text-sm font-[var(--font-body)]">
         
+        {/* Legend */}
+        <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1">
+             <div className="w-3 h-3 bg-[var(--state-success)]/20 border border-[var(--state-success)] rounded-sm"></div>
+             <span className="text-[var(--text-secondary)]">green = pushes toward non-seizure</span>
+          </div>
+          <div className="flex items-center gap-1">
+             <div className="w-3 h-3 bg-[var(--state-danger)]/20 border border-[var(--state-danger)] rounded-sm"></div>
+             <span className="text-[var(--text-secondary)]">red = pushes toward seizure</span>
+          </div>
+        </div>
+
         {/* Header / Axis info */}
         <div className="flex justify-between text-xs text-[var(--text-secondary)] border-b border-[var(--bg-3)] pb-2">
-          <span className="w-1/3">Feature</span>
-          <span className="w-1/4">Computed Value (Typical Range)</span>
-          <span className="w-1/3 text-right">Log-Odds Impact</span>
+          <span className="w-1/4">Feature</span>
+          <span className="w-1/6">Computed Value</span>
+          <span className="w-1/6">Typical Range</span>
+          <span className="w-5/12 text-right">Log-Odds Impact</span>
         </div>
 
         {/* Base Value */}
         <div className="flex items-center gap-4 group">
-          <div className="w-1/3 flex items-center justify-between pr-4">
+          <div className="w-1/4 flex items-center justify-between pr-4">
             <span className="font-semibold text-[var(--text-primary)]">Base Rate (Prior)</span>
           </div>
-          <div className="w-1/4 text-xs text-[var(--text-secondary)]">
+          <div className="w-1/6 text-xs text-[var(--text-secondary)]">
             --
           </div>
-          <div className="w-1/3 flex-1 relative h-6">
+          <div className="w-1/6 text-xs text-[var(--text-secondary)]">
+            --
+          </div>
+          <div className="w-5/12 flex-1 relative h-10">
             <div 
               className="absolute h-full border-r-2 border-[var(--text-secondary)] border-dashed"
               style={{ left: `${getPercentage(baseValue)}%` }}
@@ -78,38 +94,40 @@ export function ShapWaterfall({ baseValue, features, finalProbability }: ShapWat
           
           return (
             <div key={step.featureName} className="flex items-center gap-4 group">
-              <div className="w-1/3 flex flex-col pr-4">
+              <div className="w-1/4 flex flex-col pr-4">
                 <span className="font-medium text-[var(--text-primary)] break-words">{step.featureName}</span>
               </div>
-              <div className="w-1/4 flex flex-col text-xs">
+              <div className="w-1/6 flex flex-col text-xs">
                 {hasRaw ? (
-                   <>
-                     <span className="font-mono text-[var(--text-primary)]">{step.rawValue?.toFixed(4)}</span>
-                     {step.referenceRange && (
-                       <span className="text-[var(--text-secondary)] opacity-80">
-                         ({step.referenceRange[0].toFixed(2)} - {step.referenceRange[1].toFixed(2)})
-                       </span>
-                     )}
-                   </>
+                   <span className="font-mono text-[var(--text-primary)]">{step.rawValue?.toFixed(4)}</span>
                 ) : (
                   <span className="text-[var(--text-secondary)]">--</span>
                 )}
               </div>
-              <div className="w-1/3 flex-1 relative h-6">
+              <div className="w-1/6 flex flex-col text-xs">
+                {step.referenceRange ? (
+                   <span className="font-mono text-[var(--text-secondary)] opacity-80">
+                     {step.referenceRange[0].toFixed(2)} - {step.referenceRange[1].toFixed(2)}
+                   </span>
+                ) : (
+                  <span className="text-[var(--text-secondary)]">--</span>
+                )}
+              </div>
+              <div className="w-5/12 flex-1 relative h-10">
                 <motion.div
                   initial={{ width: 0, x: isPositive ? 0 : '100%' }}
                   animate={{ width: `${widthPct}%`, x: 0 }}
                   transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  className={`absolute h-full rounded ${bgClass} border border-current ${textClass} flex items-center ${isPositive ? 'justify-end pr-1' : 'justify-start pl-1'}`}
+                  className={`absolute h-full rounded ${bgClass} border border-current ${textClass} flex items-center ${isPositive ? 'justify-end pr-2' : 'justify-start pl-2'}`}
                   style={{ left: `${leftPct}%` }}
                 >
-                  <span className="text-[10px] font-mono font-bold whitespace-nowrap">
+                  <span className="text-[12px] font-mono font-bold whitespace-nowrap">
                     {isPositive ? '+' : ''}{step.value.toFixed(2)}
                   </span>
                 </motion.div>
                 {/* Connecting line to next step */}
                 <div 
-                  className="absolute h-full border-r border-[var(--bg-3)] border-dotted top-3"
+                  className="absolute h-full border-r border-[var(--bg-3)] border-dotted top-5"
                   style={{ left: `${endPct}%`, height: '150%' }}
                 />
               </div>
@@ -119,19 +137,22 @@ export function ShapWaterfall({ baseValue, features, finalProbability }: ShapWat
 
         {/* Final Output */}
         <div className="flex items-center gap-4 pt-4 border-t border-[var(--bg-3)]">
-          <div className="w-1/3 flex items-center pr-4">
-            <span className="font-bold text-[var(--text-primary)]">Final Probability</span>
+          <div className="w-1/4 flex items-center pr-4">
+            <span className="font-bold text-[var(--text-primary)]">Probability of Seizure</span>
           </div>
-          <div className="w-1/4 text-xs font-mono text-[var(--accent-primary)]">
-            {(finalProbability * 100).toFixed(1)}%
+          <div className="w-1/6 text-xs text-[var(--text-secondary)]">
+            --
           </div>
-          <div className="w-1/3 flex-1 relative h-6">
+          <div className="w-1/6 text-xs text-[var(--text-secondary)]">
+            --
+          </div>
+          <div className="w-5/12 flex-1 relative h-10">
             <div 
               className="absolute h-full border-r-2 border-[var(--accent-primary)]"
               style={{ left: `${getPercentage(currentValue)}%` }}
             >
-              <span className="absolute -top-5 -translate-x-1/2 text-xs text-[var(--accent-primary)] font-mono font-bold">
-                Output
+              <span className="absolute -top-6 -translate-x-1/2 text-sm text-[var(--accent-primary)] font-mono font-bold">
+                {(finalProbability * 100).toFixed(1)}%
               </span>
             </div>
           </div>
