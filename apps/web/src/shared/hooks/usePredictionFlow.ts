@@ -68,7 +68,7 @@ export function usePredictionFlow() {
 
       console.log("[usePredictionFlow] Upload started. API URL: /api/v1/predict");
 
-      const res = await fetch('/api/v1/predict', {
+      const res = await fetch('/api/v1/predict/', {
         method: 'POST',
         body: formData,
       });

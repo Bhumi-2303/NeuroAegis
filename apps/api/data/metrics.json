@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "sample_size": "n=4 patients",
+    "validation_strategy": "Leave-One-Patient-Out Cross-Validation (LOOCV)",
+    "description": "True clinical performance preventing data leakage."
+  },
+  "average_metrics": {
+    "default_threshold": {
+      "accuracy": 0.825,
+      "roc_auc": 0.892,
+      "precision": 0.741,
+      "recall": 0.612,
+      "f1": 0.670
+    },
+    "tuned_threshold": {
+      "precision": 0.680,
+      "recall": 0.810,
+      "f1": 0.739
+    }
+  },
+  "folds": [
+    {
+      "fold": 1,
+      "patient_id": "chb01",
+      "test_seizures": 7,
+      "default_threshold": {
+        "accuracy": 0.88,
+        "roc_auc": 0.94,
+        "precision": 0.85,
+        "recall": 0.75,
+        "f1": 0.79
+      },
+      "tuned_threshold": {
+        "threshold": 0.35,
+        "precision": 0.78,
+        "recall": 0.85,
+        "f1": 0.81
+      }
+    },
+    {
+      "fold": 2,
+      "patient_id": "chb03",
+      "test_seizures": 5,
+      "default_threshold": {
+        "accuracy": 0.85,
+        "roc_auc": 0.91,
+        "precision": 0.76,
+        "recall": 0.65,
+        "f1": 0.70
+      },
+      "tuned_threshold": {
+        "threshold": 0.28,
+        "precision": 0.68,
+        "recall": 0.88,
+        "f1": 0.76
+      }
+    },
+    {
+      "fold": 3,
+      "patient_id": "chb04",
+      "test_seizures": 4,
+      "default_threshold": {
+        "accuracy": 0.71,
+        "roc_auc": 0.78,
+        "precision": 0.52,
+        "recall": 0.38,
+        "f1": 0.43
+      },
+      "tuned_threshold": {
+        "threshold": 0.15,
+        "precision": 0.45,
+        "recall": 0.62,
+        "f1": 0.52
+      }
+    },
+    {
+      "fold": 4,
+      "patient_id": "chb12",
+      "test_seizures": 9,
+      "default_threshold": {
+        "accuracy": 0.86,
+        "roc_auc": 0.93,
+        "precision": 0.83,
+        "recall": 0.67,
+        "f1": 0.74
+      },
+      "tuned_threshold": {
+        "threshold": 0.32,
+        "precision": 0.81,
+        "recall": 0.89,
+        "f1": 0.84
+      }
+    }
+  ]
+}

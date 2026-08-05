@@ -68,110 +68,14 @@ export const FrequencyAnalysisPage: React.FC = () => {
   }, [chartData]);
 
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <motion.div variants={staggerChildren} className="flex flex-col gap-4">
-          <motion.div variants={slideUp}>
-            <SkeletonShimmer className="h-64 w-full rounded-xl" />
-          </motion.div>
-          <motion.div variants={slideUp} className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {BANDS.map(b => (
-              <SkeletonShimmer key={b.name} className="h-24 w-full rounded-xl" />
-            ))}
-          </motion.div>
-        </motion.div>
-      );
-    }
-
-    if (error) {
-      return (
-        <ErrorState 
-          title="Frequency Analysis Error" 
-          message={error.message || 'Could not load frequency band data.'} 
-        />
-      );
-    }
-
-    if (!chartData || chartData.length === 0) {
-      return (
-        <EmptyState 
-          icon={Radio} 
-          title="No Frequency Data" 
-          description="Waiting for the frequency analysis streams to initialize." 
-        />
-      );
-    }
-
     return (
-      <motion.div variants={staggerChildren} className="space-y-6">
-        <motion.div variants={slideUp}>
-          <GlassCard className="p-6 h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  {BANDS.map(({ name, color }) => (
-                    <linearGradient key={`gradient-${name}`} id={`gradient-${name}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                      <stop offset="95%" stopColor={color} stopOpacity={0} />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  stroke="var(--text-secondary)" 
-                  fontSize={12} 
-                  tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour12: false, second: '2-digit' })}
-                  tickMargin={10}
-                />
-                <YAxis 
-                  stroke="var(--text-secondary)" 
-                  fontSize={12} 
-                  tickMargin={10}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--bg-2)', 
-                    borderColor: 'var(--bg-4)', 
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-mono)'
-                  }} 
-                />
-                {BANDS.map(({ name, color }) => (
-                  <Area
-                    key={name}
-                    type="monotone"
-                    dataKey={name}
-                    stroke={color}
-                    fillOpacity={1}
-                    fill={`url(#gradient-${name})`}
-                    strokeWidth={2}
-                    style={{ filter: `drop-shadow(0 0 4px ${color}80)` }} // Glowing stroke
-                    isAnimationActive={false}
-                  />
-                ))}
-              </AreaChart>
-            </ResponsiveContainer>
-          </GlassCard>
-        </motion.div>
-
-        {/* Bottom Stat Tiles */}
-        {latestAverages && (
-          <motion.div variants={staggerChildren} className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            {BANDS.map(({ name, label, color }) => (
-              <motion.div key={name} variants={slideUp}>
-                <GlassCard className="p-4 flex flex-col items-center justify-center text-center">
-                  <span className="text-sm font-body" style={{ color: color }}>{label}</span>
-                  <span className="text-xl font-mono mt-2" style={{ color: 'var(--text-primary)' }}>
-                    {latestAverages[name].toFixed(2)} µV²
-                  </span>
-                </GlassCard>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
-      </motion.div>
+      <div className="flex flex-col items-center justify-center h-[500px] text-center border-2 border-dashed border-[var(--bg-4)] rounded-xl bg-[var(--bg-2)]/50">
+        <Lock className="text-gray-500 mb-3" size={32} />
+        <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Awaiting Backend Integration</h3>
+        <p className="text-sm text-[var(--text-secondary)] max-w-[400px]">
+          Frequency band analysis and spectral power streams will be available when live EEG processing is implemented on the backend.
+        </p>
+      </div>
     );
   };
 

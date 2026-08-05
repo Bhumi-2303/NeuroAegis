@@ -61,3 +61,7 @@ class BasePredictor(ABC):
             "explanation": explanation,
             "generatedAt": datetime.datetime.utcnow().isoformat() + "Z"
         }
+
+    @abstractmethod
+    def get_feature_importances(self, model_name: str = None) -> list[dict[str, Any]]:
+        """Returns feature importances mapping for the model."""

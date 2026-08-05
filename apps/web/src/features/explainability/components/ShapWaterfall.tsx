@@ -107,7 +107,7 @@ export function ShapWaterfall({ baseValue, features, finalProbability }: ShapWat
               <div className="w-1/6 flex flex-col text-xs">
                 {step.referenceRange ? (
                    <span className="font-mono text-[var(--text-secondary)] opacity-80">
-                     {step.referenceRange[0].toFixed(2)} - {step.referenceRange[1].toFixed(2)}
+                     {step.referenceRange[0].toFixed(4)} - {step.referenceRange[1].toFixed(4)}
                    </span>
                 ) : (
                   <span className="text-[var(--text-secondary)]">--</span>

@@ -1,38 +1,34 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, FileText, Download, Calendar, User } from 'lucide-react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine
-} from 'recharts';
-import { useEvaluationMetrics } from '../hooks/useEvaluationMetrics';
-import { GlassCard, SkeletonShimmer, EmptyState, ErrorState } from '../../../shared/components';
+import { AlertCircle, FileText, Download, Calendar, User, Activity, CheckCircle, Search, Target } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { GlassCard } from '../../../shared/components';
 import { pageTransition, fadeIn } from '../../../shared/lib/motion-presets';
 
-export const ReportsPage = () => {
-  const [modelName, setModelName] = useState<'random_forest' | 'xgboost' | 'lightgbm'>('random_forest');
-  const [activeTab, setActiveTab] = useState<'generate' | 'metrics'>('generate');
-  const { data, isLoading, isError, error, refetch } = useEvaluationMetrics(modelName);
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+export const ReportsPage = () => {
+  const [activeTab, setActiveTab] = useState<'generate' | 'metrics'>('generate');
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+
+  const { data: metricsData, isLoading, isError } = useQuery({
+    queryKey: ['model-metrics'],
+    queryFn: async () => {
+      const res = await fetch(`${API_URL}/api/v1/metrics`);
+      if (!res.ok) throw new Error('Failed to fetch metrics');
+      return res.json();
+    },
+    enabled: activeTab === 'metrics'
+  });
 
   const handleGenerateReport = (e: React.FormEvent) => {
     e.preventDefault();
     setIsGenerating(true);
     setReportSuccess(false);
-    
-    // Simulate API call
     setTimeout(() => {
       setIsGenerating(false);
       setReportSuccess(true);
-      
       setTimeout(() => setReportSuccess(false), 5000);
     }, 2000);
   };
@@ -40,138 +36,105 @@ export const ReportsPage = () => {
   const renderMetrics = () => {
     if (isLoading) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-          {[...Array(5)].map((_, i) => (
-            <GlassCard key={i} className="h-24">
-              <SkeletonShimmer className="w-full h-full" />
-            </GlassCard>
-          ))}
-          <GlassCard className="col-span-1 md:col-span-5 h-96">
-            <SkeletonShimmer className="w-full h-full" />
-          </GlassCard>
-          <GlassCard className="col-span-1 md:col-span-5 h-64">
-            <SkeletonShimmer className="w-full h-full" />
-          </GlassCard>
+        <div className="mt-6 flex flex-col items-center justify-center h-[400px] text-center">
+          <div className="w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-sm text-gray-500">Loading evaluation metrics...</p>
         </div>
       );
     }
-
-    if (isError) {
+    
+    if (isError || !metricsData) {
       return (
-        <div className="mt-6">
-          <ErrorState
-            title="Failed to load metrics"
-            message={error instanceof Error ? error.message : 'An unknown error occurred'}
-            onRetry={refetch}
-          />
+        <div className="mt-6 flex flex-col items-center justify-center h-[400px] text-center text-red-500">
+          <AlertCircle size={32} className="mb-4" />
+          <p>Failed to load validation metrics from backend.</p>
         </div>
       );
     }
 
-    if (!data) {
-      return (
-        <div className="mt-6">
-          <EmptyState
-            icon={AlertCircle}
-            title="No Data Available"
-            description="Evaluation metrics for the selected model are not available."
-          />
-        </div>
-      );
-    }
-
-    const formatPercent = (val: number) => `${(val * 100).toFixed(1)}%`;
+    const { metadata, average_metrics, folds } = metricsData;
 
     return (
-      <motion.div variants={fadeIn} initial="initial" animate="animate" className="space-y-6 mt-6">
-        <div className="flex gap-2 mb-6 bg-[var(--bg-2)] p-1 rounded-lg w-fit border border-[var(--bg-3)]">
-          {(['random_forest', 'xgboost', 'lightgbm'] as const).map((model) => (
-            <button
-              key={model}
-              onClick={() => setModelName(model)}
-              className={`px-4 py-2 rounded-md font-body text-sm transition-all duration-300 ${
-                modelName === model 
-                  ? 'bg-[var(--accent-primary)]/20 text-[var(--accent-primary)] border border-[var(--accent-primary)]/50 shadow-[0_0_15px_rgba(20,184,166,0.2)]' 
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-3)]'
-              }`}
-            >
-              {model === 'random_forest' ? 'Random Forest' : model === 'xgboost' ? 'XGBoost' : 'LightGBM'}
-            </button>
-          ))}
-        </div>
+      <motion.div variants={fadeIn} initial="initial" animate="animate" className="mt-6 space-y-6">
+        <GlassCard title="Clinical Validation Overview" className="p-6">
+          <div className="flex items-center gap-4 mb-6 pb-4 border-b border-gray-100">
+            <div>
+              <h3 className="font-semibold text-gray-800">{metadata?.validation_strategy}</h3>
+              <p className="text-sm text-gray-500">{metadata?.description} — Sample Size: <span className="font-mono font-medium text-indigo-600">{metadata?.sample_size}</span></p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2"><Target size={16}/> Default Threshold (0.5)</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-500 mb-1">ROC AUC</div>
+                  <div className="text-xl font-bold text-gray-900">{(average_metrics.default_threshold.roc_auc * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-500 mb-1">Accuracy</div>
+                  <div className="text-xl font-bold text-gray-900">{(average_metrics.default_threshold.accuracy * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-500 mb-1">Precision</div>
+                  <div className="text-xl font-bold text-gray-900">{(average_metrics.default_threshold.precision * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="text-xs text-gray-500 mb-1">Recall (Sensitivity)</div>
+                  <div className="text-xl font-bold text-gray-900">{(average_metrics.default_threshold.recall * 100).toFixed(1)}%</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h4 className="text-sm font-semibold text-indigo-700 flex items-center gap-2"><Activity size={16}/> Threshold-Tuned (Optimal F1)</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-indigo-50/50 rounded-lg p-4 border border-indigo-100">
+                  <div className="text-xs text-indigo-600/70 mb-1">F1 Score</div>
+                  <div className="text-xl font-bold text-indigo-900">{(average_metrics.tuned_threshold.f1 * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-indigo-50/50 rounded-lg p-4 border border-indigo-100">
+                  <div className="text-xs text-indigo-600/70 mb-1">Precision</div>
+                  <div className="text-xl font-bold text-indigo-900">{(average_metrics.tuned_threshold.precision * 100).toFixed(1)}%</div>
+                </div>
+                <div className="bg-indigo-50/50 rounded-lg p-4 border border-indigo-100 col-span-2">
+                  <div className="text-xs text-indigo-600/70 mb-1">Recall (Sensitivity)</div>
+                  <div className="text-xl font-bold text-indigo-900">{(average_metrics.tuned_threshold.recall * 100).toFixed(1)}%</div>
+                  <div className="text-xs text-indigo-500 mt-1">Tuned for max seizure detection</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <GlassCard className="flex flex-col items-center justify-center p-4">
-            <div className="font-mono text-3xl font-bold text-[var(--accent-primary)]">
-              {formatPercent(data.accuracy)}
-            </div>
-            <div className="font-body text-sm text-[var(--text-secondary)] mt-1">Accuracy</div>
-          </GlassCard>
-          <GlassCard className="flex flex-col items-center justify-center p-4">
-            <div className="font-mono text-3xl font-bold text-[var(--accent-secondary)]">
-              {formatPercent(data.precision)}
-            </div>
-            <div className="font-body text-sm text-[var(--text-secondary)] mt-1">Precision</div>
-          </GlassCard>
-          <GlassCard className="flex flex-col items-center justify-center p-4">
-            <div className="font-mono text-3xl font-bold text-[var(--accent-highlight)]">
-              {formatPercent(data.recall)}
-            </div>
-            <div className="font-body text-sm text-[var(--text-secondary)] mt-1">Recall</div>
-          </GlassCard>
-          <GlassCard className="flex flex-col items-center justify-center p-4">
-            <div className="font-mono text-3xl font-bold text-[var(--state-success)]">
-              {formatPercent(data.f1Score)}
-            </div>
-            <div className="font-body text-sm text-[var(--text-secondary)] mt-1">F1 Score</div>
-          </GlassCard>
-          <GlassCard className="flex flex-col items-center justify-center p-4">
-            <div className="font-mono text-3xl font-bold text-[var(--state-warning)]">
-              {formatPercent(data.rocAuc)}
-            </div>
-            <div className="font-body text-sm text-[var(--text-secondary)] mt-1">ROC-AUC</div>
-          </GlassCard>
-        </div>
-
-        <GlassCard title="ROC Curve" className="p-4 h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data.rocCurve} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorTpr" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-3)" />
-              <XAxis 
-                dataKey="fpr" 
-                type="number" 
-                domain={[0, 1]} 
-                tick={{ fill: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
-                stroke="var(--bg-3)"
-              />
-              <YAxis 
-                type="number" 
-                domain={[0, 1]}
-                tick={{ fill: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}
-                stroke="var(--bg-3)"
-              />
-              <Tooltip 
-                contentStyle={{ backgroundColor: 'var(--bg-1)', border: '1px solid var(--bg-3)', borderRadius: '8px' }}
-                itemStyle={{ color: 'var(--text-primary)' }}
-              />
-              <ReferenceLine segment={[{ x: 0, y: 0 }, { x: 1, y: 1 }]} stroke="var(--text-secondary)" strokeDasharray="3 3" />
-              <Area 
-                type="monotone" 
-                dataKey="tpr" 
-                stroke="var(--accent-primary)" 
-                fillOpacity={1} 
-                fill="url(#colorTpr)" 
-                strokeWidth={2}
-                activeDot={{ r: 6, fill: 'var(--accent-highlight)' }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <GlassCard title="Per-Fold Breakdown (Leave-One-Patient-Out)" className="p-6">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-gray-500 uppercase bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 rounded-tl-lg">Patient ID</th>
+                  <th className="px-4 py-3">Test Seizures</th>
+                  <th className="px-4 py-3 text-center border-l border-gray-200" colSpan={3}>Default (AUC / Prec / Rec)</th>
+                  <th className="px-4 py-3 text-center border-l border-gray-200 rounded-tr-lg" colSpan={3}>Tuned (Thresh / Prec / Rec)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {folds.map((fold: any, i: number) => (
+                  <tr key={i} className="border-b border-gray-100 last:border-0 hover:bg-gray-50/50">
+                    <td className="px-4 py-3 font-medium text-gray-900">{fold.patient_id}</td>
+                    <td className="px-4 py-3 text-gray-600">{fold.test_seizures}</td>
+                    <td className="px-4 py-3 border-l border-gray-200">{(fold.default_threshold.roc_auc * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-gray-500">{(fold.default_threshold.precision * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-gray-500">{(fold.default_threshold.recall * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 border-l border-gray-200 text-indigo-600">{fold.tuned_threshold.threshold.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-indigo-600/70">{(fold.tuned_threshold.precision * 100).toFixed(1)}%</td>
+                    <td className="px-4 py-3 text-indigo-600/70">{(fold.tuned_threshold.recall * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </GlassCard>
       </motion.div>
     );
@@ -243,7 +206,7 @@ export const ReportsPage = () => {
                   animate={{ opacity: 1, y: 0 }} 
                   className="text-sm text-[var(--state-success)] font-[var(--font-body)] flex items-center gap-2"
                 >
-                  <AlertCircle className="w-4 h-4" /> Report generated successfully!
+                  <CheckCircle className="w-4 h-4" /> Report generated successfully!
                 </motion.span>
               )}
             </div>

@@ -7,15 +7,19 @@ export interface ConfidenceGaugeProps extends HTMLAttributes<HTMLDivElement> {
   size?: number;
   label?: string;
   className?: string;
+  isSeizure?: boolean;
 }
 
 export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
-  ({ value, size = 120, label, className = '', ...props }, ref) => {
+  ({ value, size = 120, label, className = '', isSeizure, ...props }, ref) => {
     const clampedValue = Math.max(0, Math.min(100, value));
     
     let color = 'var(--state-success)';
-    if (clampedValue < 40) color = 'var(--state-danger)';
-    else if (clampedValue < 70) color = 'var(--state-warning)';
+    if (isSeizure) {
+      color = 'var(--state-danger)';
+    } else if (clampedValue < 70) {
+      color = 'var(--state-warning)';
+    }
 
     const strokeWidth = size * 0.08;
     const radius = (size - strokeWidth) / 2;
@@ -64,7 +68,7 @@ export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
             />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center font-mono text-xl font-bold text-[var(--text-primary)]">
-            {Math.round(clampedValue)}%
+            {clampedValue.toFixed(1)}%
           </div>
         </div>
         {label && (

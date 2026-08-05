@@ -22,6 +22,12 @@ class CHBMITPredictor(BasePredictor):
 
     def load_model(self) -> bool:
         try:
+            self.reference_ranges = {}
+            ref_path = os.path.join(self.model_dir, "reference_ranges.json")
+            if os.path.exists(ref_path):
+                with open(ref_path, "r") as f:
+                    self.reference_ranges = json.load(f)
+
             metadata_path = os.path.join(self.model_dir, "metadata.json")
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
@@ -71,13 +77,13 @@ class CHBMITPredictor(BasePredictor):
     def preprocess(self, data: np.ndarray) -> np.ndarray:
         return preprocess_eeg(data)
 
-    def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> np.ndarray:
+    def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> tuple[np.ndarray, dict[str, float]]:
         feature_dict = extract_all_features(data, channel_names, fs)
         # Ensure correct order based on selected_features
         vector = []
         for feat in self.selected_features:
             vector.append(feature_dict.get(feat, 0.0))
-        return np.array([vector])
+        return np.array([vector]), feature_dict
 
     def predict(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
@@ -107,7 +113,7 @@ class CHBMITPredictor(BasePredictor):
             "probabilities": {"seizure": prob_seizure, "non_seizure": prob_non_seizure}
         }
 
-    def generate_explanation(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
+    def generate_explanation(self, feature_vector: np.ndarray, raw_features: dict[str, float], model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
         explainer = self.explainers.get(model_name)
         if not explainer:
@@ -127,14 +133,70 @@ class CHBMITPredictor(BasePredictor):
         top_features = []
         for idx in top_indices:
             feat_name = self.selected_features[idx] if idx < len(self.selected_features) else f"Feature_{idx}"
-            top_features.append({
-                "name": feat_name,
-                "value": float(feature_vector[0][idx]),
-                "shap_value": float(sv[idx]),
+            feat_data = {
+                "featureName": feat_name,
+                "value": float(sv[idx]),
+                "rawValue": raw_features.get(feat_name, float(feature_vector[0][idx])),
                 "importance": float(importances[idx])
-            })
+            }
+            if feat_name in self.reference_ranges:
+                feat_data["referenceRange"] = self.reference_ranges[feat_name]
+                
+            top_features.append(feat_data)
             
         return {
             "features": top_features,
-            "base_value": float(explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value)
+            "baseValue": float(explainer.expected_value[1] if isinstance(explainer.expected_value, list) else explainer.expected_value)
         }
+
+    def get_feature_importances(self, model_name: str = None) -> list[dict[str, Any]]:
+        model_name = model_name or self.default_model
+        if model_name not in self.models:
+            return []
+            
+        model = self.models[model_name]
+        importances = None
+        
+        # Try to extract from the model directly
+        if hasattr(model, "feature_importances_"):
+            importances = model.feature_importances_
+        elif hasattr(model, "booster_"):  # LightGBM
+            importances = model.booster_.feature_importance()
+        elif hasattr(model, "named_steps"):  # Sklearn Pipeline
+            last_step = list(model.named_steps.values())[-1]
+            if hasattr(last_step, "feature_importances_"):
+                importances = last_step.feature_importances_
+                
+        if importances is None:
+            return []
+            
+        # Normalize to percentage
+        total = sum(importances)
+        if total > 0:
+            importances = [float(i) / total * 100 for i in importances]
+            
+        results = []
+        for i, name in enumerate(self.selected_features):
+            val = float(importances[i]) if i < len(importances) else 0.0
+            
+            # Simple heuristic for category mapping since we just have the name string
+            category = "Temporal"
+            lower_name = name.lower()
+            if "freq" in lower_name or "psd" in lower_name or "band" in lower_name:
+                category = "Frequency"
+            elif "wavelet" in lower_name or "wt" in lower_name:
+                category = "Wavelet"
+            elif "entropy" in lower_name or "svd" in lower_name:
+                category = "Entropy"
+            elif "hjorth" in lower_name or "complexity" in lower_name or "mobility" in lower_name:
+                category = "Hjorth"
+                
+            results.append({
+                "name": name,
+                "value": val,
+                "category": category
+            })
+            
+        # Sort by value descending
+        results.sort(key=lambda x: x["value"], reverse=True)
+        return results

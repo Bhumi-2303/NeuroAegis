@@ -1,55 +1,79 @@
 import { WidgetCard } from './WidgetCard';
 import { BarChart3 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
+interface FeatureImportance {
+  name: string;
+  value: number;
+  category: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 export function GlobalFeatureImportance() {
-  // Mock data for top 15 features across the dataset
-  const data = [
-    { name: 'Variance', value: 0.18 },
-    { name: 'Energy', value: 0.15 },
-    { name: 'Line Length', value: 0.12 },
-    { name: 'Wavelet Energy', value: 0.11 },
-    { name: 'Bandpower Delta', value: 0.09 },
-    { name: 'Hjorth Complexity', value: 0.08 },
-    { name: 'Shannon Entropy', value: 0.07 },
-    { name: 'Bandpower Theta', value: 0.05 },
-    { name: 'Mean Amplitude', value: 0.04 },
-    { name: 'Zero Crossing', value: 0.03 },
-    { name: 'Kurtosis', value: 0.02 },
-    { name: 'Skewness', value: 0.02 },
-    { name: 'Peak Frequency', value: 0.015 },
-    { name: 'Spectral Edge', value: 0.015 },
-    { name: 'Hjorth Mobility', value: 0.01 },
-  ].sort((a, b) => b.value - a.value);
+  const { data, isLoading, error } = useQuery<{ feature_importances: FeatureImportance[] }>({
+    queryKey: ['model-info'],
+    queryFn: async () => {
+      const res = await fetch(`/api/v1/model/info?dataset=chbmit&model_name=lightgbm`);
+      if (!res.ok) throw new Error('Failed to fetch model info');
+      return res.json();
+    },
+    staleTime: Infinity,
+  });
+
+  const chartData = data?.feature_importances
+    ? [...data.feature_importances]
+        .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
+        .filter(f => Math.abs(f.value) > 0)
+        .slice(0, 15)
+    : [];
+  
+  // A color mapping for the simplistic heuristic categories we made
+  const categoryColors: Record<string, string> = {
+    Temporal: '#8b5cf6', // Violet
+    Frequency: '#3b82f6', // Blue
+    Wavelet: '#ec4899', // Pink
+    Entropy: '#f59e0b', // Amber
+    Hjorth: '#10b981', // Emerald
+  };
 
   return (
-    <WidgetCard title="Global Feature Importance" icon={<BarChart3 size={16} />}>
-      <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 20, left: 20, bottom: 0 }}>
-            <XAxis type="number" hide />
-            <YAxis 
-              dataKey="name" 
-              type="category" 
-              axisLine={false} 
-              tickLine={false}
-              tick={{ fontSize: 11, fill: '#6B7280' }}
-              width={120}
-            />
-            <Tooltip 
-              cursor={{ fill: '#F3F4F6' }}
-              contentStyle={{ borderRadius: '8px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
-              itemStyle={{ color: '#111827', fontSize: '12px' }}
-              formatter={(val: any) => [`${(Number(val || 0) * 100).toFixed(1)}%`, 'Relative Importance']}
-            />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
-              {data.map((_entry, index) => (
-                <Cell key={`cell-${index}`} fill={index < 3 ? '#2563EB' : '#93C5FD'} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <WidgetCard title="Global Feature Importance (LightGBM)" icon={<BarChart3 size={16} />}>
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[300px] text-[var(--text-secondary)]">Loading model weights...</div>
+      ) : error ? (
+        <div className="flex items-center justify-center h-[300px] text-red-500">Failed to load importances</div>
+      ) : (
+        <div className="h-[300px] w-full pt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+              <XAxis type="number" hide />
+              <YAxis 
+                type="category" 
+                dataKey="name" 
+                width={120} 
+                tick={{ fontSize: 10, fill: '#6b7280' }} 
+                axisLine={false} 
+                tickLine={false} 
+              />
+              <Tooltip 
+                cursor={{ fill: '#f3f4f6' }}
+                contentStyle={{ borderRadius: '8px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
+                formatter={(val: number, name: string, props: any) => [
+                  `${val.toFixed(2)}%`,
+                  props.payload.category || 'Importance'
+                ]}
+              />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={categoryColors[entry.category] || '#3b82f6'} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </WidgetCard>
   );
 }

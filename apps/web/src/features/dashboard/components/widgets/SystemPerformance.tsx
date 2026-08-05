@@ -15,10 +15,10 @@ export function SystemPerformance() {
     <WidgetCard title="System Performance" icon={<Server size={16} />}>
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {metrics.map(m => (
-          <div key={m.label} className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex flex-col justify-center">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{m.label}</span>
-            <span className="text-sm font-semibold text-gray-900 font-mono">{m.value}</span>
-            <span className="text-[10px] text-gray-400 mt-1">{m.sub}</span>
+          <div key={m.label} className="p-3 bg-[var(--bg-3)] rounded-xl border border-[var(--bg-4)] flex flex-col justify-center">
+            <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-1">{m.label}</span>
+            <span className="text-sm font-semibold text-[var(--text-primary)] font-mono">{m.value}</span>
+            <span className="text-[10px] text-[var(--text-muted)] mt-1">{m.sub}</span>
           </div>
         ))}
       </div>

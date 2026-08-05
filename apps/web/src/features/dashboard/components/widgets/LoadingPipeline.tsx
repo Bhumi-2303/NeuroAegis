@@ -32,8 +32,8 @@ export function LoadingPipeline() {
       <WidgetCard>
         <div className="p-8">
           <div className="flex flex-col items-center mb-10">
-            <div className="text-xl font-bold text-gray-900 mb-2">Analysis in Progress</div>
-            <div className="text-sm text-gray-500">Processing biomedical data using remote cluster...</div>
+            <div className="text-xl font-bold text-[var(--text-primary)] mb-2">Analysis in Progress</div>
+            <div className="text-sm text-[var(--text-secondary)]">Processing biomedical data using remote cluster...</div>
           </div>
 
           <div className="space-y-6">
@@ -55,15 +55,15 @@ export function LoadingPipeline() {
                         <CircleDashed size={24} className="text-blue-500" />
                       </motion.div>
                     )}
-                    {isFuture && <div className="w-4 h-4 rounded-full border-2 border-gray-200" />}
+                    {isFuture && <div className="w-4 h-4 rounded-full border-2 border-[var(--bg-4)]" />}
                   </div>
 
                   <div className="flex-1">
-                    <div className={`text-sm font-semibold ${isActive ? 'text-blue-600' : isPast ? 'text-gray-700' : 'text-gray-400'}`}>
+                    <div className={`text-sm font-semibold ${isActive ? 'text-blue-600' : isPast ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}>
                       {stage}
                     </div>
                     {isActive && (
-                      <div className="w-full h-1 bg-gray-100 rounded-full mt-2 overflow-hidden">
+                      <div className="w-full h-1 bg-[var(--bg-3)] rounded-full mt-2 overflow-hidden">
                         <motion.div 
                           className="h-full bg-blue-500 rounded-full"
                           initial={{ width: 0 }}

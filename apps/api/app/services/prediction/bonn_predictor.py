@@ -19,6 +19,11 @@ logger = logging.getLogger("neuroaegis.bonn_predictor")
 class BonnPredictor(BasePredictor):
     def load_model(self) -> bool:
         try:
+            self.reference_ranges = {}
+            ref_path = os.path.join(self.model_dir, "reference_ranges.json")
+            if os.path.exists(ref_path):
+                with open(ref_path, "r") as f:
+                    self.reference_ranges = json.load(f)
             metadata_path = os.path.join(self.model_dir, "metadata.json")
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
@@ -101,7 +106,10 @@ class BonnPredictor(BasePredictor):
             name = feat["featureName"]
             feat["rawValue"] = raw_features.get(name)
             
-            if self.scaler and name in self.selected_features:
+            if name in self.reference_ranges:
+                feat["referenceRange"] = self.reference_ranges[name]
+            elif self.scaler and name in self.selected_features:
+                # Fallback
                 idx = self.selected_features.index(name)
                 if hasattr(self.scaler, 'mean_') and hasattr(self.scaler, 'scale_'):
                     mean = float(self.scaler.mean_[idx])
@@ -109,3 +117,55 @@ class BonnPredictor(BasePredictor):
                     feat["referenceRange"] = [mean - std, mean + std]
                     
         return explanation
+
+    def get_feature_importances(self, model_name: str = None) -> list[dict[str, Any]]:
+        model_name = model_name or self.default_model
+        if model_name not in self.models:
+            return []
+            
+        model = self.models[model_name]
+        importances = None
+        
+        # Try to extract from the model directly
+        if hasattr(model, "feature_importances_"):
+            importances = model.feature_importances_
+        elif hasattr(model, "booster_"):  # LightGBM
+            importances = model.booster_.feature_importance()
+        elif hasattr(model, "named_steps"):  # Sklearn Pipeline
+            last_step = list(model.named_steps.values())[-1]
+            if hasattr(last_step, "feature_importances_"):
+                importances = last_step.feature_importances_
+                
+        if importances is None:
+            return []
+            
+        # Normalize to percentage
+        total = sum(importances)
+        if total > 0:
+            importances = [float(i) / total * 100 for i in importances]
+            
+        results = []
+        for i, name in enumerate(self.selected_features):
+            val = float(importances[i]) if i < len(importances) else 0.0
+            
+            # Simple heuristic for category mapping
+            category = "Temporal"
+            lower_name = name.lower()
+            if "freq" in lower_name or "psd" in lower_name or "band" in lower_name:
+                category = "Frequency"
+            elif "wavelet" in lower_name or "wt" in lower_name:
+                category = "Wavelet"
+            elif "entropy" in lower_name or "svd" in lower_name:
+                category = "Entropy"
+            elif "hjorth" in lower_name or "complexity" in lower_name or "mobility" in lower_name:
+                category = "Hjorth"
+                
+            results.append({
+                "name": name,
+                "value": val,
+                "category": category
+            })
+            
+        # Sort by value descending
+        results.sort(key=lambda x: x["value"], reverse=True)
+        return results

@@ -18,7 +18,6 @@ import { TimeFrequencyAnalysis } from './widgets/TimeFrequencyAnalysis';
 import { EnhancedShapPanel } from './widgets/EnhancedShapPanel';
 import { GlobalFeatureImportance } from './widgets/GlobalFeatureImportance';
 import { ClinicalSummaryReport } from './widgets/ClinicalSummaryReport';
-import { SystemPerformance } from './widgets/SystemPerformance';
 import { ExportPanel } from './widgets/ExportPanel';
 import { LoadingPipeline } from './widgets/LoadingPipeline';
 
@@ -268,32 +267,25 @@ export function DashboardPage(): React.JSX.Element {
               modelName={data.modelName}
             />
 
-            {/* Row 2: 3-column grid for Dataset, Signal Quality, Model Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Row 2: Signal Visualization */}
+            <EEGViewer data={rawSignal.length > 0 ? rawSignal : MOCK_STATIC_WAVEFORM} />
+
+            {/* Row 3: Explainability */}
+            <EnhancedShapPanel data={data} />
+
+            {/* Row 4: 2-column grid for Dataset and Model Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <DatasetDetectionCard 
                 datasetName={datasetName || undefined} 
                 confidence={detectionConfidence || undefined} 
                 samplingRate={samplingRate} 
                 channels={channels} 
               />
-              <SignalQualityCard />
-              <ModelInfoCard modelName={data.modelName} />
+              <ModelInfoCard modelName={data.modelName} datasetName={datasetName || undefined} />
             </div>
 
-            {/* Row 3: Signal Visualization */}
-            <EEGViewer data={rawSignal.length > 0 ? rawSignal : MOCK_STATIC_WAVEFORM} />
-
-            {/* Row 4: Raw vs Filtered */}
-            <RawFilteredComparison data={rawSignal.length > 0 ? rawSignal : MOCK_STATIC_WAVEFORM} />
-
-            {/* Row 5 & 6: Features & Time-Frequency */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <FeatureSummaryCard />
-              <TimeFrequencyAnalysis />
-            </div>
-
-            {/* Row 7: Explainability */}
-            <EnhancedShapPanel data={data} />
+            {/* Row 5: Features Summary */}
+            <FeatureSummaryCard />
 
             {/* Row 8: Global Importance & System Performance (split) */}
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -301,8 +293,7 @@ export function DashboardPage(): React.JSX.Element {
                 <GlobalFeatureImportance />
               </div>
               <div className="xl:col-span-1 flex flex-col gap-6">
-                <SystemPerformance />
-                <ExportPanel />
+                <ExportPanel data={data} datasetName={datasetName} />
               </div>
             </div>
 

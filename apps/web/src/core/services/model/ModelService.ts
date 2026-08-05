@@ -58,11 +58,49 @@ class ModelService implements IModelService {
   }
 
   async *streamEEG(channelIds: string[]): AsyncIterable<GraphDataPoint[]> {
-    // TODO: Integrate Trained Model / Streaming API
-    // Replace with WebSocket or Server-Sent Events connection.
-    while (true) {
-      yield generateMockEEGWindow(channelIds, 100, 256);
-      await new Promise((resolve) => setTimeout(resolve, 100)); // 10Hz updates
+    const params = new URLSearchParams();
+    params.append('channels', channelIds.join(','));
+    params.append('ms_per_window', '100');
+    
+    // Use the Fetch API to read the SSE stream manually since EventSource doesn't play well with async iterators directly without wrapping.
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+    const response = await fetch(`${API_URL}/api/v1/stream/eeg?${params.toString()}`);
+    if (!response.ok || !response.body) {
+      throw new Error('Failed to connect to EEG stream');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Parse SSE lines
+        let eolIndex;
+        while ((eolIndex = buffer.indexOf('\n\n')) >= 0) {
+          const chunk = buffer.slice(0, eolIndex);
+          buffer = buffer.slice(eolIndex + 2);
+          
+          if (chunk.startsWith('data: ')) {
+            const dataStr = chunk.slice(6);
+            if (dataStr.trim()) {
+              try {
+                const points = JSON.parse(dataStr) as GraphDataPoint[];
+                yield points;
+              } catch (e) {
+                console.error("Failed to parse SSE chunk", e);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
     }
   }
 

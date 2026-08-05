@@ -55,118 +55,92 @@ export const EEGMonitorPage: React.FC = () => {
   }, [data]);
 
   const renderContent = () => {
-    if (isLoading) {
-      return (
-        <motion.div variants={staggerChildren} className="flex flex-col gap-4">
-          <motion.div variants={slideUp}>
-            <SkeletonShimmer className="h-48 w-full rounded-xl" />
-          </motion.div>
-          <motion.div variants={slideUp}>
-            <SkeletonShimmer className="h-48 w-full rounded-xl" />
-          </motion.div>
-          <motion.div variants={slideUp}>
-            <SkeletonShimmer className="h-48 w-full rounded-xl" />
-          </motion.div>
-          <motion.div variants={slideUp}>
-            <SkeletonShimmer className="h-48 w-full rounded-xl" />
-          </motion.div>
-        </motion.div>
-      );
-    }
-
     if (error) {
       return (
         <ErrorState 
-          title="Failed to Load EEG Stream" 
-          message={error.message || 'An unexpected error occurred while fetching EEG data.'} 
+          title="Stream Connection Error" 
+          message={error.message || "Failed to connect to the live EEG stream."}
         />
+      );
+    }
+
+    if (isLoading && (!chartData || chartData.length === 0)) {
+      return (
+        <GlassCard className="h-[500px] flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="w-8 h-8 border-4 border-[var(--accent-primary)] border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-[var(--text-secondary)]">Connecting to stream...</p>
+          </div>
+        </GlassCard>
       );
     }
 
     if (!chartData || chartData.length === 0) {
-      return (
-        <EmptyState 
-          icon={Activity} 
-          title="No EEG data available" 
-          description="Waiting for the EEG data stream to initialize or connect." 
-        />
-      );
+      return <EmptyState message="Waiting for signal data..." />;
     }
 
     return (
-      <motion.div variants={staggerChildren} className="space-y-6">
-        <motion.div variants={slideUp}>
-          <GlassCard className="p-6 h-[500px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-4)" vertical={false} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  stroke="var(--text-secondary)" 
-                  fontSize={12} 
-                  tickFormatter={(val) => new Date(val).toLocaleTimeString([], { hour12: false, second: '2-digit' })}
-                  tickMargin={10}
+      <GlassCard className="h-[500px] p-6 flex flex-col">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-semibold text-[var(--text-primary)]">Real-time Acquisition</h2>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="relative flex h-3 w-3">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isRunning ? 'bg-[var(--state-success)]' : 'bg-[var(--text-muted)]'}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${isRunning ? 'bg-[var(--state-success)]' : 'bg-[var(--text-muted)]'}`}></span>
+            </span>
+            <span className="text-[var(--text-secondary)] font-medium">
+              {isRunning ? 'Streaming active' : 'Stream paused'}
+            </span>
+          </div>
+        </div>
+        <div className="flex-1 w-full relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={chartData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+              <XAxis 
+                dataKey="timestamp" 
+                tickFormatter={(tick) => {
+                  const date = new Date(tick);
+                  return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}.${Math.floor(date.getMilliseconds() / 100)}`;
+                }}
+                stroke="#6B7280"
+                fontSize={12}
+                minTickGap={50}
+              />
+              <YAxis 
+                stroke="#6B7280"
+                fontSize={12}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--bg-2)',
+                  borderColor: 'var(--bg-4)',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+                  color: 'var(--text-primary)'
+                }}
+                labelFormatter={(label) => new Date(label).toISOString().split('T')[1].replace('Z', '')}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px' }} />
+              {selectedChannels.map(channel => (
+                <Line
+                  key={channel}
+                  type="monotone"
+                  dataKey={channel}
+                  stroke={CHANNEL_COLORS[channel] || CHANNEL_COLORS.Default}
+                  dot={false}
+                  isAnimationActive={false}
+                  strokeWidth={1.5}
                 />
-                <YAxis 
-                  stroke="var(--text-secondary)" 
-                  fontSize={12} 
-                  tickMargin={10}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'var(--bg-2)', 
-                    borderColor: 'var(--bg-4)', 
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                    fontFamily: 'var(--font-mono)'
-                  }} 
-                />
-                <Legend 
-                  verticalAlign="top" 
-                  height={36} 
-                  iconType="circle"
-                  formatter={(value) => <span className="text-[var(--text-primary)] font-mono ml-1">{value}</span>}
-                />
-                {selectedChannels.map((channel) => (
-                  <Line 
-                    key={channel}
-                    type="monotone" 
-                    dataKey={channel} 
-                    stroke={CHANNEL_COLORS[channel] || CHANNEL_COLORS.Default} 
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
-          </GlassCard>
-        </motion.div>
-
-        {/* Bottom Stat Cards */}
-        <motion.div variants={staggerChildren} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div variants={slideUp}>
-            <GlassCard className="p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-sm text-[var(--text-secondary)] font-body">Active Channels</span>
-              <span className="text-2xl text-[var(--accent-primary)] font-mono mt-1">{selectedChannels.length}</span>
-            </GlassCard>
-          </motion.div>
-          <motion.div variants={slideUp}>
-            <GlassCard className="p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-sm text-[var(--text-secondary)] font-body">Time Window</span>
-              <span className="text-2xl text-[var(--accent-secondary)] font-mono mt-1">{timeWindow}s</span>
-            </GlassCard>
-          </motion.div>
-          <motion.div variants={slideUp}>
-            <GlassCard className="p-4 flex flex-col items-center justify-center text-center">
-              <span className="text-sm text-[var(--text-secondary)] font-body">Status</span>
-              <span className="text-2xl text-[var(--state-success)] font-mono mt-1">
-                {isRunning ? 'RUNNING' : 'PAUSED'}
-              </span>
-            </GlassCard>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </GlassCard>
     );
   };
 

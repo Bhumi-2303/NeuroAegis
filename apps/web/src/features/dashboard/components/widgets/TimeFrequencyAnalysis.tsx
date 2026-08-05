@@ -16,12 +16,12 @@ export function TimeFrequencyAnalysis() {
 
 function PlaceholderPanel({ title }: { title: string }) {
   return (
-    <div className="h-32 border border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center justify-center relative overflow-hidden group">
+    <div className="h-32 border border-dashed border-[var(--bg-4)] rounded-xl bg-[var(--bg-3)] flex flex-col items-center justify-center relative overflow-hidden group">
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white/50 backdrop-blur-[1px] z-10" />
       <div className="relative z-20 flex flex-col items-center">
-        <Lock size={16} className="text-gray-300 mb-2" />
-        <span className="text-xs font-semibold text-gray-500">{title}</span>
-        <span className="text-[10px] text-gray-400 mt-1">Awaiting Backend Integration</span>
+        <Lock size={16} className="text-[var(--text-muted)] mb-2" />
+        <span className="text-xs font-semibold text-[var(--text-secondary)]">{title}</span>
+        <span className="text-[10px] text-[var(--text-muted)] mt-1">Awaiting Backend Integration</span>
       </div>
     </div>
   );
