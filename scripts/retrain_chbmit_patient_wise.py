@@ -203,6 +203,8 @@ def main():
     # ── Save model ───────────────────────────────────────────────────
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     joblib.dump(final_model, OUTPUT_MODEL)
+    joblib.dump(imputer_final, OUTPUT_DIR / "imputer.pkl")
+    joblib.dump(scaler_final, OUTPUT_DIR / "scaler.pkl")
     print(f"\n  ✓ Model saved to: {OUTPUT_MODEL}")
 
     # ── Save metadata ────────────────────────────────────────────────

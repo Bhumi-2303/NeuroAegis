@@ -55,6 +55,14 @@ class CHBMITPredictor(BasePredictor):
                 else:
                     self.models['lightgbm'] = loaded
 
+            # Load preprocessors
+            imputer_path = os.path.join(self.model_dir, "imputer.pkl")
+            if os.path.exists(imputer_path):
+                self.imputer = joblib.load(imputer_path)
+                
+            scaler_path = os.path.join(self.model_dir, "scaler.pkl")
+            if os.path.exists(scaler_path):
+                self.scaler = joblib.load(scaler_path)
                 
             rf_path = os.path.join(self.model_dir, "random_forest_baseline.pkl")
             if os.path.exists(rf_path):
@@ -93,7 +101,16 @@ class CHBMITPredictor(BasePredictor):
         vector = []
         for feat in self.selected_features:
             vector.append(feature_dict.get(feat, 0.0))
-        return np.array([vector]), feature_dict
+            
+        feature_vector = np.array([vector])
+        
+        # Apply imputation and scaling
+        if hasattr(self, 'imputer') and self.imputer:
+            feature_vector = self.imputer.transform(feature_vector)
+        if hasattr(self, 'scaler') and self.scaler:
+            feature_vector = self.scaler.transform(feature_vector)
+            
+        return feature_vector, feature_dict
 
     def predict(self, feature_vector: np.ndarray, model_name: str = None) -> dict[str, Any]:
         model_name = model_name or self.default_model
