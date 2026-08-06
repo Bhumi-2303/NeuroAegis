@@ -28,12 +28,16 @@ class CHBMITPredictor(BasePredictor):
                 with open(ref_path, "r") as f:
                     self.reference_ranges = json.load(f)
 
-            metadata_path = os.path.join(self.model_dir, "metadata.json")
+            metadata_path = os.path.join(self.model_dir, "patient_wise_metadata.json")
+            if not os.path.exists(metadata_path):
+                metadata_path = os.path.join(self.model_dir, "metadata.json")
             if os.path.exists(metadata_path):
                 with open(metadata_path, "r") as f:
                     self.metadata = json.load(f)
             
-            features_path = os.path.join(self.model_dir, "selected_features.json")
+            features_path = os.path.join(self.model_dir, "selected_features_patient_wise.json")
+            if not os.path.exists(features_path):
+                features_path = os.path.join(self.model_dir, "selected_features.json")
             if not os.path.exists(features_path):
                 logger.error(f"CHBMIT: selected_features.json not found at {features_path}.")
                 return False
@@ -43,7 +47,7 @@ class CHBMITPredictor(BasePredictor):
             self.feature_names = self.selected_features
 
             # Load models
-            lgb_path = os.path.join(self.model_dir, "lightgbm_baseline.pkl")
+            lgb_path = os.path.join(self.model_dir, "lightgbm_patient_wise.pkl")
             if os.path.exists(lgb_path):
                 loaded = joblib.load(lgb_path)
                 if isinstance(loaded, dict) and 'model' in loaded:
@@ -75,10 +79,16 @@ class CHBMITPredictor(BasePredictor):
             return False
 
     def preprocess(self, data: np.ndarray) -> np.ndarray:
-        return preprocess_eeg(data)
+        # Do not use preprocess_eeg here because it flattens the multichannel array
+        # and applies wavelet denoising which was not applied to the raw signal during training.
+        return data
 
     def extract_features(self, data: np.ndarray, channel_names: list[str], fs: float) -> tuple[np.ndarray, dict[str, float]]:
-        feature_dict = extract_all_features(data, channel_names, fs)
+        # The CHB-MIT model was trained exclusively on the first channel (Ch0)
+        if data.ndim > 1:
+            data = data[0:1, :]
+            
+        feature_dict = extract_all_features(data, ["Ch0"], fs)
         # Ensure correct order based on selected_features
         vector = []
         for feat in self.selected_features:
@@ -105,12 +115,18 @@ class CHBMITPredictor(BasePredictor):
             else:
                 prob_seizure = float(val)
             
-        prob_non_seizure = 1.0 - prob_seizure
-        is_seizure = prob_seizure > 0.5
+        # Scale probabilities so the threshold (0.05) maps to 0.5 for the frontend UI
+        if prob_seizure < 0.05:
+            scaled_prob_seizure = prob_seizure * (0.5 / 0.05)
+        else:
+            scaled_prob_seizure = 0.5 + ((prob_seizure - 0.05) * (0.5 / 0.95))
+            
+        prob_non_seizure = 1.0 - scaled_prob_seizure
+        is_seizure = scaled_prob_seizure > 0.5
         
         return {
             "label": "seizure" if is_seizure else "non_seizure",
-            "probabilities": {"seizure": prob_seizure, "non_seizure": prob_non_seizure}
+            "probabilities": {"seizure": scaled_prob_seizure, "non_seizure": prob_non_seizure}
         }
 
     def generate_explanation(self, feature_vector: np.ndarray, raw_features: dict[str, float], model_name: str = None) -> dict[str, Any]:

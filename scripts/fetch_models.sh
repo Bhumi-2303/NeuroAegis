@@ -35,7 +35,7 @@ fi
 # Each entry:  dataset_name|sentinel_file|space-separated required files
 DATASETS=(
     "bonn|metadata.json|metadata.json feature_names.json selected_features.json final_lightgbm_full_dataset.pkl"
-    "chbmit|metadata.json|metadata.json feature_names.json selected_features.json lightgbm_baseline.pkl"
+    "chbmit|metadata.json|metadata.json feature_names.json selected_features.json lightgbm_patient_wise.pkl"
 )
 
 # ── Colours (disable when not in a terminal) ─────────────────────────

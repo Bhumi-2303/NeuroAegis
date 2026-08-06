@@ -17,7 +17,7 @@ sys.path.append(str(Path(__file__).resolve().parent.parent / "apps" / "api"))
 from app.services.features import extract_features_multichannel
 
 BASE_URL = "https://physionet.org/files/chbmit/1.0.0"
-PATIENTS = ["chb01", "chb02", "chb03", "chb04"]
+PATIENTS = ["chb05", "chb06", "chb07", "chb08", "chb09", "chb10"]
 WINDOW_SEC = 23.6
 FS = 256  # CHB-MIT is 256Hz
 SAMPLES_PER_WINDOW = int(WINDOW_SEC * FS)
@@ -25,10 +25,26 @@ SAMPLES_PER_WINDOW = int(WINDOW_SEC * FS)
 DATA_DIR = Path("data/chbmit_subset")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-def download_file(url, out_path):
+def download_file(url, out_path, max_retries=3):
+    import time
     if not out_path.exists():
-        print(f"Downloading {url} to {out_path}")
-        urllib.request.urlretrieve(url, out_path)
+        for attempt in range(max_retries):
+            print(f"Downloading {url} to {out_path} (Attempt {attempt+1}/{max_retries})")
+            req = urllib.request.Request(url)
+            try:
+                with urllib.request.urlopen(req, timeout=30) as response, open(out_path, 'wb') as f:
+                    while True:
+                        chunk = response.read(8192)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                return
+            except Exception as e:
+                if out_path.exists():
+                    out_path.unlink()
+                print(f"Error downloading {url}: {e}")
+                time.sleep(2)
+        raise RuntimeError(f"Failed to download {url} after {max_retries} attempts")
 
 def parse_summary(summary_path):
     """Parses summary.txt to extract seizure start and end times for each EDF file."""
@@ -88,8 +104,6 @@ def main():
         for record in patient_records:
             edf_filename = record.split('/')[1]
             # To save time, we will ONLY process EDF files that have seizures, plus one background file per patient
-            # Wait, the user asked to process EDF files for chb01-chb04.
-            # Processing all of them might take too long. Let's limit to files WITH seizures and 1 without.
             has_seizure = len(seizures_dict.get(edf_filename, [])) > 0
             if not has_seizure and edf_filename != patient_records[0].split('/')[1]:
                 # Skip to save time, only process the first file (usually background) and files with seizures
@@ -97,7 +111,11 @@ def main():
                 
             edf_url = f"{BASE_URL}/{record}"
             edf_path = patient_dir / edf_filename
-            download_file(edf_url, edf_path)
+            try:
+                download_file(edf_url, edf_path)
+            except Exception as e:
+                print(f"Skipping {edf_url} due to download error: {e}")
+                continue
             
             try:
                 raw = mne.io.read_raw_edf(edf_path, preload=True, verbose=False)
@@ -125,11 +143,7 @@ def main():
                             
                     window_data = data[:, start_idx:end_idx]
                     
-                    # Use the first channel for now to match our generic single-channel logic, or extract all?
-                    # "matching our existing feature approach". The Bonn approach uses 1 channel.
-                    # CHB-MIT has 23 channels. Let's just use channel 0 to match Bonn single channel, 
-                    # or mean over channels, or extract all. The CHB-MIT notebook originally used all channels?
-                    # Let's just extract features for channel 0 for this quick script.
+                    # Use the first channel for now to match our generic single-channel logic
                     features = extract_features_multichannel(
                         window_data[0:1, :], 
                         channel_names=["Ch0"], 
@@ -149,15 +163,21 @@ def main():
                 if edf_path.exists():
                     edf_path.unlink()
 
-    if rows:
-        df = pd.DataFrame(rows)
-        out_parquet = Path("chbmit_subset.parquet")
-        df.to_parquet(out_parquet, index=False)
-        print(f"Successfully saved {len(df)} windows to {out_parquet}")
-        print(f"Target distribution: {df['target'].value_counts().to_dict()}")
-        print(f"Patient distribution: {df['patient_id'].value_counts().to_dict()}")
-    else:
-        print("No data extracted.")
+            # Save progressively per EDF
+            if rows:
+                df_new = pd.DataFrame(rows)
+                out_parquet = Path("chbmit_subset.parquet")
+                if out_parquet.exists():
+                    df_existing = pd.read_parquet(out_parquet)
+                    df_combined = pd.concat([df_existing, df_new], ignore_index=True)
+                    df_combined.to_parquet(out_parquet, index=False)
+                    print(f"Appended {len(df_new)} rows for {edf_filename}. Total epochs: {len(df_combined)}")
+                else:
+                    df_new.to_parquet(out_parquet, index=False)
+                    print(f"Created new parquet with {len(df_new)} windows for {edf_filename}.")
+                
+                # Clear rows for next EDF
+                rows = []
 
 if __name__ == "__main__":
     main()

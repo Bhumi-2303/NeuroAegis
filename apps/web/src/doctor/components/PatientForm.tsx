@@ -189,7 +189,6 @@ export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: stri
             <input 
               type="file" 
               accept=".csv,.edf,.json,.txt" 
-              className="hidden" 
               ref={fileInputRef}
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />

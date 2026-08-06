@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     MODEL_ASSETS_DIR: str = os.path.join(BASE_DIR, "models", "bonn")
     
     # Upload limits
-    MAX_UPLOAD_SIZE: int = 52428800 # 50 MB
+    MAX_UPLOAD_SIZE: int = 104857600  # 100 MB
     
     model_config = SettingsConfigDict(
         env_file=".env",
