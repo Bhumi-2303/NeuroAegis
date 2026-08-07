@@ -184,6 +184,8 @@ async def predict_eeg(
         # Use detected sampling rate if none provided
         final_sampling_rate = sampling_rate or predictor_metadata.get("sampling_rate", 256.0)
         window_length = predictor_metadata.get("window_length", 15360)
+        if not isinstance(window_length, (int, float)):
+            window_length = 15360
 
         eeg_data = df.values.T 
         channel_names = df.columns.tolist()
