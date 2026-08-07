@@ -2,6 +2,9 @@ FROM node:20-alpine as build
 
 WORKDIR /app
 
+# Accept API URL as build argument (Vite embeds env vars at build time)
+ARG VITE_API_URL=http://localhost:8000
+
 # Copy root package.json for workspaces
 COPY package.json package-lock.json ./
 COPY packages/ ./packages/
@@ -13,7 +16,7 @@ RUN npm ci
 # Copy the rest of the web app
 COPY apps/web/ ./apps/web/
 
-# Build
+# Build with the API URL baked in
 WORKDIR /app/apps/web
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
