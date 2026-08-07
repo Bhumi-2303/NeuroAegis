@@ -118,7 +118,7 @@ export function usePredictionFlow() {
                }
             },
             confidence: {
-               value: statusData.result.probability_seizure,
+               value: Math.max(statusData.result.probability_seizure, 1.0 - statusData.result.probability_seizure),
                band: statusData.result.confidence_band
             },
             explanation: statusData.result.shap_explanation,
