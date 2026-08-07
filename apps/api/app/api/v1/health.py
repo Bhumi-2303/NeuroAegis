@@ -13,12 +13,16 @@ router = APIRouter()
 async def health_check():
     """Basic health check and model loaded status"""
 
-    # Derive model_version and dataset_name from the first loaded predictor
-    model_version = None
-    dataset_name = None
-
+    predictors_info = {}
     if prediction_router.is_loaded and prediction_router._predictors:
-        # Report on the first loaded dataset (primary)
+        for ds_name, predictor in prediction_router._predictors.items():
+            meta = getattr(predictor, "metadata", {}) or {}
+            predictors_info[ds_name] = {
+                "model": meta.get("model") or meta.get("version"),
+                "dataset": meta.get("dataset", ds_name),
+                "features": meta.get("features")
+            }
+        # Primary loaded dataset
         first_dataset = next(iter(prediction_router._predictors))
         dataset_name = first_dataset
         predictor = prediction_router._predictors[first_dataset]
@@ -36,6 +40,7 @@ async def health_check():
         last_load_time=last_load_time,
         details={
             "python_version": platform.python_version(),
-            "loaded_datasets": list(prediction_router._predictors.keys()) if prediction_router._predictors else []
+            "loaded_datasets": list(prediction_router._predictors.keys()) if prediction_router._predictors else [],
+            "predictors": predictors_info
         }
     )
