@@ -28,3 +28,16 @@ apps/api/models/chbmit/*.csv
 # Notebook/workspace directories
 NeuroAegis_bonn_dataset_model/
 neuroaegis_chbmit_project(1)/
+
+# Local Database
+apps/api/neuroaegis.db
+
+# Large Data files
+*.edf
+data/chbmit_subset/
+scratch/*.csv
+scratch/*.txt
+bonn_mock.txt
+chb01_03.csv
+chb_1hr*.csv
+chb_60s.csv
