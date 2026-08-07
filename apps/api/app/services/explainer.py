@@ -79,13 +79,17 @@ class ShapExplainerService:
             # Ensure val is a scalar
             while isinstance(val, (np.ndarray, list)):
                 val = val[0]
-            feature_contributions.append({"featureName": name, "value": float(val)})
+            v_float = float(val)
+            if not np.isfinite(v_float):
+                v_float = 0.0
+            feature_contributions.append({"featureName": name, "value": v_float})
         
         # Sort by absolute SHAP value (importance)
         feature_contributions.sort(key=lambda x: abs(x["value"]), reverse=True)
         
+        bv_float = float(base_value) if np.isfinite(base_value) else 0.0
         return {
-            "baseValue": float(base_value),
+            "baseValue": bv_float,
             "features": feature_contributions[:top_n]
         }
 

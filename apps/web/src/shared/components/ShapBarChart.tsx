@@ -15,11 +15,13 @@ export interface ShapBarChartProps extends HTMLAttributes<HTMLDivElement> {
 
 export const ShapBarChart = forwardRef<HTMLDivElement, ShapBarChartProps>(
   ({ features, maxBars = 8, className = '', ...props }, ref) => {
-    const sortedFeatures = [...features]
+    const validFeatures = features.filter((f) => typeof f.value === 'number' && Number.isFinite(f.value));
+    const sortedFeatures = [...validFeatures]
       .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
       .slice(0, maxBars);
 
-    const maxAbs = Math.max(...sortedFeatures.map((f) => Math.abs(f.value)), 1);
+    const rawMax = Math.max(...sortedFeatures.map((f) => Math.abs(f.value)), 1);
+    const maxAbs = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 1;
 
     const containerVariants = {
       hidden: { opacity: 0 },

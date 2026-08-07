@@ -10,13 +10,14 @@ export function EnhancedShapPanel({ data }: Props) {
   if (!data?.explanation) return null;
 
   const isNormal = data.prediction.label !== 'seizure';
-  const features = data.explanation.features || [];
+  const rawFeatures = data.explanation.features || [];
+  const features = rawFeatures.filter((f: any) => typeof f.value === 'number' && Number.isFinite(f.value));
   
   // Sort features by magnitude
-  const sorted = [...features].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  const sorted = [...features].sort((a: any, b: any) => Math.abs(b.value) - Math.abs(a.value));
   const topFeature = sorted[0];
-  const topPositive = [...features].sort((a, b) => b.value - a.value).slice(0, 2);
-  const topNegative = [...features].sort((a, b) => a.value - b.value).slice(0, 2);
+  const topPositive = [...features].sort((a: any, b: any) => b.value - a.value).slice(0, 2);
+  const topNegative = [...features].sort((a: any, b: any) => a.value - b.value).slice(0, 2);
 
   return (
     <WidgetCard title="Explainable AI Analysis" icon={<Lightbulb size={16} />}>
