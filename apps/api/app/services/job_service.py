@@ -21,7 +21,7 @@ def update_job_status(db: Session, job_id: str, status: str, progress: int):
         job.progress = progress
         db.commit()
 
-async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_names: list, fs: float):
+async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_names: list, fs: float, dataset_name: str = "bonn"):
     db = SessionLocal()
     try:
         # Stage 1: Validating (Already mostly done before calling this, but we show it)
@@ -36,7 +36,7 @@ async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_nam
         # Stage 3: Brain Graph Construction / GNN (Simulated visual stage based on features)
         update_job_status(db, job_id, "Brain Graph Construction", 45)
         
-        predictor = prediction_router.get_predictor("bonn")
+        predictor = prediction_router.get_predictor(dataset_name)
         
         feature_vector = select_and_order_features(all_features, predictor.selected_features)
         if predictor.scaler:

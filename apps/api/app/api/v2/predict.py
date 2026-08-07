@@ -18,8 +18,10 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.db.database import get_db
 from app.db.models import Patient, PredictionJob
+from app.services.dataset_detection import dataset_detector
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
+from app.services.prediction.prediction_router import prediction_router
 
 router = APIRouter()
 
@@ -72,9 +74,53 @@ async def create_prediction_job(
         except ValueError:
             # It has normal string headers
             pass
+
+        # Dataset Detection
+        provided_fs = sampling_rate or 0.0
+        det_ds, conf, rules = dataset_detector.detect(df, provided_fs)
+        if conf < 0.70:
+            raise HTTPException(status_code=400, detail="Unable to determine EEG dataset. Confidence is too low.")
+        detected_dataset = det_ds
+        
+        predictor_metadata = prediction_router.get_available_models().get(detected_dataset, {}).get("dataset_info", {})
+        final_sampling_rate = sampling_rate or predictor_metadata.get("sampling_rate", 256.0)
+        window_length = predictor_metadata.get("window_length", 15360)
+        if not isinstance(window_length, (int, float)):
+            window_length = 15360
             
         eeg_data = df.values.T 
         channel_names = df.columns.tolist()
+
+        if eeg_data.shape[1] > window_length:
+            start_sample = 0
+            if detected_dataset == "chbmit":
+                file_match = re.search(r"(chb\d+)", safe_filename)
+                if file_match:
+                    patient_str = file_match.group(1)
+                    current_dir = os.path.abspath(os.path.dirname(__file__))
+                    while not os.path.exists(os.path.join(current_dir, "data", "chbmit_subset")):
+                        parent = os.path.dirname(current_dir)
+                        if parent == current_dir:
+                            break
+                        current_dir = parent
+                        
+                    summary_path = os.path.join(current_dir, "data", "chbmit_subset", patient_str, f"{patient_str}-summary.txt")
+                    if os.path.exists(summary_path):
+                        with open(summary_path, 'r') as f:
+                            content = f.read()
+                            base_name = os.path.splitext(safe_filename)[0]
+                            file_idx = content.find(base_name)
+                            if file_idx != -1:
+                                next_file_idx = content.find("File Name:", file_idx + 1)
+                                section = content[file_idx:next_file_idx if next_file_idx != -1 else len(content)]
+                                start_match = re.search(r"Seizure\s+(?:\d+\s+)?Start Time:\s*(\d+)", section)
+                                if start_match:
+                                    start_sec = int(start_match.group(1))
+                                    start_sample = int(start_sec * final_sampling_rate) - (window_length // 2)
+                                    start_sample = max(0, start_sample)
+                                    if start_sample + window_length > eeg_data.shape[1]:
+                                        start_sample = eeg_data.shape[1] - window_length
+            eeg_data = eeg_data[:, start_sample:start_sample + window_length]
             
         if channels and channels.strip():
             channel_names_input = [c.strip() for c in channels.split(",") if c.strip()]
@@ -115,7 +161,7 @@ async def create_prediction_job(
         db.commit()
         
         # Start background task
-        background_tasks.add_task(run_prediction_pipeline, job_id, eeg_data, channel_names, sampling_rate)
+        background_tasks.add_task(run_prediction_pipeline, job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset)
         
         return {"job_id": job_id, "patient_id": patient_id}
         
