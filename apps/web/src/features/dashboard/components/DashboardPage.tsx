@@ -8,13 +8,10 @@ import { usePredictionFlow } from '../../../shared/hooks';
 // New Widgets
 import { WidgetCard } from './widgets/WidgetCard';
 import { DatasetDetectionCard } from './widgets/DatasetDetectionCard';
-import { SignalQualityCard } from './widgets/SignalQualityCard';
 import { ModelInfoCard } from './widgets/ModelInfoCard';
 import { PredictionSummaryCard } from './widgets/PredictionSummaryCard';
 import { EEGViewer } from './widgets/EEGViewer';
-import { RawFilteredComparison } from './widgets/RawFilteredComparison';
 import { FeatureSummaryCard } from './widgets/FeatureSummaryCard';
-import { TimeFrequencyAnalysis } from './widgets/TimeFrequencyAnalysis';
 import { EnhancedShapPanel } from './widgets/EnhancedShapPanel';
 import { GlobalFeatureImportance } from './widgets/GlobalFeatureImportance';
 import { ClinicalSummaryReport } from './widgets/ClinicalSummaryReport';
@@ -278,8 +275,6 @@ export function DashboardPage(): React.JSX.Element {
               <DatasetDetectionCard 
                 datasetName={datasetName || undefined} 
                 confidence={detectionConfidence || undefined} 
-                samplingRate={samplingRate} 
-                channels={channels} 
               />
               <ModelInfoCard modelName={data.modelName} datasetName={datasetName || undefined} />
             </div>

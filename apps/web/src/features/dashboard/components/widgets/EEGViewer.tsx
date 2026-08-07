@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
 import { WidgetCard } from './WidgetCard';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { ZoomIn, ZoomOut, Maximize2, Move, Download, SlidersHorizontal, Settings2, Lock } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 
 interface Props {
   data: number[];
 }
 
 export function EEGViewer({ data }: Props) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
   // Map raw data array to Recharts format
   const chartData = data.map((val, i) => ({ time: i, amplitude: val }));
 
@@ -61,17 +58,5 @@ export function EEGViewer({ data }: Props) {
         </div>
       </div>
     </WidgetCard>
-  );
-}
-
-function ToolbarButton({ icon, tooltip, onClick }: { icon: React.ReactNode, tooltip: string, onClick?: () => void }) {
-  return (
-    <button 
-      onClick={onClick}
-      title={tooltip}
-      className="p-1.5 text-[var(--text-secondary)] hover:bg-[var(--bg-3)] hover:text-[var(--text-primary)] rounded-md transition-colors"
-    >
-      {icon}
-    </button>
   );
 }

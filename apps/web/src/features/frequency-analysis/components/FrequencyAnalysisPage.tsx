@@ -1,72 +1,10 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { Radio } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
-} from 'recharts';
+import { Radio, Lock } from 'lucide-react';
 
-import { 
-  GlassCard, 
-  SkeletonShimmer, 
-  EmptyState, 
-  ErrorState 
-} from '../../../shared/components';
-import { pageTransition, staggerChildren, slideUp } from '../../../shared/lib/motion-presets';
-
-import { useFrequencyBands } from '../hooks/useFrequencyBands';
-
-const BANDS = [
-  { name: 'gamma', color: '#F87171', label: 'Gamma' },
-  { name: 'beta', color: '#FBBF24', label: 'Beta' },
-  { name: 'alpha', color: '#34D399', label: 'Alpha' },
-  { name: 'theta', color: '#60A5FA', label: 'Theta' },
-  { name: 'delta', color: '#A78BFA', label: 'Delta' }
-] as const;
+import { pageTransition } from '../../../shared/lib/motion-presets';
 
 export const FrequencyAnalysisPage: React.FC = () => {
-  const { data, error, isLoading } = useFrequencyBands();
-
-  const chartData = useMemo(() => {
-    if (!data) return [];
-    
-    const groupedData = new Map<string, any>();
-    
-    BANDS.forEach(({ name }) => {
-      const bandData = data[name as keyof typeof data];
-      if (Array.isArray(bandData)) {
-        bandData.forEach((point) => {
-          const entry = groupedData.get(point.timestamp) || { timestamp: point.timestamp };
-          entry[name] = point.value;
-          groupedData.set(point.timestamp, entry);
-        });
-      }
-    });
-    
-    return Array.from(groupedData.values()).sort((a, b) => a.timestamp.localeCompare(b.timestamp));
-  }, [data]);
-
-  const latestAverages = useMemo(() => {
-    if (chartData.length === 0) return null;
-    
-    const result: Record<string, number> = {};
-    BANDS.forEach(({ name }) => {
-      // simple average of last N points or overall average for display
-      const values = chartData.map(d => d[name]).filter(v => v !== undefined && v !== null);
-      if (values.length > 0) {
-        result[name] = values.reduce((sum, val) => sum + val, 0) / values.length;
-      } else {
-        result[name] = 0;
-      }
-    });
-    return result;
-  }, [chartData]);
-
   const renderContent = () => {
     return (
       <div className="flex flex-col items-center justify-center h-[500px] text-center border-2 border-dashed border-[var(--bg-4)] rounded-xl bg-[var(--bg-2)]/50">

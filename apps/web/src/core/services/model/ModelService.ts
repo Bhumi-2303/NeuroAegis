@@ -9,7 +9,6 @@ import type {
 } from '@neuroaegis/model-contracts';
 
 
-import { generateMockEEGWindow } from './mock/mockEEG';
 import { generateMockFrequencyBands } from './mock/mockFrequencyBands';
 import { generateMockEvaluationMetrics } from './mock/mockEvaluationMetrics';
 import { generateMockAlerts } from './mock/mockAlerts';

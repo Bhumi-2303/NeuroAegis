@@ -1,6 +1,6 @@
 export const MODEL_CONFIG = {
   // Toggle this when a real backend is available
-  USE_MOCK_DATA: true,
+  USE_MOCK_DATA: false,
 
   // Configurable latency for mock responses to simulate network/inference delay
   MOCK_LATENCY_MIN_MS: 300,

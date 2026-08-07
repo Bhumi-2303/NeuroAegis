@@ -9,7 +9,7 @@ interface FeatureImportance {
   category: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 
 export function GlobalFeatureImportance() {
   const { data, isLoading, error } = useQuery<{ feature_importances: FeatureImportance[] }>({
@@ -60,8 +60,8 @@ export function GlobalFeatureImportance() {
               <Tooltip 
                 cursor={{ fill: '#f3f4f6' }}
                 contentStyle={{ borderRadius: '8px', border: '1px solid #f0f0f0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}
-                formatter={(val: number, name: string, props: any) => [
-                  `${val.toFixed(2)}%`,
+                formatter={(val: any, _name: any, props: any) => [
+                  `${Number(val || 0).toFixed(2)}%`,
                   props.payload.category || 'Importance'
                 ]}
               />

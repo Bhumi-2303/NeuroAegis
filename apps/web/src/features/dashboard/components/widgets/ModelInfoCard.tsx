@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { WidgetCard } from './WidgetCard';
 import { Cpu } from 'lucide-react';
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 interface Props {
   modelName?: string;

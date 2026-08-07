@@ -5,11 +5,9 @@ import { motion } from 'framer-motion';
 interface Props {
   datasetName?: string;
   confidence?: number;
-  samplingRate?: string;
-  channels?: string;
 }
 
-export function DatasetDetectionCard({ datasetName, confidence = 0.99, samplingRate, channels }: Props) {
+export function DatasetDetectionCard({ datasetName, confidence = 0.99 }: Props) {
   const isBonn = datasetName?.toLowerCase().includes('bonn');
   const reasons = isBonn ? [
     'Single Channel Structure',

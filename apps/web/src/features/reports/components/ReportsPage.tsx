@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, FileText, Download, Calendar, User, Activity, CheckCircle, Search, Target } from 'lucide-react';
+import { AlertCircle, FileText, Download, Calendar, User, Activity, CheckCircle, Target } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { GlassCard } from '../../../shared/components';
 import { pageTransition, fadeIn } from '../../../shared/lib/motion-presets';

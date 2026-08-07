@@ -14,11 +14,10 @@ import {
 
 import { 
   GlassCard, 
-  SkeletonShimmer, 
   EmptyState, 
   ErrorState 
 } from '../../../shared/components';
-import { pageTransition, staggerChildren, slideUp } from '../../../shared/lib/motion-presets';
+import { pageTransition } from '../../../shared/lib/motion-presets';
 
 import { useEEGStream } from '../hooks/useEEGStream';
 import { useEegStore } from '../store';
@@ -34,7 +33,7 @@ const CHANNEL_COLORS: Record<string, string> = {
 };
 
 export const EEGMonitorPage: React.FC = () => {
-  const { selectedChannels, timeWindow, isRunning } = useEegStore();
+  const { selectedChannels, timeWindow: _timeWindow, isRunning } = useEegStore();
   const { data, error, isLoading } = useEEGStream(selectedChannels);
 
   const chartData = useMemo(() => {
@@ -76,7 +75,7 @@ export const EEGMonitorPage: React.FC = () => {
     }
 
     if (!chartData || chartData.length === 0) {
-      return <EmptyState message="Waiting for signal data..." />;
+      return <EmptyState title="Waiting for signal data..." />;
     }
 
     return (
