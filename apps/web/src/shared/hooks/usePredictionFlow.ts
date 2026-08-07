@@ -7,6 +7,7 @@ export type JobStep = 'Validating' | 'Preprocessing' | 'Inference' | 'SHAP';
 export const STEPS: JobStep[] = ['Validating', 'Preprocessing', 'Inference', 'SHAP'];
 
 export function usePredictionFlow() {
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
   const [datasetName, setDatasetName] = useState<string | null>(null);
   const [detectionConfidence, setDetectionConfidence] = useState<number | null>(null);
   const [modelName, setModelName] = useState<string | null>(null);
@@ -66,9 +67,9 @@ export function usePredictionFlow() {
     }
       formData.append('channels', channels);
 
-      console.log("[usePredictionFlow] Upload started. API URL: /api/v1/predict");
+      console.log(`[usePredictionFlow] Upload started. API URL: ${API_URL}/api/v1/predict/`);
 
-      const res = await fetch('/api/v1/predict/', {
+      const res = await fetch(`${API_URL}/api/v1/predict/`, {
         method: 'POST',
         body: formData,
       });
@@ -95,7 +96,7 @@ export function usePredictionFlow() {
 
       while (attempts < MAX_POLL_ATTEMPTS) {
         attempts++;
-        const statusRes = await fetch(`/api/v1/jobs/${job_id}`);
+        const statusRes = await fetch(`${API_URL}/api/v1/jobs/${job_id}`);
         if (!statusRes.ok) throw new Error('Failed to fetch job status');
         const statusData = await statusRes.json();
         

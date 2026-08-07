@@ -10,7 +10,7 @@ with open("apps/api/models/chbmit/selected_features.json", "r") as f:
 print("Selected features start with:", selected[:3])
 
 # Load predict.py logic
-raw = mne.io.read_raw_edf("data/chbmit_subset/chb06/chb06_01.edf", preload=True, verbose=False)
+raw = mne.io.read_raw_edf("data/chbmit_subset/chb01/chb01_01.edf", preload=True, verbose=False)
 df = raw.to_data_frame()
 df.drop(columns=["time"], inplace=True, errors="ignore")
 eeg_data = df.values.T

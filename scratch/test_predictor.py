@@ -6,7 +6,7 @@ from app.services.prediction.chbmit_predictor import CHBMITPredictor
 predictor = CHBMITPredictor(model_dir="apps/api/models/chbmit", default_model="lightgbm")
 predictor.load_model()
 
-raw = mne.io.read_raw_edf("data/chbmit_subset/chb06/chb06_01.edf", preload=True, verbose=False)
+raw = mne.io.read_raw_edf("data/chbmit_subset/chb01/chb01_01.edf", preload=True, verbose=False)
 df = raw.to_data_frame()
 df.drop(columns=["time"], inplace=True, errors="ignore")
 eeg_data = df.values.T

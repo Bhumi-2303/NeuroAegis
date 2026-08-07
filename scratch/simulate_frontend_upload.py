@@ -4,7 +4,7 @@ import time
 
 import sys
 
-filepath = sys.argv[1] if len(sys.argv) > 1 else "data/chbmit_subset/chb06/chb06_01.edf"
+filepath = sys.argv[1] if len(sys.argv) > 1 else "data/chbmit_subset/chb01/chb01_01.edf"
 print(f"Simulating frontend upload of {filepath}")
 
 # Mimic the FormData sent by the frontend

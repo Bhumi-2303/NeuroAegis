@@ -35,6 +35,7 @@ async def health_check():
         dataset_name=dataset_name,
         last_load_time=last_load_time,
         details={
-            "python_version": platform.python_version()
+            "python_version": platform.python_version(),
+            "loaded_datasets": list(prediction_router._predictors.keys()) if prediction_router._predictors else []
         }
     )
