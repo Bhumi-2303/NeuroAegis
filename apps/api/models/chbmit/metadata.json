@@ -1,45 +1,184 @@
 {
-    "model": "LightGBM",
-    "dataset": "CHB-MIT",
-    "model_file": "lightgbm_patient_wise.pkl",
-    "split_strategy": "Leave-One-Patient-Out (LOPO-CV)",
-    "patients": ["chb01", "chb02", "chb03", "chb04"],
-    "features": 57,
-    "total_samples": 4805,
-    "seizure_samples": 76,
-    "non_seizure_samples": 4729,
-    "scale_pos_weight": 62.2237,
-    "cv_aggregate": {
-        "accuracy":  { "mean": 0.9487, "std": 0.0625 },
-        "precision": { "mean": 0.3313, "std": 0.3078 },
-        "recall":    { "mean": 0.3796, "std": 0.2193 },
-        "f1_score":  { "mean": 0.3079, "std": 0.2491 },
-        "roc_auc":   { "mean": 0.8203, "std": 0.0698 },
-        "mcc":       { "mean": 0.3103, "std": 0.2473 }
-    },
-    "cv_per_fold": [
-        { "fold": 1, "test_patient": "chb01", "test_samples": 1162, "test_seizures": 27, "accuracy": 0.8408, "precision": 0.0753, "recall": 0.5185, "f1": 0.1315, "roc_auc": 0.7755, "mcc": 0.1508 },
-        { "fold": 2, "test_patient": "chb02", "test_samples":  344, "test_seizures":  6, "accuracy": 0.9884, "precision": 0.7500, "recall": 0.5000, "f1": 0.6000, "roc_auc": 0.8097, "mcc": 0.6070 },
-        { "fold": 3, "test_patient": "chb03", "test_samples": 1064, "test_seizures": 24, "accuracy": 0.9774, "precision": 0.5000, "recall": 0.5000, "f1": 0.5000, "roc_auc": 0.9370, "mcc": 0.4885 },
-        { "fold": 4, "test_patient": "chb04", "test_samples": 2235, "test_seizures": 19, "accuracy": 0.9884, "precision": 0.0000, "recall": 0.0000, "f1": 0.0000, "roc_auc": 0.7590, "mcc": -0.0052 }
+  "model": "LightGBM",
+  "dataset": "CHB-MIT",
+  "split_strategy": "Leave-One-Patient-Out (LOPO-CV)",
+  "patients": [
+    "chb01",
+    "chb02",
+    "chb03",
+    "chb04",
+    "chb05"
+  ],
+  "features": 57,
+  "feature_names": [
+    "Ch0_mean",
+    "Ch0_median",
+    "Ch0_std",
+    "Ch0_variance",
+    "Ch0_minimum",
+    "Ch0_maximum",
+    "Ch0_range",
+    "Ch0_rms",
+    "Ch0_energy",
+    "Ch0_absolute_mean",
+    "Ch0_line_length",
+    "Ch0_zero_crossings",
+    "Ch0_skewness",
+    "Ch0_kurtosis",
+    "Ch0_iqr",
+    "Ch0_crest_factor",
+    "Ch0_shape_factor",
+    "Ch0_impulse_factor",
+    "Ch0_clearance_factor",
+    "Ch0_hjorth_activity",
+    "Ch0_hjorth_mobility",
+    "Ch0_hjorth_complexity",
+    "Ch0_delta_power",
+    "Ch0_theta_power",
+    "Ch0_alpha_power",
+    "Ch0_beta_power",
+    "Ch0_gamma_power",
+    "Ch0_relative_delta",
+    "Ch0_relative_theta",
+    "Ch0_relative_alpha",
+    "Ch0_relative_beta",
+    "Ch0_relative_gamma",
+    "Ch0_dominant_frequency",
+    "Ch0_spectral_entropy",
+    "Ch0_spectral_centroid",
+    "Ch0_total_power",
+    "Ch0_wavelet_entropy",
+    "Ch0_wavelet_energy_0",
+    "Ch0_wavelet_relative_energy_0",
+    "Ch0_wavelet_mean_0",
+    "Ch0_wavelet_std_0",
+    "Ch0_wavelet_energy_1",
+    "Ch0_wavelet_relative_energy_1",
+    "Ch0_wavelet_mean_1",
+    "Ch0_wavelet_std_1",
+    "Ch0_wavelet_energy_2",
+    "Ch0_wavelet_relative_energy_2",
+    "Ch0_wavelet_mean_2",
+    "Ch0_wavelet_std_2",
+    "Ch0_wavelet_energy_3",
+    "Ch0_wavelet_relative_energy_3",
+    "Ch0_wavelet_mean_3",
+    "Ch0_wavelet_std_3",
+    "Ch0_wavelet_energy_4",
+    "Ch0_wavelet_relative_energy_4",
+    "Ch0_wavelet_mean_4",
+    "Ch0_wavelet_std_4"
+  ],
+  "total_samples": 5717,
+  "seizure_samples": 104,
+  "non_seizure_samples": 5613,
+  "scale_pos_weight": 53.9712,
+  "hyperparameters": {
+    "boosting_type": "gbdt",
+    "objective": "binary",
+    "n_estimators": 500,
+    "learning_rate": 0.05,
+    "max_depth": -1,
+    "num_leaves": 31,
+    "min_child_samples": 20,
+    "min_child_weight": 0.001,
+    "min_split_gain": 0.0,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "reg_alpha": 0.1,
+    "reg_lambda": 1.0,
+    "random_state": 42,
+    "n_jobs": -1,
+    "importance_type": "split"
+  },
+  "cv_results": {
+    "strategy": "Leave-One-Patient-Out",
+    "n_folds": 5,
+    "per_fold": [
+      {
+        "accuracy": 0.9655765920826161,
+        "precision": 0.19047619047619047,
+        "recall": 0.14814814814814814,
+        "f1": 0.16666666666666666,
+        "mcc": 0.15060323902961553,
+        "roc_auc": 0.6703866862457171,
+        "test_patient": "chb01",
+        "test_samples": 1162,
+        "test_seizures": 27
+      },
+      {
+        "accuracy": 0.9883720930232558,
+        "precision": 0.75,
+        "recall": 0.5,
+        "f1": 0.6,
+        "mcc": 0.6069558513594526,
+        "roc_auc": 0.7194280078895463,
+        "test_patient": "chb02",
+        "test_samples": 344,
+        "test_seizures": 6
+      },
+      {
+        "accuracy": 0.9755639097744361,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mcc": -0.006592371765401569,
+        "roc_auc": 0.9576522435897437,
+        "test_patient": "chb03",
+        "test_samples": 1064,
+        "test_seizures": 24
+      },
+      {
+        "accuracy": 0.9874720357941834,
+        "precision": 0.2,
+        "recall": 0.15789473684210525,
+        "f1": 0.17647058823529413,
+        "mcc": 0.17145542566501293,
+        "roc_auc": 0.8193995819874595,
+        "test_patient": "chb04",
+        "test_samples": 2235,
+        "test_seizures": 19
+      },
+      {
+        "accuracy": 0.7598684210526315,
+        "precision": 0.1037344398340249,
+        "recall": 0.8928571428571429,
+        "f1": 0.18587360594795538,
+        "mcc": 0.253719718869682,
+        "roc_auc": 0.9172996121525533,
+        "test_patient": "chb05",
+        "test_samples": 912,
+        "test_seizures": 28
+      }
     ],
-    "hyperparameters": {
-        "boosting_type": "gbdt",
-        "objective": "binary",
-        "n_estimators": 500,
-        "learning_rate": 0.05,
-        "max_depth": -1,
-        "num_leaves": 31,
-        "min_child_samples": 20,
-        "subsample": 0.8,
-        "colsample_bytree": 0.8,
-        "reg_alpha": 0.1,
-        "reg_lambda": 1.0,
-        "random_state": 42
-    },
-    "sampling_frequency": 256,
-    "window_type": "EEG Segment",
-    "framework": "NeuroAegis",
-    "training_date": "2026-08-06",
-    "notes": "Retrained with patient-wise LOPO-CV to eliminate cross-patient data leakage. Metrics reflect honest generalization on unseen patients. High variance expected with only 4 patients and extreme class imbalance (76/4805 seizure windows)."
+    "aggregate": {
+      "accuracy": {
+        "mean": 0.9353706103454247,
+        "std": 0.08815059477746262
+      },
+      "precision": {
+        "mean": 0.2488421260620431,
+        "std": 0.26074124899241097
+      },
+      "recall": {
+        "mean": 0.3397800055694793,
+        "std": 0.3215027957418744
+      },
+      "f1": {
+        "mean": 0.22580217216998322,
+        "std": 0.1992664241133315
+      },
+      "roc_auc": {
+        "mean": 0.816833226373004,
+        "std": 0.11033081361586769
+      },
+      "mcc": {
+        "mean": 0.23522837263167226,
+        "std": 0.20407298829082673
+      }
+    }
+  },
+  "training_date": "2026-08-06T17:28:17.184307",
+  "framework": "NeuroAegis",
+  "notes": "Retrained with patient-wise split to eliminate data leakage. Same hyperparameters as original lightgbm_baseline.pkl for fair comparison."
 }
