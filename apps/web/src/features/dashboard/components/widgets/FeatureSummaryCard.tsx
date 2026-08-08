@@ -3,10 +3,10 @@ import { Network, Activity, Waves, Zap, Hash, AlignCenter, Calculator } from 'lu
 
 export function FeatureSummaryCard() {
   const categories = [
-    { name: 'Temporal Features', count: 12, icon: <Activity size={14} />, desc: 'Time-domain statistical moments' },
-    { name: 'Frequency Features', count: 18, icon: <Waves size={14} />, desc: 'Spectral power distributions' },
-    { name: 'Wavelet Features', count: 24, icon: <Network size={14} />, desc: 'Multi-resolution analysis' },
-    { name: 'Entropy Features', count: 4, icon: <Hash size={14} />, desc: 'Signal complexity and chaos' },
+    { name: 'Temporal Features', count: 19, icon: <Activity size={14} />, desc: 'Time-domain statistical moments' },
+    { name: 'Frequency Features', count: 9, icon: <Waves size={14} />, desc: 'Spectral power distributions' },
+    { name: 'Wavelet Features', count: 19, icon: <Network size={14} />, desc: 'Multi-resolution analysis' },
+    { name: 'Entropy Features', count: 1, icon: <Hash size={14} />, desc: 'Signal complexity and chaos' },
     { name: 'Hjorth Parameters', count: 3, icon: <AlignCenter size={14} />, desc: 'Activity, mobility, complexity' },
     { name: 'Band Power', count: 5, icon: <Zap size={14} />, desc: 'Alpha, Beta, Theta, Delta, Gamma' },
   ];
