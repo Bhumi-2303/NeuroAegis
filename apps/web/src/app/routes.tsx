@@ -19,10 +19,18 @@ import { RouteErrorBoundary } from '../shared/components/RouteErrorBoundary';
 // Doctor V2
 import { DoctorDashboard } from '../doctor/pages/DoctorDashboard';
 
+// Auth
+import { LoginPage } from '../features/auth/LoginPage';
+import { ProtectedRoute } from '../shared/components/ProtectedRoute';
+
 export const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <LoginPage />
+  },
+  {
     path: '/',
-    element: <DashboardShell />,
+    element: <ProtectedRoute><DashboardShell /></ProtectedRoute>,
     errorElement: <RouteErrorBoundary />,
     children: [
       {
@@ -73,6 +81,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '/doctor',
-    element: <DoctorDashboard />
+    element: <ProtectedRoute allowedRoles={['clinician', 'admin']}><DoctorDashboard /></ProtectedRoute>
   }
 ]);

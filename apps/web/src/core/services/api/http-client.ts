@@ -38,10 +38,13 @@ export class HttpClient {
       }
     }
 
+    const token = localStorage.getItem('token');
+    
     const config: RequestInit = {
       ...customConfig,
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         ...customConfig.headers,
       },
     };

@@ -3,17 +3,21 @@ import { QueryProvider, StoreProvider, ThemeProvider } from './app/providers';
 import { router } from './app/routes';
 import { ParticleField } from './design-system/primitives';
 
+import { AuthProvider } from './app/providers/AuthProvider';
+
 function App() {
   return (
-    <ThemeProvider>
-      <QueryProvider>
-        <StoreProvider>
-          <ParticleField count={40} />
+    <AuthProvider>
+      <ThemeProvider>
+        <QueryProvider>
+          <StoreProvider>
+            <ParticleField count={40} />
 
-          <RouterProvider router={router} />
-        </StoreProvider>
-      </QueryProvider>
-    </ThemeProvider>
+            <RouterProvider router={router} />
+          </StoreProvider>
+        </QueryProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

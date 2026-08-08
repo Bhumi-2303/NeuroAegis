@@ -4,6 +4,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Sphere, Line } from '@react-three/drei';
 import * as THREE from 'three';
+import { ClinicalDisclaimer } from '../../shared/components/ClinicalDisclaimer';
+import { ModelLimitations } from '../../shared/components/ModelLimitations';
 
 // --- 3D Brain Network Component ---
 function BrainNetwork() {
@@ -92,6 +94,9 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
 
   return (
     <div className="space-y-6">
+      {/* Non-dismissible Clinical Disclaimer */}
+      <ClinicalDisclaimer />
+
       {/* Header Actions */}
       <div className="flex justify-end gap-4 mb-4">
         <button 
@@ -118,7 +123,7 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 {isHighRisk ? <AlertTriangle className="w-8 h-8 text-red-400" /> : <ShieldCheck className="w-8 h-8 text-teal-400" />}
-                <h2 className="text-3xl font-bold tracking-tight">AI Clinical Assessment</h2>
+                <h2 className="text-3xl font-bold tracking-tight">EEG Signal Analysis</h2>
               </div>
               <p className="text-neutral-400 max-w-md mt-4">
                 Based on the GNN analysis of the uploaded EEG signals, the neural activity patterns exhibit characteristics consistent with {isHighRisk ? 'abnormal epileptiform activity' : 'normal baseline rhythms'}.
@@ -131,7 +136,7 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
                 <span className={isHighRisk ? 'text-red-400' : 'text-teal-400'}>{prob}%</span>
               </div>
               <div className="mt-4 flex items-center justify-end gap-2 text-sm">
-                <span className="text-neutral-500">Confidence Model:</span>
+                <span className="text-neutral-500">Model Probability Band:</span>
                 <span className={`px-2 py-1 rounded text-xs font-bold ${
                   confidence === 'HIGH' ? 'bg-teal-500/20 text-teal-300' : 
                   confidence === 'MEDIUM' ? 'bg-yellow-500/20 text-yellow-300' : 'bg-red-500/20 text-red-300'
@@ -187,6 +192,11 @@ export function ResultDashboard({ jobId }: { jobId: string }) {
               <div className="w-3 h-3 rounded-full bg-blue-500" /> Decreased Risk
             </div>
           </div>
+        </div>
+
+        {/* Model Limitations (always visible) */}
+        <div className="lg:col-span-3">
+          <ModelLimitations />
         </div>
 
       </div>

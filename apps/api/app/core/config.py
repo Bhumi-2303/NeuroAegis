@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./neuroaegis.db"
     
+    # Auth
+    SECRET_KEY: str = "ff948120d6c9b84a43343111fb6c417098725c0603c22d40742cc7aa8037efa1"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
     

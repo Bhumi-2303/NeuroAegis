@@ -1,10 +1,18 @@
 # Environments
 .env
-.env.*
+.env.local
+.env.production
+!.env.example
 .venv/
 venv/
 env/
 .uv/
+
+# TLS / Secrets
+nginx/server.key
+nginx/server.crt
+*.pem
+*.key
 
 # Node/React Frontend
 node_modules/

@@ -3,6 +3,7 @@ import { PatientForm } from '../components/PatientForm';
 import { AnalysisProgress } from '../components/AnalysisProgress';
 import { ResultDashboard } from '../components/ResultDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ClinicalDisclaimer } from '../../shared/components/ClinicalDisclaimer';
 
 type DashboardStage = 'input' | 'analyzing' | 'result';
 
@@ -35,7 +36,7 @@ export function DoctorDashboard() {
       <header className="relative z-10 p-6 border-b border-white/10 backdrop-blur-md bg-neutral-950/50 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-teal-500 to-blue-500 flex items-center justify-center font-bold">N</div>
-          <h1 className="text-xl font-medium tracking-wide">NeuroAegis <span className="text-neutral-400">Doctor AI</span></h1>
+          <h1 className="text-xl font-medium tracking-wide">NeuroAegis <span className="text-neutral-400">Research Tool</span></h1>
         </div>
         {stage !== 'input' && (
           <button 
@@ -48,6 +49,7 @@ export function DoctorDashboard() {
       </header>
 
       <main className="relative z-10 container mx-auto px-4 py-8 max-w-7xl">
+        <ClinicalDisclaimer />
         <AnimatePresence mode="wait">
           {stage === 'input' && (
             <motion.div

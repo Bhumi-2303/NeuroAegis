@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Upload, FileText, User, Activity, Brain } from 'lucide-react';
+import { Upload, FileText, User, Activity, Brain, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const patientSchema = z.object({
@@ -15,7 +15,8 @@ const patientSchema = z.object({
   heart_rate: z.coerce.number().min(30).max(200),
   blood_pressure: z.string().regex(/^\d{2,3}\/\d{2,3}$/, "Format: 120/80"),
   spo2: z.coerce.number().min(50).max(100),
-  temperature: z.coerce.number().min(30).max(45)
+  temperature: z.coerce.number().min(30).max(45),
+  consent_given: z.literal(true, { errorMap: () => ({ message: "You must provide informed consent to proceed." }) }),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -171,6 +172,37 @@ export function PatientForm({ onStartAnalysis }: { onStartAnalysis: (jobId: stri
             <label className="block text-sm font-medium text-neutral-400 mb-2">Medical History & Symptoms</label>
             <textarea {...register("medical_history")} rows={4} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-teal-500 transition-colors resize-none" placeholder="Previous seizures, medication, family history..."></textarea>
             {errors.medical_history && <p className="text-red-400 text-xs mt-1">{errors.medical_history.message}</p>}
+          </div>
+
+          {/* Informed Consent */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldCheck className="text-amber-400 w-5 h-5" />
+              <h3 className="text-lg font-semibold text-amber-200">Informed Consent</h3>
+            </div>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 mb-4">
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                By checking the box below, I confirm that:
+              </p>
+              <ul className="text-sm text-neutral-400 list-disc list-inside mt-2 space-y-1">
+                <li>I have the legal authority to submit this patient's data for analysis.</li>
+                <li>I understand this tool is a <strong className="text-amber-300">research aid only</strong> and is NOT a certified medical device.</li>
+                <li>All clinical decisions must be made by a qualified medical professional.</li>
+                <li>Patient data will be processed per our <a href="/privacy" className="text-teal-400 underline hover:text-teal-300">Privacy Policy</a>.</li>
+                <li>I may request deletion of this data at any time by contacting an administrator.</li>
+              </ul>
+            </div>
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                {...register("consent_given")}
+                className="mt-1 w-5 h-5 rounded border-2 border-amber-500/40 bg-black/40 checked:bg-amber-500 checked:border-amber-500 focus:ring-amber-500/50 focus:ring-2 transition-all cursor-pointer"
+              />
+              <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">
+                I have read and agree to the above terms and give informed consent for this analysis.
+              </span>
+            </label>
+            {errors.consent_given && <p className="text-red-400 text-xs mt-2 ml-8">{errors.consent_given.message}</p>}
           </div>
         </form>
       </div>

@@ -4,6 +4,7 @@ import { AlertCircle, FileText, Download, Calendar, User, Activity, CheckCircle,
 import { useQuery } from '@tanstack/react-query';
 import { GlassCard } from '../../../shared/components';
 import { pageTransition, fadeIn } from '../../../shared/lib/motion-presets';
+import { ClinicalDisclaimer } from '../../../shared/components/ClinicalDisclaimer';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -240,7 +241,7 @@ export const ReportsPage = () => {
           <FileText className="w-8 h-8 text-[var(--accent-primary)]" />
           <h1 className="text-3xl font-display font-bold text-[var(--text-primary)]">Reports & Analytics</h1>
         </div>
-        
+
         <div className="flex gap-2 bg-[var(--bg-2)] p-1 rounded-lg border border-[var(--bg-3)]">
           <button
             onClick={() => setActiveTab('generate')}
@@ -264,6 +265,8 @@ export const ReportsPage = () => {
           </button>
         </div>
       </header>
+
+      <ClinicalDisclaimer />
 
       {activeTab === 'generate' ? renderGenerateForm() : renderMetrics()}
     </motion.div>

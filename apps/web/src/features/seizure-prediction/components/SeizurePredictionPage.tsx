@@ -9,6 +9,7 @@ import {
   StatusBadge 
 } from '../../../shared/components';
 import { pageTransition, staggerChildren, fadeIn } from '../../../shared/lib/motion-presets';
+import { ClinicalDisclaimer } from '../../../shared/components/ClinicalDisclaimer';
 import type { ModelOutput } from '@neuroaegis/model-contracts';
 
 const MAX_FILE_SIZE = 52 * 1024 * 1024; // 52MB
@@ -169,6 +170,8 @@ export const SeizurePredictionPage: React.FC = () => {
         <Brain className="w-8 h-8 text-[var(--accent-primary)]" strokeWidth={1.5} />
         <h1 className="text-2xl font-[var(--font-display)] text-[var(--text-primary)]">Seizure Prediction</h1>
       </div>
+
+      <ClinicalDisclaimer />
 
       <AnimatePresence mode="wait">
         {/* Idle State: File Upload Form */}

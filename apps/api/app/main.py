@@ -3,8 +3,10 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.router import api_router as api_v1_router
 from app.core.config import settings
@@ -16,6 +18,20 @@ except ImportError:
 from app.db.database import Base, engine
 
 logger = logging.getLogger("neuroaegis")
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds security headers to every response."""
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        if settings.ENVIRONMENT != "development":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        return response
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -39,7 +55,6 @@ async def lifespan(app: FastAPI):
     yield
     
     logger.info("Application shutdown: Cleaning up resources...")
-    # Add cleanup logic if necessary
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -48,6 +63,9 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+# Security middleware
+app.add_middleware(SecurityHeadersMiddleware)
 
 # Set all CORS enabled origins
 if settings.CORS_ORIGINS:

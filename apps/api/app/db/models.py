@@ -1,7 +1,7 @@
 from __future__ import annotations
 from datetime import datetime
 
-from sqlalchemy import JSON, Column, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.database import Base
@@ -22,6 +22,11 @@ class Patient(Base):
     
     # Vital signs stored as JSON
     vital_signs = Column(JSON)
+    
+    # Privacy & Consent
+    consent_given = Column(Boolean, default=False)
+    consent_date = Column(DateTime, nullable=True)
+    data_retention_opt_in = Column(Boolean, default=False)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     
@@ -55,3 +60,11 @@ class PredictionJob(Base):
     completed_at = Column(DateTime, nullable=True)
     
     patient = relationship("Patient", back_populates="jobs")
+
+class User(Base):
+    __tablename__ = "users"
+    
+    id = Column(String, primary_key=True, index=True) # UUID string
+    username = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
+    role = Column(String, default="clinician") # admin, clinician, researcher

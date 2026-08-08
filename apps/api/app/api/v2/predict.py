@@ -17,11 +17,12 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import Patient, PredictionJob
+from app.db.models import Patient, PredictionJob, User
 from app.services.dataset_detection import dataset_detector
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
 from app.services.prediction.prediction_router import prediction_router
+from app.core.auth import require_role
 
 router = APIRouter()
 

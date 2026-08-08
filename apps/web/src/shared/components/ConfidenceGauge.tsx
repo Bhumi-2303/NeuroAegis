@@ -76,6 +76,9 @@ export const ConfidenceGauge = forwardRef<HTMLDivElement, ConfidenceGaugeProps>(
             {label}
           </div>
         )}
+        <div className="mt-1 text-[10px] text-neutral-500 text-center max-w-[180px] leading-tight">
+          Model probability — not clinical certainty
+        </div>
       </div>
     );
   }

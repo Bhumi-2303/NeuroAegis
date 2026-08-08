@@ -18,8 +18,9 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.database import SessionLocal, get_db
-from app.db.models import Patient, PredictionJob
+from app.db.models import Patient, PredictionJob, User
 from app.services.prediction.prediction_router import prediction_router
+from app.core.auth import require_role
 
 router = APIRouter()
 
