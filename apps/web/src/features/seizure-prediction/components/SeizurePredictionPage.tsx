@@ -46,11 +46,11 @@ export const SeizurePredictionPage: React.FC = () => {
   useEffect(() => {
     const fetchModels = async () => {
       try {
-        const res = await fetch('/api/v1/models/');
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const res = await fetch(`${API_URL}/api/v1/models/`);
         if (res.ok) {
           const data = await res.json();
           setAvailableModels(data);
-
         }
       } catch (err) {
         console.error("Failed to fetch available models", err);
@@ -94,17 +94,33 @@ export const SeizurePredictionPage: React.FC = () => {
       // formData.append('dataset', selectedDataset);
       // formData.append('model', selectedModel);
 
-      const res = await fetch('/api/v1/predict', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/v1/predict/`, {
         method: 'POST',
         body: formData,
       });
       
-      if (!res.ok) throw new Error('Prediction request failed');
+      if (!res.ok) {
+        let errorMsg = `Prediction request failed (${res.status})`;
+        if (res.status === 404) errorMsg = 'API endpoint not found (404). Ensure the backend service is running.';
+        if (res.status === 502 || res.status === 504) errorMsg = 'Backend service is currently unreachable (502/504 Gateway Error).';
+        
+        try {
+          const text = await res.text();
+          try {
+            const errorData = JSON.parse(text);
+            errorMsg = errorData.detail || errorMsg;
+          } catch {
+            console.error("Non-JSON error response:", text.substring(0, 200));
+          }
+        } catch {}
+        throw new Error(errorMsg);
+      }
       const { job_id } = await res.json();
       
       while (true) {
-        const statusRes = await fetch(`/api/v1/jobs/${job_id}`);
-        if (!statusRes.ok) throw new Error('Failed to fetch job status');
+        const statusRes = await fetch(`${API_URL}/api/v1/jobs/${job_id}`);
+        if (!statusRes.ok) throw new Error(`Failed to fetch job status (${statusRes.status})`);
         const statusData = await statusRes.json();
         
         // Map backend stages to UI steps

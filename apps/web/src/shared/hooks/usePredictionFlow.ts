@@ -77,13 +77,20 @@ export function usePredictionFlow() {
       console.log(`[usePredictionFlow] Response received. Status: ${res.status}`);
       
       if (!res.ok) {
-        let errorMsg = 'Prediction request failed';
+        let errorMsg = `Prediction request failed (${res.status})`;
+        if (res.status === 404) errorMsg = 'API endpoint not found (404). Ensure the backend service is running.';
+        if (res.status === 502 || res.status === 504) errorMsg = 'Backend service is currently unreachable (502/504 Gateway Error).';
+        if (res.status === 413) errorMsg = 'File too large (413 Payload Too Large).';
+        
         try {
-          const errorData = await res.json();
-          errorMsg = errorData.detail || errorMsg;
-        } catch {
-          // If response isn't JSON, it might be a gateway error
-        }
+          const text = await res.text();
+          try {
+            const errorData = JSON.parse(text);
+            errorMsg = errorData.detail || errorMsg;
+          } catch {
+            console.error("Non-JSON error response:", text.substring(0, 200));
+          }
+        } catch {}
         throw new Error(errorMsg);
       }
       
