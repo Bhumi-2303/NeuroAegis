@@ -25,7 +25,7 @@ export function ClinicalSummaryReport({ data, file }: Props) {
           <ReportRow label="Confidence Score" value={`${confidence.toFixed(1)}%`} />
           <ReportRow label="Dataset Profile" value={(data?.datasetName || 'Unknown').toUpperCase()} />
           <ReportRow label="Signal Quality" value="Excellent (94%)" />
-          <ReportRow label="Features Extracted" value={data?.datasetName?.toLowerCase() === 'chb-mit' ? '45 total features' : '66 total features'} />
+          <ReportRow label="Features Extracted" value={data?.datasetName?.toLowerCase() === 'chb-mit' ? '36,864 features' : '56 features'} />
           <ReportRow label="Inference Engine" value={data?.modelName?.replace(/_/g, ' ').toUpperCase() || 'LIGHTGBM ENSEMBLE'} />
           
           <div className="pt-3 mt-3 border-t border-[var(--bg-4)]">
