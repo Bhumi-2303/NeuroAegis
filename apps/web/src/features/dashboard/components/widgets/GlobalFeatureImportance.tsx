@@ -15,7 +15,8 @@ export function GlobalFeatureImportance() {
   const { data, isLoading, error } = useQuery<{ feature_importances: FeatureImportance[] }>({
     queryKey: ['model-info'],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/model/info?dataset=chbmit&model_name=lightgbm`);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const res = await fetch(`${API_URL}/api/v1/model/info?dataset=bonn&model_name=lightgbm`);
       if (!res.ok) throw new Error('Failed to fetch model info');
       return res.json();
     },
