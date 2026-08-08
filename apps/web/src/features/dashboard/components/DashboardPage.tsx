@@ -8,12 +8,10 @@ import { usePredictionFlow } from '../../../shared/hooks';
 // New Widgets
 import { WidgetCard } from './widgets/WidgetCard';
 import { DatasetDetectionCard } from './widgets/DatasetDetectionCard';
-import { ModelInfoCard } from './widgets/ModelInfoCard';
 import { PredictionSummaryCard } from './widgets/PredictionSummaryCard';
 import { EEGViewer } from './widgets/EEGViewer';
 import { FeatureSummaryCard } from './widgets/FeatureSummaryCard';
 import { EnhancedShapPanel } from './widgets/EnhancedShapPanel';
-import { GlobalFeatureImportance } from './widgets/GlobalFeatureImportance';
 import { ClinicalSummaryReport } from './widgets/ClinicalSummaryReport';
 import { ExportPanel } from './widgets/ExportPanel';
 import { LoadingPipeline } from './widgets/LoadingPipeline';
@@ -270,26 +268,20 @@ export function DashboardPage(): React.JSX.Element {
             {/* Row 3: Explainability */}
             <EnhancedShapPanel data={data} />
 
-            {/* Row 4: 2-column grid for Dataset and Model Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Row 4: Dataset Detection */}
+            <div className="w-full">
               <DatasetDetectionCard 
                 datasetName={datasetName || undefined} 
                 confidence={detectionConfidence || undefined} 
               />
-              <ModelInfoCard modelName={data.modelName} datasetName={datasetName || undefined} />
             </div>
 
             {/* Row 5: Features Summary */}
             <FeatureSummaryCard />
 
-            {/* Row 8: Global Importance & System Performance (split) */}
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-              <div className="xl:col-span-2 h-full">
-                <GlobalFeatureImportance />
-              </div>
-              <div className="xl:col-span-1 flex flex-col gap-6">
-                <ExportPanel data={data} datasetName={datasetName} />
-              </div>
+            {/* Row 8: Export Panel */}
+            <div className="w-full">
+              <ExportPanel data={data} datasetName={datasetName} />
             </div>
 
             {/* Row 9: Clinical Report */}
