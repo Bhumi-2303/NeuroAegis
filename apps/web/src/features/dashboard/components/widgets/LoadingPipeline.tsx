@@ -7,7 +7,7 @@ const PIPELINE_STAGES = [
   'Loading EEG Signal Data',
   'Filtering & Artifact Removal',
   'Extracting Biomarkers & Features',
-  'Running Model Inference',
+  'Running LightGBM Inference',
   'Generating SHAP Explanations',
   'Compiling Clinical Report'
 ];
