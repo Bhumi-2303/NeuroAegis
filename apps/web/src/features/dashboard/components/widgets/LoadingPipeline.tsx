@@ -6,8 +6,8 @@ import { WidgetCard } from './WidgetCard';
 const PIPELINE_STAGES = [
   'Loading EEG Signal Data',
   'Filtering & Artifact Removal',
-  'Extracting 66 Features',
-  'Running XGBoost Inference',
+  'Extracting Biomarkers & Features',
+  'Running Model Inference',
   'Generating SHAP Explanations',
   'Compiling Clinical Report'
 ];

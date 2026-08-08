@@ -62,7 +62,7 @@ export function PredictionSummaryCard({ probability, label, datasetName, modelNa
                </div>
                <div>
                  <div className="text-[10px] uppercase font-bold text-[var(--text-muted)]">Model</div>
-                 <div className="text-xs font-semibold text-[var(--text-primary)] capitalize">{modelName?.replace('_', ' ') || 'XGBoost'}</div>
+                 <div className="text-xs font-semibold text-[var(--text-primary)] capitalize">{modelName?.replace(/_/g, ' ') || 'LightGBM'}</div>
                </div>
              </div>
              

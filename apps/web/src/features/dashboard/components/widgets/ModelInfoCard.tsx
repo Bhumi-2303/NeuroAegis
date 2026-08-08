@@ -44,7 +44,7 @@ export function ModelInfoCard({ modelName, datasetName }: Props) {
     <WidgetCard title="Model Information" icon={<Cpu size={16} />}>
       <div className="mb-6">
         <div className="text-xl font-bold text-[var(--text-primary)] capitalize tracking-tight">
-          {modelName?.replace('_', ' ') || 'CHB-MIT XGBoost'}
+          {modelName?.replace(/_/g, ' ') || 'CHB-MIT LightGBM'}
         </div>
         <div className="flex gap-2 items-center mt-2">
           <span className="px-2 py-0.5 bg-[var(--accent-primary)]/10 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 rounded text-[11px] font-semibold">v2.1.0</span>

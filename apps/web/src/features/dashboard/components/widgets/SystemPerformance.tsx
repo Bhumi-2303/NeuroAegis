@@ -8,7 +8,7 @@ export function SystemPerformance() {
     { label: 'GPU Status', value: 'Idle', sub: 'Fallback to CPU' },
     { label: 'Model Size', value: '2.4 MB', sub: 'In-memory' },
     { label: 'Feature Extraction', value: '18ms', sub: 'Pandas/NumPy' },
-    { label: 'Prediction', value: '8ms', sub: 'XGBoost Eval' },
+    { label: 'Prediction', value: '8ms', sub: 'LightGBM Eval' },
   ];
 
   return (
