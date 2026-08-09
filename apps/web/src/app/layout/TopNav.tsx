@@ -3,7 +3,6 @@ import { Search, Bell, User, Brain } from 'lucide-react';
 
 const TOP_LINKS = [
   { path: '/', label: 'Dashboard' },
-  { path: '/analysis', label: 'Analysis' },
   { path: '/reports', label: 'Reports' },
 ];
 
