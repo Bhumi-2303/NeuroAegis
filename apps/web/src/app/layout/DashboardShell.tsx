@@ -5,7 +5,6 @@ import { Sidebar } from './Sidebar';
 
 const MOBILE_NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/analysis', icon: Brain, label: 'Analysis' },
   { path: '/eeg', icon: Activity, label: 'EEG' },
 ];
 

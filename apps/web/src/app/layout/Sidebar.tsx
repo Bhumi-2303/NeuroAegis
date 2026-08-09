@@ -7,7 +7,6 @@ import {
 
 const NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/analysis', icon: Brain, label: 'Brain Analysis' },
   { path: '/eeg', icon: Activity, label: 'Neural Activity' },
 ];
 

@@ -3,7 +3,6 @@ import { DashboardShell } from './layout';
 
 // Feature Pages
 import { DashboardPage } from '../features/dashboard';
-import { BrainAnalysisPage } from '../features/brain-analysis';
 import { EEGMonitorPage } from '../features/eeg-monitor';
 import { FrequencyAnalysisPage } from '../features/frequency-analysis';
 import { LiveMonitorPage } from '../features/live-monitor';
@@ -36,10 +35,6 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <DashboardPage />,
-      },
-      {
-        path: 'analysis',
-        element: <BrainAnalysisPage />,
       },
       {
         path: 'eeg',
