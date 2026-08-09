@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { ModelOutput } from '@neuroaegis/model-contracts';
+import { useAppStore } from '../../core/state';
 
 const MAX_FILE_SIZE = 52 * 1024 * 1024; // 52MB
 
@@ -11,6 +12,8 @@ export function usePredictionFlow() {
   const [datasetName, setDatasetName] = useState<string | null>(null);
   const [detectionConfidence, setDetectionConfidence] = useState<number | null>(null);
   const [modelName, setModelName] = useState<string | null>(null);
+  
+  const setLatestPrediction = useAppStore(state => state.setLatestPrediction);
   
   const [file, setFile] = useState<File | null>(null);
   const [samplingRate, setSamplingRate] = useState<string>('');
@@ -135,6 +138,7 @@ export function usePredictionFlow() {
           setDetectionConfidence(statusData.detectionConfidence || 0);
           setModelName(statusData.modelName || 'Unknown');
           setData(responseData);
+          setLatestPrediction(responseData);
           console.log("[usePredictionFlow] Job completed successfully.");
           completed = true;
           break;

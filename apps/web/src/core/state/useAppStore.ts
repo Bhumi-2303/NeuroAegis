@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import type { ModelOutput } from '@neuroaegis/model-contracts';
 
 interface AppState {
   activeModelId: string;
@@ -10,6 +11,9 @@ interface AppState {
   
   activePatientId: string | null;
   setActivePatientId: (id: string | null) => void;
+
+  latestPrediction: ModelOutput | null;
+  setLatestPrediction: (data: ModelOutput | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -23,6 +27,9 @@ export const useAppStore = create<AppState>()(
       
       activePatientId: null,
       setActivePatientId: (id) => set({ activePatientId: id }),
+
+      latestPrediction: null,
+      setLatestPrediction: (data) => set({ latestPrediction: data }),
     }),
     { name: 'AppStore' }
   )

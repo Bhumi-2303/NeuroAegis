@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { GlassCard } from '../../../shared/components';
 import { pageTransition, fadeIn } from '../../../shared/lib/motion-presets';
 import { ClinicalDisclaimer } from '../../../shared/components/ClinicalDisclaimer';
+import { useAppStore } from '../../../core/state';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -12,6 +13,7 @@ export const ReportsPage = () => {
   const [activeTab, setActiveTab] = useState<'generate' | 'metrics'>('generate');
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportSuccess, setReportSuccess] = useState(false);
+  const latestPrediction = useAppStore(state => state.latestPrediction);
 
   const { data: metricsData, isLoading, isError } = useQuery({
     queryKey: ['model-metrics'],
@@ -25,13 +27,62 @@ export const ReportsPage = () => {
 
   const handleGenerateReport = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!latestPrediction) {
+      alert("No prediction data available to export. Please run an analysis in the Dashboard first.");
+      return;
+    }
+
     setIsGenerating(true);
     setReportSuccess(false);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setReportSuccess(true);
-      setTimeout(() => setReportSuccess(false), 5000);
-    }, 2000);
+
+    const formData = new FormData(e.target as HTMLFormElement);
+    const patientId = formData.get('patientId') as string;
+    const reportType = formData.get('reportType') as string;
+    const startDate = formData.get('startDate') as string;
+    const endDate = formData.get('endDate') as string;
+    const notes = formData.get('notes') as string;
+
+    const reportContent = `=========================================================
+NOT A MEDICAL DEVICE — RESEARCH USE ONLY
+NeuroAegis is an experimental research tool. Its predictions have not been validated in clinical trials and are not approved by the FDA, EMA, or any regulatory body. All outputs must be reviewed and confirmed by a qualified neurologist or epileptologist before any clinical action is taken. Never use these results as the sole basis for diagnosis, treatment, or medication changes.
+=========================================================
+
+CLINICAL REPORT
+---------------
+Patient ID: ${patientId || 'N/A'}
+Report Type: ${reportType || 'N/A'}
+Date Range: ${startDate || 'N/A'} to ${endDate || 'N/A'}
+
+PREDICTION RESULTS
+------------------
+Model: ${latestPrediction.modelName}
+Generated At: ${new Date(latestPrediction.generatedAt).toLocaleString()}
+Prediction: ${latestPrediction.prediction.label}
+Confidence: ${(latestPrediction.confidence.value * 100).toFixed(1)}% (${latestPrediction.confidence.band})
+
+SHAP FEATURE IMPORTANCE (Top 5)
+-------------------------------
+${latestPrediction.explanation.features.slice(0, 5).map((f: any) => `- ${f.name}: ${f.value.toFixed(4)}`).join('\n')}
+
+ADDITIONAL NOTES
+----------------
+${notes || 'None'}
+`;
+
+    const blob = new Blob([reportContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `NeuroAegis_Report_${patientId || 'Export'}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setIsGenerating(false);
+    setReportSuccess(true);
+    setTimeout(() => setReportSuccess(false), 5000);
   };
 
   const renderMetrics = () => {
@@ -151,6 +202,7 @@ export const ReportsPage = () => {
                 <User className="w-4 h-4" /> Patient ID
               </label>
               <input 
+                name="patientId"
                 type="text" 
                 required
                 placeholder="e.g. PAT-12345"
@@ -162,7 +214,7 @@ export const ReportsPage = () => {
               <label className="text-sm font-[var(--font-body)] text-[var(--text-secondary)] flex items-center gap-2">
                 <FileText className="w-4 h-4" /> Report Type
               </label>
-              <select className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors appearance-none">
+              <select name="reportType" className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors appearance-none">
                 <option value="summary">Summary Report</option>
                 <option value="detailed">Detailed Analysis</option>
                 <option value="clinical">Clinical Diagnostics</option>
@@ -174,6 +226,7 @@ export const ReportsPage = () => {
                 <Calendar className="w-4 h-4" /> Start Date
               </label>
               <input 
+                name="startDate"
                 type="date" 
                 className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
               />
@@ -184,6 +237,7 @@ export const ReportsPage = () => {
                 <Calendar className="w-4 h-4" /> End Date
               </label>
               <input 
+                name="endDate"
                 type="date" 
                 className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors"
               />
@@ -193,6 +247,7 @@ export const ReportsPage = () => {
           <div className="space-y-2 pt-2">
             <label className="text-sm font-[var(--font-body)] text-[var(--text-secondary)]">Additional Notes</label>
             <textarea 
+              name="notes"
               rows={4}
               placeholder="Any specific findings to include in the report..."
               className="w-full bg-[var(--bg-2)] border border-[var(--bg-3)] rounded-lg px-4 py-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)] transition-colors custom-scrollbar"
