@@ -2,17 +2,13 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Brain, 
-  Activity, 
-  Sparkles,
-  MonitorPlay
+  Activity
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/analysis', icon: Brain, label: 'Brain Analysis' },
   { path: '/eeg', icon: Activity, label: 'Neural Activity' },
-  { path: '/live-monitor', icon: MonitorPlay, label: 'Live Monitor' },
-  { path: '/explainability', icon: Sparkles, label: 'Explainability (SHAP)' },
 ];
 
 export const Sidebar = () => {

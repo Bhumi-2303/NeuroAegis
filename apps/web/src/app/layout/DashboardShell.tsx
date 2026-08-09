@@ -1,5 +1,5 @@
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Brain, Activity, Sparkles, MonitorPlay } from 'lucide-react';
+import { LayoutDashboard, Brain, Activity } from 'lucide-react';
 import { TopNav } from './TopNav';
 import { Sidebar } from './Sidebar';
 
@@ -7,8 +7,6 @@ const MOBILE_NAV_ITEMS = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { path: '/analysis', icon: Brain, label: 'Analysis' },
   { path: '/eeg', icon: Activity, label: 'EEG' },
-  { path: '/live-monitor', icon: MonitorPlay, label: 'Live' },
-  { path: '/explainability', icon: Sparkles, label: 'SHAP' },
 ];
 
 export const DashboardShell = () => {
