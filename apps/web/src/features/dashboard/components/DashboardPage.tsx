@@ -109,7 +109,7 @@ export function DashboardPage(): React.JSX.Element {
             NeuroAegis Analysis Interface
           </h1>
           <p className="text-[13px] text-[var(--text-secondary)] m-0 mt-0.5 font-medium">
-            Biomedical research software for EEG pattern recognition.
+            Biomedical research software for epileptic seizure detection.
           </p>
         </div>
       </div>
