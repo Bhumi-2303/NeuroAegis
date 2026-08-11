@@ -604,7 +604,7 @@ See [`docs/RULES.md`](./docs/RULES.md) for the full coding standards and [`docs/
 This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
 
 ```
-MIT License • Copyright (c) 2026 Bhavini Chauhan
+MIT License • Copyright (c) 2026 Bhavini Chauhan, Tirth Kosambia, Anuj Pradhan
 ```
 
 ---
@@ -625,5 +625,5 @@ MIT License • Copyright (c) 2026 Bhavini Chauhan
 ---
 
 <p align="center">
-  Built with 🧠 by <a href="https://github.com/Bhumi-2303"><strong>Bhavini Chauhan</strong></a>
+  Built with 🧠 by <a href="https://github.com/Bhumi-2303"><strong>Anuj Pradhan, Bhavini Chauhan, Tirth Kosambia</strong></a>
 </p>
