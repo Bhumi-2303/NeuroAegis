@@ -27,8 +27,10 @@ out/
 # Python/FastAPI Backend
 __pycache__/
 .venv*/
-# Training datasets
+# Training datasets and checkpoints
 apps/api/models/chbmit/*.parquet
+apps/api/models/chbmit/attention_*/
+*.pt
 
 # Training reports
 apps/api/models/chbmit/*.csv
@@ -42,10 +44,22 @@ apps/api/neuroaegis.db
 
 # Large Data files
 *.edf
-data/chbmit_subset/
+*.parquet
+data/bonn_raw/
+data/chbmit_edf/
+data/bonn_features.csv
+results/
+apps/api/results/
+data/chbmit_subset/*.edf
 scratch/*.csv
 scratch/*.txt
 bonn_mock.txt
 chb01_03.csv
 chb_1hr*.csv
 chb_60s.csv
+
+# macOS metadata
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes

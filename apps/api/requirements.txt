@@ -22,3 +22,6 @@ sqlalchemy==2.0.51
 psycopg2-binary==2.9.12
 pyyaml==6.0.1
 scikit-learn==1.6.1
+# Training module (attention pooling) — not required for serving
+torch>=2.0.0
+matplotlib>=3.7.0
