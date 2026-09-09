@@ -1,0 +1,15 @@
+{
+  "execution_timestamp": "2026-09-05T17:56:45.789576Z",
+  "os": "macOS-26.6.2-arm64-arm-64bit",
+  "python_version": "3.11.15",
+  "torch_version": "2.13.0",
+  "torch_mps_available": true,
+  "mne_version": "1.7.0",
+  "scipy_version": "1.12.0",
+  "numpy_version": "1.26.4",
+  "pandas_version": "2.2.1",
+  "openpyxl_version": "3.1.5",
+  "matplotlib_version": "3.11.1",
+  "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+  "hardware": "Apple Silicon M4 (16 GB Unified Memory)"
+}

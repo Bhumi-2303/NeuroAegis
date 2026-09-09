@@ -1,0 +1,105 @@
+# NeuroAegis Class Imbalance Handling Configuration
+# Dataset: CHB-MIT Scalp EEG Database (24 Patients, 1,414,710 Windows)
+
+dataset: CHB-MIT
+master_index_path: research/data/manifests/chbmit_window_index.csv
+patient_manifest_path: research/data/manifests/chbmit_patient_manifest.csv
+seizure_events_path: research/data/manifests/chbmit_seizure_events.csv
+
+split:
+  strategy: holdout_16_4_4
+  random_seed: 42
+  train_patients:
+    - chb04
+    - chb09
+    - chb11
+    - chb12
+    - chb13
+    - chb14
+    - chb15
+    - chb16
+    - chb17
+    - chb18
+    - chb19
+    - chb20
+    - chb21
+    - chb22
+    - chb23
+    - chb24
+  validation_patients:
+    - chb06
+    - chb07
+    - chb08
+    - chb10
+  test_patients:
+    - chb01
+    - chb02
+    - chb03
+    - chb05
+  notes: "Strict patient-level isolation. Validation and test sets preserve their natural clinical class distribution."
+
+sampling:
+  method: dynamic_negative_subsampling
+  primary_ratio: 10.0
+  base_seed: 42
+  seed_formula: "base_seed + epoch"
+  positive_handling:
+    preserve_all_positives: true
+    no_random_discard: true
+    no_artificial_duplication: true
+  negative_handling:
+    dynamic_per_epoch: true
+    replace: false
+    shuffle_batches: true
+  notes: "Applied strictly to the training fold. Validation and test sets are NEVER balanced."
+
+loss:
+  primary_loss: focal_loss
+  focal_loss:
+    gamma: 2.0
+    alpha: 0.25
+    accepts_logits: true
+    reduction: mean
+    notes: "Binary Focal Loss accepting unnormalized logits. Reduces to alpha-weighted BCE when gamma=0."
+  baseline_bce:
+    type: binary_cross_entropy_with_logits
+    reduction: mean
+
+ablations:
+  enabled: true
+  experiments:
+    exp_a_bce_10to1:
+      loss: bce
+      negative_to_positive_ratio: 10.0
+      description: "Standard BCE with 10:1 dynamic negative subsampling"
+    exp_b_focal_10to1:
+      loss: focal
+      gamma: 2.0
+      alpha: 0.25
+      negative_to_positive_ratio: 10.0
+      description: "Focal Loss (gamma=2.0, alpha=0.25) with 10:1 dynamic negative subsampling (Primary Baseline)"
+    exp_c_focal_5to1:
+      loss: focal
+      gamma: 2.0
+      alpha: 0.25
+      negative_to_positive_ratio: 5.0
+      description: "Focal Loss with alternative 5:1 dynamic negative subsampling ratio"
+    exp_c_focal_20to1:
+      loss: focal
+      gamma: 2.0
+      alpha: 0.25
+      negative_to_positive_ratio: 20.0
+      description: "Focal Loss with alternative 20:1 dynamic negative subsampling ratio"
+
+metrics:
+  classification_threshold: 0.5
+  clinical_metrics:
+    - sensitivity
+    - specificity
+    - precision
+    - f1_score
+    - balanced_accuracy
+    - auroc
+    - auprc
+    - false_alarms_per_24h
+  time_step_stride_sec: 2.5
