@@ -1,0 +1,72 @@
+{
+    "project": "NeuroAegis",
+    "phase": "Phase 0 - Research Context, Literature Review & Repository Audit",
+    "audit_timestamp": "2026-09-05T17:05:00+05:30",
+    "status": "COMPLETED",
+    "research_direction": {
+        "primary_task": "Binary seizure vs non-seizure detection",
+        "target_architecture": "Lightweight CNN + GNN + GRU + Spatial-Temporal Attention",
+        "primary_dataset": "CHB-MIT Scalp EEG Database",
+        "external_dataset": "Siena Scalp EEG Database (Zero-Shot Cross-Domain)",
+        "supplementary_dataset": "Bonn University EEG Dataset",
+        "validation_strategy": "Patient-Independent Leave-One-Patient-Out Cross-Validation (LOPO-CV)"
+    },
+    "hardware_audit": {
+        "device": "Apple MacBook (Apple Silicon M4)",
+        "cpu_cores": 10,
+        "ram_gb": 16.0,
+        "pytorch_version": "2.13.0",
+        "mps_backend_available": true,
+        "cuda_available": false,
+        "disk_free_gb": 47.45
+    },
+    "dataset_audit": {
+        "chbmit": {
+            "patients_count": 24,
+            "total_edfs": 686,
+            "seizure_edfs": 141,
+            "seizure_annotation_files": 141,
+            "total_seizures": 198,
+            "total_seizure_duration_seconds": 10627,
+            "mean_seizure_duration_seconds": 53.67,
+            "min_seizure_duration_seconds": 6,
+            "max_seizure_duration_seconds": 752,
+            "class_imbalance_ratio": "53.97:1 (1.82% seizure windows in subset)"
+        },
+        "bonn": {
+            "total_epochs": 500,
+            "feature_columns": 60,
+            "numeric_features": 57,
+            "missing_values": 0,
+            "duplicate_rows": 0,
+            "class_balance": "5 classes x 100 epochs (balanced)"
+        },
+        "siena": {
+            "status": "Pending ingestion for Phase 2/3 cross-domain benchmarking"
+        }
+    },
+    "key_mismatches_investigated": [
+        {
+            "parameter": "Total Seizure Duration",
+            "reference": 424715,
+            "actual_verified": 10627,
+            "reason": "Previous parser had regex start-to-end pairing bug across multi-seizure EDFs"
+        },
+        {
+            "parameter": "chb04 Seizure Count",
+            "reference": 5,
+            "actual_verified": 4,
+            "reason": "chb04-summary.txt annotates exactly 4 seizures across 3 EDFs"
+        },
+        {
+            "parameter": "Min Seizure Duration",
+            "reference": 9,
+            "actual_verified": 6,
+            "reason": "chb16_17.edf contains a verified 6-second focal seizure"
+        }
+    ],
+    "research_risks_identified": 6,
+    "hardcoded_parameters_cataloged": 11,
+    "models_inventoried": 8,
+    "metrics_inventoried": 12
+}
