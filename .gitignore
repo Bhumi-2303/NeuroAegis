@@ -48,7 +48,7 @@ apps/api/neuroaegis.db
 data/bonn_raw/
 data/chbmit_edf/
 data/bonn_features.csv
-results/
+/results/
 apps/api/results/
 data/chbmit_subset/*.edf
 scratch/*.csv
@@ -57,6 +57,11 @@ bonn_mock.txt
 chb01_03.csv
 chb_1hr*.csv
 chb_60s.csv
+CHB-MIT Dataset/
+data/siena_edf/
+scratch/matplotlib_cache/
+research/phase_4b/embeddings_cache/
+research/data/manifests/chbmit_window_index.csv
 
 # macOS metadata
 .DS_Store
