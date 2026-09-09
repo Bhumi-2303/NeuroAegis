@@ -1,0 +1,127 @@
+{
+  "audit_name": "NeuroAegis Decision 2 Class-Imbalance Audit",
+  "audit_phase": "Phase 2.5 Audit",
+  "timestamp": "2026-09-05T17:58:00Z",
+  "final_verdict": "PASS WITH WARNINGS",
+  "cnn_training_permitted": "YES",
+  "final_recommendation": "READY FOR CNN BASELINE WITH DOCUMENTED WARNINGS",
+  "verifications": {
+    "focal_loss": {
+      "status": "PASS",
+      "implementation_file": "research/imbalance/focal_loss.py",
+      "class_name": "BinaryFocalLossWithLogits",
+      "alpha": 0.25,
+      "gamma": 2.0,
+      "accepts_logits": true,
+      "gamma_0_reduction_max_diff": 0.0,
+      "extreme_logits_stable": true
+    },
+    "logits_handling": {
+      "status": "PASS",
+      "model_output": "raw_logits",
+      "loss_input": "raw_logits",
+      "numerical_stability": "log_sum_exp_stable"
+    },
+    "sigmoid_handling": {
+      "status": "PASS",
+      "training": "internal_for_pt_only",
+      "metrics": "single_sigmoid_via_logits_to_probabilities",
+      "double_sigmoid_detected": false
+    },
+    "patient_isolation": {
+      "status": "PASS",
+      "train_patients_count": 16,
+      "val_patients_count": 4,
+      "test_patients_count": 4,
+      "train_val_intersection": 0,
+      "train_test_intersection": 0,
+      "val_test_intersection": 0
+    },
+    "recording_isolation": {
+      "status": "PASS",
+      "train_recordings": 449,
+      "val_recordings": 82,
+      "test_recordings": 155,
+      "recording_intersections": 0
+    },
+    "window_isolation": {
+      "status": "PASS",
+      "train_windows": 901391,
+      "val_windows": 293410,
+      "test_windows": 219909,
+      "master_total_windows": 1414710,
+      "window_intersections": 0,
+      "master_sha256": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+      "master_sha256_match": true
+    },
+    "dynamic_sampling": {
+      "status": "PASS",
+      "implementation_file": "research/imbalance/dynamic_sampler.py",
+      "class_name": "DynamicNegativeSampler",
+      "epoch_to_epoch_diversity_jaccard": 0.0203,
+      "deterministic_reproducibility": true
+    },
+    "ten_to_one_sampling": {
+      "status": "PASS",
+      "configured_ratio": 10.0,
+      "actual_ratio": 10.0,
+      "positive_samples_per_epoch": 3543,
+      "sampled_negative_samples_per_epoch": 35430,
+      "tolerance_met": true
+    },
+    "natural_validation": {
+      "status": "PASS",
+      "positive_windows": 782,
+      "negative_windows": 292628,
+      "natural_ratio": 374.2,
+      "sampler_bypassed": true
+    },
+    "natural_test": {
+      "status": "PASS",
+      "positive_windows": 674,
+      "negative_windows": 219235,
+      "natural_ratio": 325.27,
+      "sampler_bypassed": true
+    },
+    "threshold_safety": {
+      "status": "PASS",
+      "default_threshold": 0.5,
+      "test_tuning_detected": false
+    },
+    "leakage_audit": {
+      "status": "PASS",
+      "patient_leakage": false,
+      "recording_leakage": false,
+      "window_leakage": false,
+      "normalization_leakage": false,
+      "threshold_leakage": false
+    },
+    "reproducibility": {
+      "status": "PASS",
+      "master_seed": 42,
+      "seed_formula": "base_seed + epoch",
+      "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616"
+    },
+    "hardcoding_audit": {
+      "status": "PASS_WITH_WARNINGS",
+      "warnings": "Initial plotting script contained literal constants for Figure 2-4 axes/titles. Refactored dynamically."
+    },
+    "logging_excel": {
+      "status": "PASS",
+      "excel_file": "research/imbalance/Class_Imbalance_Audit.xlsx",
+      "sheets": ["Class Imbalance Strategy", "Sampling Epoch History", "Split Partitions"]
+    },
+    "automated_tests": {
+      "status": "PASS",
+      "passed": 14,
+      "total": 14,
+      "failed": 0
+    },
+    "memory_safety": {
+      "status": "PASS",
+      "peak_rss_mb": 2370.2,
+      "memory_budget_mb": 16384,
+      "raw_eeg_preloaded": false
+    }
+  }
+}

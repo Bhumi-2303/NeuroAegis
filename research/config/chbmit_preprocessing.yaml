@@ -1,0 +1,60 @@
+dataset: CHB-MIT
+sampling_rate_hz: 256.0
+canonical_channels_count: 23
+channel_order_file: research/data/config/chbmit_channel_order.json
+filtering:
+  bandpass:
+    enabled: true
+    lowcut_hz: 0.5
+    highcut_hz: 40.0
+    order: 4
+    filter_type: butterworth
+    zero_phase: true
+    mode: offline_research
+    notes: Offline zero-phase Butterworth filter (sosfiltfilt) preserving onset timing
+      without phase distortion.
+  notch:
+    enabled: true
+    frequency_hz: 60.0
+    quality_factor: 30.0
+    powerline_region: US_Boston_Childrens_Hospital_60Hz
+    zero_phase: true
+    notes: 60 Hz notch filter corresponding to American AC power frequency at Boston
+      Childrens Hospital.
+windowing:
+  duration_sec: 5.0
+  stride_sec: 2.5
+  overlap_ratio: 0.5
+  duration_samples: 1280
+  stride_samples: 640
+  recording_local: true
+  cross_recording: false
+  notes: 5-second windows (1280 samples @ 256 Hz) with 50% overlap (640 samples stride),
+    strictly contained within each EDF.
+labeling:
+  strategies:
+    strategy_a:
+      name: any_overlap
+      min_overlap_sec: 0.0
+      rule: overlap_duration_sec > 0.0
+      description: Positive if window overlaps seizure by any amount > 0s.
+    strategy_b:
+      name: fifty_percent_overlap
+      min_overlap_ratio: 0.5
+      rule: overlap_ratio >= 0.50
+      description: Positive if seizure duration in window >= 50% of window length
+        (>= 2.5s).
+  primary_label: strategy_a
+normalization:
+  method: zscore
+  scope: per_channel
+  fit_level: fold_specific_training_only
+  epsilon: 1.0e-08
+  leakage_safe: true
+  notes: Mean and std computed strictly on training fold data; never on test or validation
+    patients.
+storage:
+  mode: lazy_index
+  window_index_manifest: research/data/manifests/chbmit_window_index.csv
+  data_dtype: float32
+  memory_budget: 16GB_unified_memory_safe

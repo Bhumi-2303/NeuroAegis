@@ -1,0 +1,33 @@
+{
+  "primary_label_strategy": "Strategy B (label_50pct_overlap)",
+  "definition": "Positive (1) iff overlap_ratio >= 0.50; Negative (0) otherwise.",
+  "overlap_threshold": 0.5,
+  "window_duration_sec": 5.0,
+  "window_stride_sec": 2.5,
+  "sampling_frequency_hz": 256.0,
+  "window_samples": 1280,
+  "stride_samples": 640,
+  "dataset": "CHB-MIT",
+  "decision_date": "2026-09-06",
+  "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+  "master_index_sha256": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+  "total_windows": 1414710,
+  "primary_positive_windows": 4684,
+  "primary_negative_windows": 1410026,
+  "primary_imbalance_ratio": 301.03,
+  "primary_event_coverage": "198/198 (100.0%)",
+  "secondary_sensitivity_strategy": "Strategy A (label_any_overlap)",
+  "secondary_definition": "Positive (1) iff overlap_duration_sec > 0.0s; Negative (0) otherwise.",
+  "secondary_positive_windows": 4999,
+  "secondary_negative_windows": 1409711,
+  "secondary_imbalance_ratio": 282.0,
+  "secondary_event_coverage": "198/198 (100.0%)",
+  "class_imbalance_decision_2": {
+    "strategy": "Dynamic Negative Subsampling + Binary Focal Loss",
+    "negative_to_positive_ratio": 10.0,
+    "focal_gamma": 2.0,
+    "focal_alpha": 0.25,
+    "status": "FROZEN_UNCHANGED"
+  },
+  "rationale": "Strategy B (overlap_ratio >= 0.50) selected as primary because: (1) 100% event coverage (198/198, 0 missed); (2) >= 3 positive windows for every event including shortest 6.0s seizures; (3) Eliminates 315 boundary-contaminated windows (60-90% background); (4) 4,684 high-purity positive anchors (91.55% pure ictal content); (5) Integrates with frozen 10:1 subsampler and Binary Focal Loss. Strategy A retained for sensitivity ablation."
+}

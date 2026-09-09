@@ -1,0 +1,35 @@
+{
+  "pipeline_phase": "Phase 2: Preprocessing, Windowing & Label Construction",
+  "dataset": "CHB-MIT",
+  "sampling_rate_hz": 256.0,
+  "window_duration_sec": 5.0,
+  "window_stride_sec": 2.5,
+  "window_overlap_ratio": 0.5,
+  "window_samples": 1280,
+  "stride_samples": 640,
+  "total_windows": 1414710,
+  "strategy_a_positive": 4999,
+  "strategy_a_negative": 1409711,
+  "strategy_a_imbalance": 282.0,
+  "strategy_b_positive": 4684,
+  "strategy_b_negative": 1410026,
+  "strategy_b_imbalance": 301.03,
+  "seizure_event_coverage_strategy_a": "198/198 (100.0%)",
+  "seizure_event_coverage_strategy_b": "198/198 (100.0%)",
+  "bandpass_filter": {
+    "lowcut": 0.5,
+    "highcut": 40.0,
+    "order": 4,
+    "type": "butterworth_sosfiltfilt_zero_phase"
+  },
+  "notch_filter": {
+    "freq": 60.0,
+    "quality_factor": 30.0,
+    "type": "iirnotch_filtfilt_zero_phase"
+  },
+  "normalization": {
+    "method": "zscore",
+    "scope": "per_channel",
+    "leakage_safe": true
+  }
+}
