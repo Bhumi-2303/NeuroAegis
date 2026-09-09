@@ -1,0 +1,4 @@
+Model,Temporal Module,Spatial Module,Sequential Context,Parameters,Receptive Field
+Model A (1D-CNN),Depthwise 1D-CNN (4 Conv Layers),Flatten / Dense Linear,"None (Single Window, 5.0s)",173601,5.0s
+Model B (CNN+GNN),Depthwise 1D-CNN (4 Conv Layers),"2-Layer GCN (θ=0.30, 40 Edges)","None (Single Window, 5.0s)",52497,5.0s
+Model C (CNN+GNN+GRU),Depthwise 1D-CNN (4 Conv Layers),"2-Layer GCN (θ=0.30, 40 Edges)","1-Layer Causal GRU (L=8, H=64)",91858,22.5s

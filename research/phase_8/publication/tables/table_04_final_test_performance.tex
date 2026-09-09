@@ -1,0 +1,15 @@
+\begin{table*}[t]
+\centering
+\caption{Authoritative Held-Out Test Evaluation on CHB-MIT Cohort (N=219,909 Windows, 152.82h)}
+\label{tab:final_test_performance}
+\small
+\begin{tabular}{lllllllllll}
+\toprule
+Model & Architecture & Params & Event Sens & FA/24h & Delay (s) & AUROC & AUPRC & F1 & Win Sens & Win Spec \\
+\midrule
+Model A & 1D CNN Baseline & 173601 & 0.5455 & 1946.6 & 9.58 & 0.36389 & 0.04148 & 0.01553 & 0.16013 & 0.94347 \\
+Model B & CNN + Spatial GNN (theta=0.30) & 52497 & 0.2727 & 200.39 & 7.08 & 0.19431 & 0.00492 & 0.02784 & 0.04239 & 0.99418 \\
+Model C & CNN + Spatial GNN + Causal GRU (L=8) & 91858 & 0.9545 & 62.66 & 10.57 & 0.9897 & 0.80681 & 0.68025 & 0.8383 & 0.99818 \\
+\bottomrule
+\end{tabular}
+\end{table*}

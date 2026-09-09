@@ -1,0 +1,25 @@
+metric_category,metric_name,value,unit
+Window Evaluation,Total Evaluation Windows,219909.0,windows
+Window Evaluation,True Positives (TP),534.0,windows
+Window Evaluation,True Negatives (TN),218873.0,windows
+Window Evaluation,False Positives (FP),399.0,windows
+Window Evaluation,False Negatives (FN),103.0,windows
+Window Evaluation,Window Sensitivity,0.8383,ratio
+Window Evaluation,Window Specificity,0.99818,ratio
+Window Evaluation,Precision,0.57235,ratio
+Window Evaluation,F1 Score,0.68025,score
+Window Evaluation,Balanced Accuracy,0.91824,ratio
+Window Evaluation,AUROC,0.9897,score
+Window Evaluation,AUPRC,0.80681,score
+Event Detection,Total Seizure Events,22.0,events
+Event Detection,Detected Seizure Events,21.0,events
+Event Detection,Event Sensitivity,0.9545,ratio
+Event Detection,Mean Detection Delay,10.57,seconds
+Event Detection,Median Detection Delay,9.0,seconds
+Clinical Safety,Total Monitoring Hours,152.82,hours
+Clinical Safety,Total False Alarms,399.0,alarms
+Clinical Safety,False Alarms per 24h,62.66,alarms/24h
+Complexity,Total Parameters,91858.0,parameters
+Complexity,Temporal Context,22.5,seconds
+Complexity,Sequence Length,8.0,windows
+Decision Protocol,Decision Threshold,0.5,probability

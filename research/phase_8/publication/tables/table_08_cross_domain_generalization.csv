@@ -1,0 +1,4 @@
+benchmark_domain,cohort_description,evaluation_mode,evaluated_patients,total_windows,event_sensitivity,window_sensitivity,window_specificity,precision,f1_score,balanced_accuracy,auroc,auprc,fa_per_24h,detection_delay_sec
+CHB-MIT Final Test (Source),"4 patients, 155 continuous EDFs, 22 seizures, 152.82h",Patient-independent Holdout,4,219909,0.9545,0.8383,0.9982,0.5724,0.6803,0.9182,0.9897,0.8068,62.66,10.57
+Siena Scalp EEG (External Target),"2 patients (PN00, PN12), 4 recordings, 4 seizures, 2.46h",Zero-shot Harmonized Transfer,2,3538,1.0,0.5161290322580645,0.9985354422964264,0.927536231884058,0.6632124352331605,0.7573322372772455,0.9120084282933651,0.7135485574859992,0.0,19.375
+Siena Scalp EEG (Adapted Target),"Held-out PN12 test (calibrated on PN00: T*=0.3495, tau*=0.3800)",Post-Hoc Calibrated Adaptation,1,1064,1.0,0.2307692307692307,1.0,1.0,0.375,0.6153846153846154,0.9120084282933651,0.7135485574859992,0.0,29.5
