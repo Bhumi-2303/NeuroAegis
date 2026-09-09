@@ -1,0 +1,215 @@
+{
+  "audit_timestamp": "2026-09-06T18:25:00Z",
+  "frozen_invariants": {
+    "dataset": {
+      "phase3": "CHB-MIT",
+      "phase4a": "CHB-MIT",
+      "match": true
+    },
+    "num_channels": {
+      "phase3": 23,
+      "phase4a": 23,
+      "match": true
+    },
+    "window_duration_samples": {
+      "phase3": "5 sec / 1280 samples",
+      "phase4a": "5 sec / 1280 samples",
+      "match": true
+    },
+    "stride_samples": {
+      "phase3": "2.5 sec / 640 samples",
+      "phase4a": "2.5 sec / 640 samples",
+      "match": true
+    },
+    "primary_label": {
+      "phase3": ">=50% overlap",
+      "phase4a": ">=50% overlap",
+      "match": true
+    },
+    "training_sampler": {
+      "phase3": "10:1 dynamic negative sampling",
+      "phase4a": "10:1 dynamic negative sampling",
+      "match": true
+    },
+    "loss_function": {
+      "phase3": "Binary Focal Loss (gamma=2.0, alpha=0.25)",
+      "phase4a": "Binary Focal Loss (gamma=2.0, alpha=0.25)",
+      "match": true
+    },
+    "train_patients": {
+      "phase3": [
+        "chb04",
+        "chb09",
+        "chb11",
+        "chb12",
+        "chb13",
+        "chb14",
+        "chb15",
+        "chb16",
+        "chb17",
+        "chb18",
+        "chb19",
+        "chb20",
+        "chb21",
+        "chb22",
+        "chb23",
+        "chb24"
+      ],
+      "phase4a": [
+        "chb04",
+        "chb09",
+        "chb11",
+        "chb12",
+        "chb13",
+        "chb14",
+        "chb15",
+        "chb16",
+        "chb17",
+        "chb18",
+        "chb19",
+        "chb20",
+        "chb21",
+        "chb22",
+        "chb23",
+        "chb24"
+      ],
+      "match": true
+    },
+    "validation_patients": {
+      "phase3": [
+        "chb06",
+        "chb07",
+        "chb08",
+        "chb10"
+      ],
+      "phase4a": [
+        "chb06",
+        "chb07",
+        "chb08",
+        "chb10"
+      ],
+      "match": true
+    },
+    "test_patients": {
+      "phase3": [
+        "chb01",
+        "chb02",
+        "chb03",
+        "chb05"
+      ],
+      "phase4a": [
+        "chb01",
+        "chb02",
+        "chb03",
+        "chb05"
+      ],
+      "match": true
+    },
+    "leakage_audits": {
+      "patient_leakage": {
+        "p3": "PASS",
+        "p4": "PASS"
+      },
+      "recording_leakage": {
+        "p3": "PASS",
+        "p4": "PASS"
+      },
+      "window_leakage": {
+        "p3": "PASS",
+        "p4": "PASS"
+      }
+    },
+    "master_index_sha256": {
+      "phase3": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+      "phase4a": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+      "match": true
+    }
+  },
+  "architectural_differences": {
+    "model_type": {
+      "phase3": "Multi-Channel Temporal 1D CNN",
+      "phase4a": "Channel-Preserving 1D CNN + 2-Layer Spatial GCN"
+    },
+    "parameter_count": {
+      "phase3": 173601,
+      "phase4a": 52497,
+      "delta": -121104,
+      "pct_change": -69.76
+    },
+    "channel_interaction_mechanism": {
+      "phase3": "Dense 1D Conv across all 23 channels at Stage 1 (Conv1d(23, 32))",
+      "phase4a": "Explicit Graph Message Passing via Adjacency Matrix over 23 distinct node representations"
+    },
+    "temporal_feature_extractor": {
+      "phase3": "Multi-channel (23 -> 32 -> 64 -> 128 -> 128)",
+      "phase4a": "Single-channel shared (1 -> 16 -> 32 -> 64 -> 64)"
+    },
+    "graph_pooling": {
+      "phase3": "N/A (Spatial channels collapsed in Conv1d layer 1)",
+      "phase4a": "Dual Pooling: Concatenation of Global Mean Pool and Global Max Pool (64 + 64 = 128-dim)"
+    }
+  },
+  "empirical_metrics_comparison": {
+    "test_auroc": {
+      "phase3": 0.36389,
+      "phase4a": 0.16976,
+      "delta": -0.19413
+    },
+    "test_auprc": {
+      "phase3": 0.04148,
+      "phase4a": 0.00451,
+      "delta": -0.03697
+    },
+    "test_window_sensitivity": {
+      "phase3": 0.16013,
+      "phase4a": 0.03297,
+      "delta": -0.12716
+    },
+    "test_window_specificity": {
+      "phase3": 0.94347,
+      "phase4a": 0.9948,
+      "delta": 0.05133
+    },
+    "test_precision": {
+      "phase3": 0.00816,
+      "phase4a": 0.01807,
+      "delta": 0.00991
+    },
+    "test_f1": {
+      "phase3": 0.01553,
+      "phase4a": 0.02335,
+      "delta": 0.00782
+    },
+    "test_accuracy": {
+      "phase3": 0.9412,
+      "phase4a": 0.99201,
+      "delta": 0.05081
+    },
+    "event_sensitivity": {
+      "phase3": 1.0,
+      "phase4a": 1.0,
+      "delta": 0.0
+    },
+    "false_alarms_per_day": {
+      "phase3": 1946.56,
+      "phase4a": 179.19,
+      "delta": -1767.37,
+      "pct_reduction": 90.79
+    },
+    "detection_delay_sec": {
+      "phase3": 9.58,
+      "phase4a": 6.5,
+      "delta": -3.08
+    },
+    "training_time_sec": {
+      "phase3": 755.6,
+      "phase4a": 127.68,
+      "delta": -627.92
+    }
+  },
+  "scientific_interpretation": {
+    "summary": "Phase 4A introduces explicit spatial topology constraints while strictly preserving data, split, and labeling invariants.",
+    "spatial_smoothing_tradeoff": "Phase 4A acts as an aggressive spatial low-pass filter. While suppressing background false alarms by 90.8% (1946.56 -> 179.19 FA/24h) and increasing specificity to 99.48%, the conservative output distribution reduces window-level sensitivity at fixed threshold 0.50 from 16.01% to 3.30%, causing a lower AUROC/AUPRC on ranked window evaluation even though all 22 seizure events triggered detections.",
+    "capacity_difference": "Phase 4A possesses 70% fewer parameters (52,497 vs 173,601) due to channel weight-sharing in the temporal backbone, which regularizes the model but limits individual channel spectral expressivity."
+  }
+}

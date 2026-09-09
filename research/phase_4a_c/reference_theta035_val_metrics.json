@@ -1,0 +1,25 @@
+{
+  "candidate": "Frozen Phase 4A (theta=0.35)",
+  "threshold": 0.35,
+  "best_epoch": 3,
+  "validation_auprc": 0.00159,
+  "validation_auroc": 0.25654,
+  "validation_sensitivity": 0.02706,
+  "validation_specificity": 0.91799,
+  "validation_precision": 0.00083,
+  "validation_recall": 0.02706,
+  "validation_f1": 0.00162,
+  "validation_accuracy": 0.91575,
+  "validation_balanced_accuracy": 0.47253,
+  "validation_event_sensitivity": 0.36,
+  "validation_event_detected": 9,
+  "validation_event_total": 25,
+  "validation_false_alarms_per_day": 2827.13,
+  "validation_detection_delay_sec": 39.89,
+  "confusion_matrix": {
+    "tp": 20,
+    "fp": 24002,
+    "tn": 268669,
+    "fn": 719
+  }
+}

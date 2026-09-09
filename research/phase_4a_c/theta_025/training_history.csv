@@ -1,0 +1,4 @@
+epoch,train_loss,val_loss,validation_accuracy,validation_precision,validation_recall,validation_f1,validation_auroc,validation_auprc,validation_sensitivity,validation_specificity,learning_rate,epoch_duration,peak_memory
+1,0.02856,0.06942,0.86955,0.00027,0.01353,0.00052,0.15882,0.00137,0.01353,0.87171,0.001,326.2,7075.67
+2,0.02211,0.10437,0.84425,0.00089,0.05413,0.00175,0.22472,0.0015,0.05413,0.84624,0.0007525,325.7,7341.94
+3,0.02021,0.05799,0.89809,0.00089,0.03518,0.00174,0.23005,0.00152,0.03518,0.90027,0.00025750000000000013,350.8,7341.94

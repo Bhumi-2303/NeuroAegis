@@ -1,0 +1,531 @@
+[
+  {
+    "threshold": 0.15,
+    "edges": 118,
+    "density": 0.4664,
+    "num_components": 1,
+    "component_sizes": [
+      23
+    ],
+    "occipital_in_main_component": true,
+    "num_isolated_nodes": 0,
+    "isolated_channels": [],
+    "mean_degree": 10.26,
+    "min_degree": 3,
+    "max_degree": 15,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 23,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "T7-P7",
+          "P7-O1",
+          "FP1-F3",
+          "F3-C3",
+          "C3-P3",
+          "P3-O1",
+          "FP2-F4",
+          "F4-C4",
+          "C4-P4",
+          "P4-O2",
+          "FP2-F8",
+          "F8-T8",
+          "T8-P8",
+          "P8-O2",
+          "FZ-CZ",
+          "CZ-PZ",
+          "P7-T7",
+          "T7-FT9",
+          "FT9-FT10",
+          "FT10-T8",
+          "T8-P8"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.2,
+    "edges": 90,
+    "density": 0.3557,
+    "num_components": 1,
+    "component_sizes": [
+      23
+    ],
+    "occipital_in_main_component": true,
+    "num_isolated_nodes": 0,
+    "isolated_channels": [],
+    "mean_degree": 7.83,
+    "min_degree": 2,
+    "max_degree": 14,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 23,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "T7-P7",
+          "P7-O1",
+          "FP1-F3",
+          "F3-C3",
+          "C3-P3",
+          "P3-O1",
+          "FP2-F4",
+          "F4-C4",
+          "C4-P4",
+          "P4-O2",
+          "FP2-F8",
+          "F8-T8",
+          "T8-P8",
+          "P8-O2",
+          "FZ-CZ",
+          "CZ-PZ",
+          "P7-T7",
+          "T7-FT9",
+          "FT9-FT10",
+          "FT10-T8",
+          "T8-P8"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.25,
+    "edges": 60,
+    "density": 0.2372,
+    "num_components": 2,
+    "component_sizes": [
+      19,
+      4
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 0,
+    "isolated_channels": [],
+    "mean_degree": 5.22,
+    "min_degree": 1,
+    "max_degree": 10,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 19,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "T7-P7",
+          "FP1-F3",
+          "F3-C3",
+          "C3-P3",
+          "FP2-F4",
+          "F4-C4",
+          "C4-P4",
+          "FP2-F8",
+          "F8-T8",
+          "T8-P8",
+          "FZ-CZ",
+          "CZ-PZ",
+          "P7-T7",
+          "T7-FT9",
+          "FT9-FT10",
+          "FT10-T8",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 4,
+        "channels": [
+          "P7-O1",
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.3,
+    "edges": 40,
+    "density": 0.1581,
+    "num_components": 2,
+    "component_sizes": [
+      19,
+      4
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 0,
+    "isolated_channels": [],
+    "mean_degree": 3.48,
+    "min_degree": 1,
+    "max_degree": 8,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 19,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "T7-P7",
+          "FP1-F3",
+          "F3-C3",
+          "C3-P3",
+          "FP2-F4",
+          "F4-C4",
+          "C4-P4",
+          "FP2-F8",
+          "F8-T8",
+          "T8-P8",
+          "FZ-CZ",
+          "CZ-PZ",
+          "P7-T7",
+          "T7-FT9",
+          "FT9-FT10",
+          "FT10-T8",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 4,
+        "channels": [
+          "P7-O1",
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.35,
+    "edges": 32,
+    "density": 0.1265,
+    "num_components": 2,
+    "component_sizes": [
+      19,
+      4
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 0,
+    "isolated_channels": [],
+    "mean_degree": 2.78,
+    "min_degree": 1,
+    "max_degree": 6,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 19,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "T7-P7",
+          "FP1-F3",
+          "F3-C3",
+          "C3-P3",
+          "FP2-F4",
+          "F4-C4",
+          "C4-P4",
+          "FP2-F8",
+          "F8-T8",
+          "T8-P8",
+          "FZ-CZ",
+          "CZ-PZ",
+          "P7-T7",
+          "T7-FT9",
+          "FT9-FT10",
+          "FT10-T8",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 4,
+        "channels": [
+          "P7-O1",
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.4,
+    "edges": 23,
+    "density": 0.0909,
+    "num_components": 5,
+    "component_sizes": [
+      11,
+      5,
+      4,
+      2,
+      1
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 1,
+    "isolated_channels": [
+      "FT9-FT10"
+    ],
+    "mean_degree": 2.0,
+    "min_degree": 0,
+    "max_degree": 4,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 11,
+        "channels": [
+          "FP1-F7",
+          "F7-T7",
+          "FP1-F3",
+          "F3-C3",
+          "FP2-F4",
+          "F4-C4",
+          "FP2-F8",
+          "F8-T8",
+          "FZ-CZ",
+          "T7-FT9",
+          "FT10-T8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 2,
+        "channels": [
+          "T7-P7",
+          "P7-T7"
+        ]
+      },
+      {
+        "component_id": 3,
+        "size": 4,
+        "channels": [
+          "P7-O1",
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      },
+      {
+        "component_id": 4,
+        "size": 5,
+        "channels": [
+          "C3-P3",
+          "C4-P4",
+          "T8-P8",
+          "CZ-PZ",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 5,
+        "size": 1,
+        "channels": [
+          "FT9-FT10"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.45,
+    "edges": 20,
+    "density": 0.0791,
+    "num_components": 7,
+    "component_sizes": [
+      7,
+      4,
+      4,
+      3,
+      2,
+      2,
+      1
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 1,
+    "isolated_channels": [
+      "FT9-FT10"
+    ],
+    "mean_degree": 1.74,
+    "min_degree": 0,
+    "max_degree": 3,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 4,
+        "channels": [
+          "FP1-F7",
+          "FP1-F3",
+          "FP2-F4",
+          "FP2-F8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 7,
+        "channels": [
+          "F7-T7",
+          "F3-C3",
+          "F4-C4",
+          "F8-T8",
+          "FZ-CZ",
+          "T7-FT9",
+          "FT10-T8"
+        ]
+      },
+      {
+        "component_id": 3,
+        "size": 2,
+        "channels": [
+          "T7-P7",
+          "P7-T7"
+        ]
+      },
+      {
+        "component_id": 4,
+        "size": 4,
+        "channels": [
+          "P7-O1",
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      },
+      {
+        "component_id": 5,
+        "size": 3,
+        "channels": [
+          "C3-P3",
+          "C4-P4",
+          "CZ-PZ"
+        ]
+      },
+      {
+        "component_id": 6,
+        "size": 2,
+        "channels": [
+          "T8-P8",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 7,
+        "size": 1,
+        "channels": [
+          "FT9-FT10"
+        ]
+      }
+    ]
+  },
+  {
+    "threshold": 0.5,
+    "edges": 15,
+    "density": 0.0593,
+    "num_components": 10,
+    "component_sizes": [
+      4,
+      3,
+      3,
+      3,
+      2,
+      2,
+      2,
+      2,
+      1,
+      1
+    ],
+    "occipital_in_main_component": false,
+    "num_isolated_nodes": 2,
+    "isolated_channels": [
+      "P7-O1",
+      "FT9-FT10"
+    ],
+    "mean_degree": 1.3,
+    "min_degree": 0,
+    "max_degree": 3,
+    "components": [
+      {
+        "component_id": 1,
+        "size": 4,
+        "channels": [
+          "FP1-F7",
+          "FP1-F3",
+          "FP2-F4",
+          "FP2-F8"
+        ]
+      },
+      {
+        "component_id": 2,
+        "size": 2,
+        "channels": [
+          "F7-T7",
+          "T7-FT9"
+        ]
+      },
+      {
+        "component_id": 3,
+        "size": 2,
+        "channels": [
+          "T7-P7",
+          "P7-T7"
+        ]
+      },
+      {
+        "component_id": 4,
+        "size": 1,
+        "channels": [
+          "P7-O1"
+        ]
+      },
+      {
+        "component_id": 5,
+        "size": 3,
+        "channels": [
+          "F3-C3",
+          "F4-C4",
+          "FZ-CZ"
+        ]
+      },
+      {
+        "component_id": 6,
+        "size": 3,
+        "channels": [
+          "C3-P3",
+          "C4-P4",
+          "CZ-PZ"
+        ]
+      },
+      {
+        "component_id": 7,
+        "size": 3,
+        "channels": [
+          "P3-O1",
+          "P4-O2",
+          "P8-O2"
+        ]
+      },
+      {
+        "component_id": 8,
+        "size": 2,
+        "channels": [
+          "F8-T8",
+          "FT10-T8"
+        ]
+      },
+      {
+        "component_id": 9,
+        "size": 2,
+        "channels": [
+          "T8-P8",
+          "T8-P8"
+        ]
+      },
+      {
+        "component_id": 10,
+        "size": 1,
+        "channels": [
+          "FT9-FT10"
+        ]
+      }
+    ]
+  }
+]

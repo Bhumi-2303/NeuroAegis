@@ -1,0 +1,16 @@
+{
+  "model_name": "Baseline1DCNN_GNN",
+  "trainable_parameters": 52497,
+  "non_trainable_parameters": 0,
+  "total_parameters": 52497,
+  "model_state_dict_size_bytes": 662523,
+  "model_state_dict_size_mb": 0.63,
+  "parameter_memory_bytes": 209988,
+  "parameter_memory_mb": 0.2003,
+  "inference_hardware": "Apple M3 Max (MPS accelerated)",
+  "test_windows_count": 219909,
+  "total_inference_time_seconds": 123.6,
+  "inference_throughput_windows_per_sec": 1779.2,
+  "inference_latency_per_window_ms": 0.5621,
+  "inference_batch_size": 256
+}

@@ -1,0 +1,5 @@
+patient_id,num_recordings,total_windows,recording_hours,num_seizures,detected_seizures,event_sensitivity,window_sensitivity,window_specificity,false_alarms_count,false_alarms_per_day,mean_detection_delay_sec
+chb01,42,58353,40.52,7,0,0.0,0.0,0.99988,7,4.15,
+chb02,36,50747,35.24,3,2,0.6667,0.27143,0.9999,5,3.41,9.0
+chb03,38,54684,37.98,7,0,0.0,0.0,0.99895,57,36.02,
+chb05,39,56125,38.98,5,4,0.8,0.03571,0.97841,1207,743.23,6.12

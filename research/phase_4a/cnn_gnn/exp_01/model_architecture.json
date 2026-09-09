@@ -1,0 +1,44 @@
+{
+  "model_name": "Baseline1DCNN_GNN",
+  "phase": "Phase 4A",
+  "hypothesis": "Does explicitly modeling spatial relationships between the 23 EEG channels improve seizure detection compared with the Phase 3 temporal-only 1D CNN?",
+  "input_shape": [
+    null,
+    23,
+    1280
+  ],
+  "channel_preservation": "Each of the 23 channels is encoded independently via shared 1D conv blocks into a 64-d node representation",
+  "node_features": 64,
+  "gnn_type": "Spatial Graph Convolutional Network (GCN)",
+  "gnn_layers": 2,
+  "gnn_hidden_dim": 64,
+  "message_passing": "H^(l+1) = GELU(A_hat * H^(l) * W + b)",
+  "readout": "Dual Global Pooling (Concat of Mean and Max over 23 nodes) -> 128-d graph representation",
+  "head": "Linear(128, 32) -> GELU -> Dropout(0.3) -> Linear(32, 1)",
+  "output": "Raw unnormalized scalar linear logit (NO sigmoid)",
+  "total_parameters": 52497,
+  "layer_breakdown": {
+    "temporal_backbone_1d_cnn": {
+      "description": "Shared 4-stage 1D CNN across 23 channels",
+      "parameters": 40016,
+      "stages": [
+        "Conv1d(1, 16, k=15, s=2, p=7) + BN + GELU + MaxPool(2)",
+        "Conv1d(16, 32, k=9, s=2, p=4) + BN + GELU + MaxPool(2)",
+        "Conv1d(32, 64, k=7, s=2, p=3) + BN + GELU + MaxPool(2)",
+        "Conv1d(64, 64, k=5, s=1, p=2) + BN + GELU + AdaptiveAvgPool(1)"
+      ]
+    },
+    "spatial_gnn_gcn1": {
+      "description": "GCN Layer 1 (64 -> 64)",
+      "parameters": 4160
+    },
+    "spatial_gnn_gcn2": {
+      "description": "GCN Layer 2 (64 -> 64)",
+      "parameters": 4160
+    },
+    "classification_head": {
+      "description": "Linear(128, 32) + GELU + Dropout(0.3) + Linear(32, 1)",
+      "parameters": 4161
+    }
+  }
+}

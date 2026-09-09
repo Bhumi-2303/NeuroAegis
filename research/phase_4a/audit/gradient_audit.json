@@ -1,0 +1,135 @@
+{
+  "loss_value": 0.11516,
+  "has_nan_gradients": false,
+  "has_inf_gradients": false,
+  "has_vanishing_gradients": false,
+  "has_exploding_gradients": false,
+  "module_mean_norms": {
+    "temporal_backbone_cnn": 0.109647,
+    "spatial_gcn_layer_1": 0.207796,
+    "spatial_gcn_layer_2": 0.168094,
+    "classifier_head": 0.136502
+  },
+  "all_parameter_gradients": {
+    "temporal_backbone.0.weight": {
+      "norm": 0.289809,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.1.weight": {
+      "norm": 0.020927,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.1.bias": {
+      "norm": 0.011689,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.5.weight": {
+      "norm": 0.252779,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.6.weight": {
+      "norm": 0.043738,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.6.bias": {
+      "norm": 0.04291,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.10.weight": {
+      "norm": 0.240529,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.11.weight": {
+      "norm": 0.03862,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.11.bias": {
+      "norm": 0.024893,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.15.weight": {
+      "norm": 0.155949,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.16.weight": {
+      "norm": 0.089303,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "temporal_backbone.16.bias": {
+      "norm": 0.104618,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "gcn1.linear.weight": {
+      "norm": 0.302302,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "gcn1.linear.bias": {
+      "norm": 0.11329,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "gcn2.linear.weight": {
+      "norm": 0.224721,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "gcn2.linear.bias": {
+      "norm": 0.111468,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "classifier.0.weight": {
+      "norm": 0.22781,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "classifier.0.bias": {
+      "norm": 0.072643,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "classifier.3.weight": {
+      "norm": 0.150954,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    },
+    "classifier.3.bias": {
+      "norm": 0.094603,
+      "is_nan": false,
+      "is_inf": false,
+      "is_zero": false
+    }
+  }
+}

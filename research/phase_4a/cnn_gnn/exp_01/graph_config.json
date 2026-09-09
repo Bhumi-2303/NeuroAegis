@@ -1,0 +1,198 @@
+{
+  "dataset": "CHB-MIT",
+  "num_nodes": 23,
+  "channel_order": [
+    "FP1-F7",
+    "F7-T7",
+    "T7-P7",
+    "P7-O1",
+    "FP1-F3",
+    "F3-C3",
+    "C3-P3",
+    "P3-O1",
+    "FP2-F4",
+    "F4-C4",
+    "C4-P4",
+    "P4-O2",
+    "FP2-F8",
+    "F8-T8",
+    "T8-P8",
+    "P8-O2",
+    "FZ-CZ",
+    "CZ-PZ",
+    "P7-T7",
+    "T7-FT9",
+    "FT9-FT10",
+    "FT10-T8",
+    "T8-P8"
+  ],
+  "adjacency_threshold": 0.35,
+  "total_undirected_edges": 32,
+  "max_possible_edges": 253,
+  "graph_density": 0.1265,
+  "mean_degree": 2.78,
+  "min_degree": 1,
+  "max_degree": 6,
+  "node_degrees_by_index": [
+    {
+      "index": 0,
+      "channel": "FP1-F7",
+      "degree": 5
+    },
+    {
+      "index": 1,
+      "channel": "F7-T7",
+      "degree": 3
+    },
+    {
+      "index": 2,
+      "channel": "T7-P7",
+      "degree": 2
+    },
+    {
+      "index": 3,
+      "channel": "P7-O1",
+      "degree": 2
+    },
+    {
+      "index": 4,
+      "channel": "FP1-F3",
+      "degree": 3
+    },
+    {
+      "index": 5,
+      "channel": "F3-C3",
+      "degree": 5
+    },
+    {
+      "index": 6,
+      "channel": "C3-P3",
+      "degree": 4
+    },
+    {
+      "index": 7,
+      "channel": "P3-O1",
+      "degree": 2
+    },
+    {
+      "index": 8,
+      "channel": "FP2-F4",
+      "degree": 3
+    },
+    {
+      "index": 9,
+      "channel": "F4-C4",
+      "degree": 4
+    },
+    {
+      "index": 10,
+      "channel": "C4-P4",
+      "degree": 4
+    },
+    {
+      "index": 11,
+      "channel": "P4-O2",
+      "degree": 2
+    },
+    {
+      "index": 12,
+      "channel": "FP2-F8",
+      "degree": 6
+    },
+    {
+      "index": 13,
+      "channel": "F8-T8",
+      "degree": 3
+    },
+    {
+      "index": 14,
+      "channel": "T8-P8",
+      "degree": 2
+    },
+    {
+      "index": 15,
+      "channel": "P8-O2",
+      "degree": 2
+    },
+    {
+      "index": 16,
+      "channel": "FZ-CZ",
+      "degree": 2
+    },
+    {
+      "index": 17,
+      "channel": "CZ-PZ",
+      "degree": 3
+    },
+    {
+      "index": 18,
+      "channel": "P7-T7",
+      "degree": 2
+    },
+    {
+      "index": 19,
+      "channel": "T7-FT9",
+      "degree": 1
+    },
+    {
+      "index": 20,
+      "channel": "FT9-FT10",
+      "degree": 1
+    },
+    {
+      "index": 21,
+      "channel": "FT10-T8",
+      "degree": 1
+    },
+    {
+      "index": 22,
+      "channel": "T8-P8",
+      "degree": 2
+    }
+  ],
+  "node_degrees": {
+    "FP1-F7 (ch1)": 5,
+    "F7-T7 (ch2)": 3,
+    "T7-P7 (ch3)": 2,
+    "P7-O1 (ch4)": 2,
+    "FP1-F3 (ch5)": 3,
+    "F3-C3 (ch6)": 5,
+    "C3-P3 (ch7)": 4,
+    "P3-O1 (ch8)": 2,
+    "FP2-F4 (ch9)": 3,
+    "F4-C4 (ch10)": 4,
+    "C4-P4 (ch11)": 4,
+    "P4-O2 (ch12)": 2,
+    "FP2-F8 (ch13)": 6,
+    "F8-T8 (ch14)": 3,
+    "T8-P8 (ch15)": 2,
+    "P8-O2 (ch16)": 2,
+    "FZ-CZ (ch17)": 2,
+    "CZ-PZ (ch18)": 3,
+    "P7-T7 (ch19)": 2,
+    "T7-FT9 (ch20)": 1,
+    "FT9-FT10 (ch21)": 1,
+    "FT10-T8 (ch22)": 1,
+    "T8-P8 (ch23)": 2
+  },
+  "normalization": "Symmetric Kipf-Welling (D^-0.5 * (A + I) * D^-0.5)",
+  "training_patients_used": [
+    "chb04",
+    "chb09",
+    "chb11",
+    "chb12",
+    "chb13",
+    "chb14",
+    "chb15",
+    "chb16",
+    "chb17",
+    "chb18",
+    "chb19",
+    "chb20",
+    "chb21",
+    "chb22",
+    "chb23",
+    "chb24"
+  ],
+  "label_leakage": "NONE (computed strictly on unlabelled EEG data of training set)"
+}

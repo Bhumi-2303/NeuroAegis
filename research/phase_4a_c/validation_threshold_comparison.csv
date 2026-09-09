@@ -1,0 +1,4 @@
+candidate,threshold,best_epoch,validation_auprc,validation_auroc,validation_sensitivity,validation_specificity,validation_precision,validation_recall,validation_f1,validation_accuracy,validation_balanced_accuracy,validation_event_sensitivity,validation_event_detected,validation_event_total,validation_false_alarms_per_day,validation_detection_delay_sec,tp,fp,tn,fn
+Graph A (theta=0.25),0.25,3,0.00152,0.23005,0.03518,0.90027,0.00089,0.03518,0.00174,0.89809,0.46772,0.44,11,25,3438.1,33.91,26,29189,263482,713
+Graph B (theta=0.30),0.3,3,0.00159,0.25887,0.03654,0.90882,0.00101,0.03654,0.00197,0.90662,0.47268,0.36,9,25,3143.39,40.06,27,26687,265984,712
+Frozen Phase 4A (theta=0.35),0.35,3,0.00159,0.25654,0.02706,0.91799,0.00083,0.02706,0.00162,0.91575,0.47253,0.36,9,25,2827.13,39.89,20,24002,268669,719

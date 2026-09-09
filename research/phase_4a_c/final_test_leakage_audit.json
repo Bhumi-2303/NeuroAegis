@@ -1,0 +1,61 @@
+{
+  "audit_timestamp": "2026-09-06T16:54:22Z",
+  "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+  "master_window_index_sha256": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+  "dataset": "CHB-MIT",
+  "train_patients": [
+    "chb04",
+    "chb09",
+    "chb11",
+    "chb12",
+    "chb13",
+    "chb14",
+    "chb15",
+    "chb16",
+    "chb17",
+    "chb18",
+    "chb19",
+    "chb20",
+    "chb21",
+    "chb22",
+    "chb23",
+    "chb24"
+  ],
+  "validation_patients": [
+    "chb06",
+    "chb07",
+    "chb08",
+    "chb10"
+  ],
+  "test_patients": [
+    "chb01",
+    "chb02",
+    "chb03",
+    "chb05"
+  ],
+  "train_patient_count": 16,
+  "validation_patient_count": 4,
+  "test_patient_count": 4,
+  "train_recording_count": 449,
+  "validation_recording_count": 82,
+  "test_recording_count": 155,
+  "train_window_count": 901391,
+  "validation_window_count": 293410,
+  "test_window_count": 219909,
+  "assertions": {
+    "train_test_patient_overlap": 0,
+    "val_test_patient_overlap": 0,
+    "train_val_patient_overlap": 0,
+    "train_test_recording_overlap": 0,
+    "val_test_recording_overlap": 0,
+    "train_val_recording_overlap": 0,
+    "train_test_window_overlap": 0,
+    "val_test_window_overlap": 0,
+    "train_val_window_overlap": 0,
+    "test_labels_used_during_selection": false,
+    "test_predictions_used_for_tuning": false,
+    "test_data_used_for_normalization": false,
+    "correlation_matrix_contains_test_recordings": false
+  },
+  "overall_leakage_status": "PASS (Mutually Disjoint Partitioning Verified)"
+}

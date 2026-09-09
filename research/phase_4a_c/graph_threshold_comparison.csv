@@ -1,0 +1,4 @@
+graph_candidate,threshold,num_nodes,undirected_edges,max_possible_edges,graph_density,graph_density_pct,num_connected_components,largest_component_size,smallest_component_size,isolated_nodes_count,occipital_in_main_component,degree_min,degree_max,degree_mean,degree_median,weight_min,weight_max,weight_mean,weight_median,weight_std
+Graph A (theta=0.25),0.25,23,60,253,0.23715415019762845,23.72,2,19,4,0,NO,1,10,5.22,5.0,0.2501,1.0,0.4077,0.3635,0.1676
+Graph B (theta=0.30),0.3,23,40,253,0.15810276679841898,15.81,2,19,4,0,NO,1,8,3.48,3.0,0.307,1.0,0.4798,0.4444,0.1627
+"Graph C (theta=0.35, Frozen Ref)",0.35,23,32,253,0.12648221343873517,12.65,2,19,4,0,NO,1,6,2.78,2.0,0.351,1.0,0.519,0.4929,0.1591
