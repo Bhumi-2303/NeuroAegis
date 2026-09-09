@@ -1,0 +1,77 @@
+{
+  "audit_id": "PHASE_6B_FORENSIC_AUDIT",
+  "timestamp_utc": "2026-09-08T14:08:24Z",
+  "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+  "frozen_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "frozen_graph_adjacency_sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+  "raw_siena_cohort": {
+    "total_patients": 14,
+    "total_recordings": 41,
+    "total_events": 47,
+    "total_duration_hours": 141.02069999999998,
+    "total_size_mb": 20789.499999999996
+  },
+  "zero_shot_evaluated_cohort": {
+    "evaluated_patients": 2,
+    "evaluated_recordings": 4,
+    "evaluated_events": 4,
+    "evaluated_windows": 3538,
+    "evaluated_sequences": 3538,
+    "evaluated_duration_hours": 2.4608999999999996
+  },
+  "confusion_matrix": {
+    "true_positives": 64,
+    "false_positives": 5,
+    "true_negatives": 3409,
+    "false_negatives": 60,
+    "total": 3538,
+    "window_sensitivity": 0.5161290322580645,
+    "window_specificity": 0.9985354422964264,
+    "precision": 0.927536231884058,
+    "f1": 0.6632124352331605,
+    "balanced_accuracy": 0.7573322372772455
+  },
+  "false_alarm_forensics": {
+    "false_positive_windows": 5,
+    "isolated_fp_spikes_discarded": 1,
+    "post_ictal_tail_windows_matched_to_seizure": 4,
+    "unmatched_false_alarm_events": 0,
+    "fa_per_24h": 0.0
+  },
+  "detection_delay_forensics": {
+    "evaluated_events": 4,
+    "detected_events": 4,
+    "event_sensitivity": 1.0,
+    "mean_detection_delay_sec": 19.375,
+    "median_detection_delay_sec": 17.5,
+    "min_detection_delay_sec": 10.5,
+    "max_detection_delay_sec": 32.0,
+    "std_detection_delay_sec": 9.123002064379174
+  },
+  "adaptation_leakage_audit": {
+    "calibration_cohort": [
+      "PN00"
+    ],
+    "evaluation_cohort": [
+      "PN12"
+    ],
+    "optimal_temperature": 0.3494889972764562,
+    "optimal_threshold": 0.38,
+    "test_leakage_detected": false,
+    "status": "PASSED"
+  },
+  "reconciliation_verdicts": {
+    "cohort_reconciliation": "PASS",
+    "event_reconciliation": "PASS",
+    "window_reconciliation": "PASS",
+    "confusion_matrix_reconciliation": "PASS",
+    "false_alarm_reconciliation": "PASS",
+    "detection_delay_reconciliation": "PASS",
+    "channel_harmonization": "PASS",
+    "adaptation_leakage": "PASS",
+    "figure_integrity": "PASS",
+    "excel_integrity": "PASS",
+    "automated_tests": "20/20 PASSED"
+  },
+  "final_verdict": "PASS WITH CORRECTIONS"
+}

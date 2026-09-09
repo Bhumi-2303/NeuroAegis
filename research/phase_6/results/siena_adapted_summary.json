@@ -1,0 +1,16 @@
+{
+  "experiment_id": "PHASE6_SIENA_ADAPTATION",
+  "calibration_patients": [
+    "PN00"
+  ],
+  "test_patients": [
+    "PN12"
+  ],
+  "optimal_temperature": 0.3494889972764562,
+  "optimal_threshold": 0.38,
+  "zero_shot_test_f1": 0.30434782608695654,
+  "adapted_test_f1": 0.375,
+  "adapted_test_sensitivity": 0.23076923076923078,
+  "adapted_test_precision": 1.0,
+  "adaptation_improvement_pct": -43.45703124999999
+}

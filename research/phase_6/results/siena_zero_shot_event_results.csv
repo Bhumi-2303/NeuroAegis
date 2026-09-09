@@ -1,0 +1,5 @@
+patient_id,recording_id,seizure_id,cohort_split,event_start_sec,event_end_sec,event_duration_sec,detected,alarm_time_sec,detection_delay_sec
+PN00,PN00/PN00-1.edf,PN00_sz01,CALIBRATION,1143.0,1213.0,70.0,True,1175.0,32.0
+PN00,PN00/PN00-4.edf,PN00_sz04,CALIBRATION,1006.0,1080.0,74.0,True,1025.0,19.0
+PN00,PN00/PN00-5.edf,PN00_sz05,CALIBRATION,904.0,971.0,67.0,True,920.0,16.0
+PN12,PN12/PN12-3.edf,PN12_sz03,TEST,772.0,868.0,96.0,True,782.5,10.5
