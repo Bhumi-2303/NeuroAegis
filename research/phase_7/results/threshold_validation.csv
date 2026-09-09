@@ -1,0 +1,10 @@
+threshold,dataset_split,true_positives,false_positives,true_negatives,false_negatives,sensitivity,specificity,precision,f1_score,accuracy,balanced_accuracy,false_alarms_per_24h,frozen_test_threshold
+0.1,"Validation (293,410 windows, 203.82 hours)",722,216882,75789,17,0.977,0.25896,0.00332,0.00661,0.26076,0.61798,25538.06,False
+0.2,"Validation (293,410 windows, 203.82 hours)",653,77362,215309,86,0.88363,0.73567,0.00837,0.01658,0.73604,0.80965,9109.45,False
+0.3,"Validation (293,410 windows, 203.82 hours)",596,48446,244225,143,0.8065,0.83447,0.01215,0.02394,0.8344,0.82048,5704.56,False
+0.4,"Validation (293,410 windows, 203.82 hours)",529,25113,267558,210,0.71583,0.91419,0.02063,0.0401,0.91369,0.81501,2957.08,False
+0.5,"Validation (293,410 windows, 203.82 hours)",476,4467,288204,263,0.64411,0.98474,0.0963,0.16755,0.98388,0.81443,525.99,True
+0.6,"Validation (293,410 windows, 203.82 hours)",337,314,292357,402,0.45602,0.99893,0.51767,0.48489,0.99756,0.72747,36.97,False
+0.7,"Validation (293,410 windows, 203.82 hours)",81,8,292663,658,0.10961,0.99997,0.91011,0.19565,0.99773,0.55479,0.94,False
+0.8,"Validation (293,410 windows, 203.82 hours)",0,0,292671,739,0.0,1.0,0.0,0.0,0.99748,0.5,0.0,False
+0.9,"Validation (293,410 windows, 203.82 hours)",0,0,292671,739,0.0,1.0,0.0,0.0,0.99748,0.5,0.0,False

@@ -1,0 +1,4 @@
+model_id,architecture_name,total_false_positives,total_test_hours,false_alarms_per_24h,pct_reduction_vs_model_a,specificity,chb01_fp,chb01_fa_per_day,chb02_fp,chb02_fa_per_day,chb03_fp,chb03_fa_per_day,chb05_fp,chb05_fa_per_day
+Model A,1D CNN Baseline,12395,152.82,1946.6,0.0,0.94347,21,12.43,421,286.51,20,12.63,11933,7342.86
+Model B,CNN + Spatial GNN (theta=0.30),1276,152.82,200.39,89.71,0.99418,7,4.14,5,3.4,57,36.0,1207,742.72
+Model C,CNN + Spatial GNN + Causal GRU (L=8),399,152.82,62.66,96.78,0.99818,9,5.33,35,23.82,96,60.63,259,159.37

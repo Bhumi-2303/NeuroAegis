@@ -1,0 +1,115 @@
+{
+  "status": "PASS",
+  "phase": "Phase 7 \u2014 Statistical Robustness, Ablation & Final Model Validation",
+  "date": "2026-09-08",
+  "test_dataset": "CHB-MIT Scalp EEG",
+  "test_cohort": {
+    "patients": [
+      "chb01",
+      "chb02",
+      "chb03",
+      "chb05"
+    ],
+    "num_patients": 4,
+    "num_recordings": 155,
+    "num_seizures": 22,
+    "total_windows": 219909,
+    "total_monitoring_hours": 152.82,
+    "natural_class_ratio": "344.23:1"
+  },
+  "model_architecture_freeze": {
+    "model_c_checkpoint": "research/phase_4b/frozen_cnn_gnn_gru.pt",
+    "model_c_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+    "spatial_graph_config": "research/phase_4a/frozen_graph_config.json",
+    "spatial_graph_config_sha256": "7798862ec4493ae22ce43eba7791ee9838c4a266cd8b5cc49d096a2e61f0aa82",
+    "spatial_graph_adjacency": "research/phase_4a/frozen_graph_adjacency.csv",
+    "spatial_graph_adjacency_sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+    "spatial_graph_sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+    "trainable_parameters": 91858,
+    "decision_threshold_tau": 0.5
+  },
+  "authoritative_model_comparison": {
+    "model_a_1d_cnn": {
+      "parameters": 173601,
+      "event_sensitivity_nominal": 1.0,
+      "event_sensitivity_strict": 0.5455,
+      "detected_events_strict": 12,
+      "false_alarms_per_24h": 1946.6,
+      "detection_delay_sec": 9.58,
+      "auroc": 0.36389,
+      "auprc": 0.04148,
+      "f1_score": 0.01553,
+      "window_sensitivity": 0.16013,
+      "window_specificity": 0.94347
+    },
+    "model_b_cnn_gnn": {
+      "parameters": 52497,
+      "event_sensitivity": 0.2727,
+      "detected_events": 6,
+      "false_alarms_per_24h": 200.39,
+      "detection_delay_sec": 7.08,
+      "auroc": 0.19431,
+      "auprc": 0.00492,
+      "f1_score": 0.02784,
+      "window_sensitivity": 0.04239,
+      "window_specificity": 0.99418
+    },
+    "model_c_cnn_gnn_gru": {
+      "parameters": 91858,
+      "event_sensitivity": 0.9545,
+      "detected_events": 21,
+      "false_alarms_per_24h": 62.66,
+      "detection_delay_sec": 10.57,
+      "auroc": 0.9897,
+      "auprc": 0.80681,
+      "f1_score": 0.68025,
+      "window_sensitivity": 0.8383,
+      "window_specificity": 0.99818,
+      "brier_score": 0.0209,
+      "expected_calibration_error": 0.12623,
+      "max_calibration_error": 0.39774
+    }
+  },
+  "ablation_findings": {
+    "spatial_gnn_effect": "False alarms reduced by 89.7% (1,946.56 -> 200.39/24h), but event sensitivity dropped to 27.27% due to missing temporal dynamics.",
+    "temporal_gru_effect": "Temporal recurrence restored event sensitivity to 95.45% (21/22), reduced FA to 62.66/24h (-96.8% vs CNN), and surged AUPRC from 0.0415 to 0.8068.",
+    "patient_consistency": "Model C achieved superior F1, AUROC, and AUPRC on 4 of 4 test patients (100% consistency)."
+  },
+  "bootstrap_validation": {
+    "seed": 42,
+    "iterations": 5000,
+    "resampling_scheme": "Patient-cluster resampling (N=4) and event resampling (N=22)",
+    "model_c_auroc_ci95": [
+      0.98448,
+      0.99528
+    ],
+    "model_c_auprc_ci95": [
+      0.69887,
+      0.87377
+    ],
+    "model_c_f1_ci95": [
+      0.59366,
+      0.82164
+    ],
+    "delta_ca_f1_ci95": [
+      0.58502,
+      0.70464
+    ],
+    "delta_cb_f1_ci95": [
+      0.54685,
+      0.78635
+    ]
+  },
+  "statistical_testing": {
+    "wilcoxon_note": "Patient-level paired test N=4 is underpowered for asymptotic p < 0.05 (p_min = 0.125). High effect sizes (Cohen's d_z > 2.0) indicate substantial clinical separation.",
+    "mcnemar_c_vs_b_p": 6e-05
+  },
+  "leakage_audit": {
+    "patient_leakage": "PASS (0 overlap across train, val, test)",
+    "recording_leakage": "PASS (0 overlap across train, val, test)",
+    "window_leakage": "PASS (0 overlap across train, val, test)",
+    "test_threshold_integrity": "PASS (Frozen tau=0.50 strictly untouched on test set)",
+    "weights_immutable": "PASS (Zero gradient updates or retraining)",
+    "siena_designation": "Siena zero-shot benchmark subset (2 patients, 4 recordings, 4 events, 2.46 hours)"
+  }
+}

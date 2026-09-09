@@ -1,0 +1,4 @@
+model_id,detected_events,total_events,detection_rate,mean_delay_sec,median_delay_sec,std_delay_sec,min_delay_sec,max_delay_sec,iqr_delay_sec,pct_detected_within_5s,pct_detected_within_10s,pct_detected_within_15s
+Model A,12,22,54.55,9.58,4.25,10.68,0.5,38.0,11.12,50.0,58.33,75.0
+Model B,6,22,27.27,7.08,6.75,4.83,1.5,15.5,6.62,33.33,83.33,83.33
+Model C,21,22,95.45,10.57,9.0,5.22,5.5,29.5,2.5,0.0,66.67,90.48
