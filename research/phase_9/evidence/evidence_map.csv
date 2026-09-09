@@ -1,0 +1,41 @@
+Paper Section,Claim,Numerical Value,Source Artifact,Dataset,Cohort,Evidence Type,Verified,Notes
+Abstract / Section 4.3,Window Sensitivity,83.83%,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,"Test (chb01, chb02, chb03, chb05)",Primary Metric,PASS,534 / 637 positive windows
+Abstract / Section 4.3,Window Specificity,99.82%,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,"218,873 / 219,272 negative windows"
+Abstract / Section 4.3,Window Precision,57.24%,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,534 / 933 predicted positives
+Abstract / Section 4.3,Window F1 Score,0.68025,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,Harmonic mean of sens and prec
+Abstract / Section 4.3,Balanced Accuracy,91.82%,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,(Sens + Spec) / 2
+Abstract / Section 4.3,Area Under ROC (AUROC),0.98970,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,Trapezoidal integration across thresholds
+Abstract / Section 4.3,Area Under PRC (AUPRC),0.80681,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Primary Metric,PASS,Natural prevalence baseline = 0.0029 (278x gain)
+Abstract / Section 4.6,Event Sensitivity,95.45%,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Clinical Event Metric,PASS,21 of 22 test seizures detected
+Abstract / Section 4.6,Missed Seizure Identification,chb01_15 seizure_01,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort (chb01),Clinical Event Metric,PASS,"Sole missed event, highly focal short seizure"
+Abstract / Section 4.3,False Alarms per 24h,62.66 FA/24h,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Operational Clinical Metric,PASS,399 FP windows / 152.82 monitoring hours
+Section 4.3,Confusion Matrix TP,534,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Raw Count,PASS,Window-level true positives
+Section 4.3,Confusion Matrix TN,"218,873",research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Raw Count,PASS,Window-level true negatives
+Section 4.3,Confusion Matrix FP,399,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Raw Count,PASS,Window-level false positives
+Section 4.3,Confusion Matrix FN,103,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Raw Count,PASS,Window-level false negatives
+Section 3.1 / 4.3,Total Evaluation Windows,"219,909",research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Dataset Count,PASS,"TP + TN + FP + FN = 219,909 verified"
+Section 3.1 / 4.3,Total Monitoring Duration,152.82 hours,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Dataset Count,PASS,155 continuous unsegmented EDF records
+Section 4.6,Mean Detection Delay,10.57 s,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Latency Metric,PASS,Average elapsed time from electrographic onset
+Abstract / Section 4.6,Median Detection Delay,9.0 s,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Latency Metric,PASS,85.7% of seizures detected <= 15.0 s
+Section 3.4,Window Duration & Stride,"5.0s window, 2.5s stride",research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT / Siena,All Partitions,Signal Configuration,PASS,50% temporal overlap
+Section 3.8,Recurrent Temporal Context,22.5 s (L=8),research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT / Siena,All Partitions,Model Parameter,PASS,Sequence length L=8 causal windows
+Section 3.9 / 4.3,Decision Threshold tau,0.50,research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Test Cohort,Decision Parameter,PASS,"Strictly frozen, zero post-hoc threshold tuning"
+Section 3.6 / 4.11,Total Model Parameters,"91,858",research/phase_8/final_results/authoritative_final_metrics.json,CHB-MIT,Full Model,Complexity Metric,PASS,"52,497 CNN-GNN backbone + 39,361 GRU classifier"
+Section 3.7,Graph Sparsity Threshold theta,0.30,research/phase_4a/frozen_graph_adjacency.csv,CHB-MIT,Training Partition,Graph Topology,PASS,Pearson correlation threshold on training signals
+Section 3.7,Spatial Graph Edges & Density,"40 edges, 15.81% density",research/phase_4a/frozen_graph_adjacency.csv,CHB-MIT,Graph Topology,Graph Topology,PASS,"23 nodes, 2 components (19-node major, 4-node occipital)"
+Section 4.1,Baseline Model A Event Sens & FA,"54.55% sens, 1,946.56 FA/24h",research/phase_8/final_results/final_ablation.csv,CHB-MIT,Test Cohort,Ablation Baseline,PASS,1D-CNN without spatial graph or temporal memory
+Section 4.2,Ablation Model B Event Sens & FA,"27.27% sens, 200.39 FA/24h",research/phase_8/final_results/final_ablation.csv,CHB-MIT,Test Cohort,Ablation Step 1,PASS,GNN suppresses FA by 89.7% but causes sensitivity collapse
+Section 4.4,Ablation Model C FA Suppression,-96.8% vs Model A,research/phase_8/final_results/final_ablation.csv,CHB-MIT,Test Cohort,Comparative Finding,PASS,"62.66 vs 1,946.56 FA/24h"
+Section 4.7,Event McNemar Test vs Model B,p = 5.9e-5 (chi2 = 16.1),research/phase_8/final_results/final_statistical_results.csv,CHB-MIT,Test Cohort,Hypothesis Test,PASS,Statistically significant event recovery
+Section 4.7,Event McNemar Test vs Model A,p = 5.3e-4 (chi2 = 12.0),research/phase_8/final_results/final_statistical_results.csv,CHB-MIT,Test Cohort,Hypothesis Test,PASS,Statistically significant event recovery
+Section 4.7,AUROC 95% Bootstrap CI,"[0.9845, 0.9953]",research/phase_8/final_results/final_statistical_results.csv,CHB-MIT,Test Cohort,Confidence Interval,PASS,"5,000 stratified patient-cluster bootstrap resamples"
+Section 4.7,AUPRC 95% Bootstrap CI,"[0.6989, 0.8738]",research/phase_8/final_results/final_statistical_results.csv,CHB-MIT,Test Cohort,Confidence Interval,PASS,"5,000 stratified patient-cluster bootstrap resamples"
+Section 4.7,F1 95% Bootstrap CI,"[0.5937, 0.8216]",research/phase_8/final_results/final_statistical_results.csv,CHB-MIT,Test Cohort,Confidence Interval,PASS,"5,000 stratified patient-cluster bootstrap resamples"
+Section 4.8,Siena Zero-Shot Event Sensitivity,100% (4 of 4 events),research/phase_8/final_results/final_cross_domain.csv,Siena Scalp EEG,"Benchmark Subset (PN00, PN12)",Cross-Domain Metric,PASS,"4 recordings, 2.46 hours"
+Section 4.8,Siena Zero-Shot FA Rate & Spec,"0.0 FA/24h, 99.85% Spec",research/phase_8/final_results/final_cross_domain.csv,Siena Scalp EEG,"Benchmark Subset (PN00, PN12)",Cross-Domain Metric,PASS,"3,538 total windows"
+Section 4.8,Siena Zero-Shot AUROC & AUPRC,"0.9120 AUROC, 0.7135 AUPRC",research/phase_8/final_results/final_cross_domain.csv,Siena Scalp EEG,"Benchmark Subset (PN00, PN12)",Cross-Domain Metric,PASS,Harmonized 23-bipolar montage
+Section 4.9,Siena Domain Adaptation Recovery,F1: 0.3043 -> 0.3750 (+23.2%),research/phase_8/publication/tables/table_09_domain_adaptation.csv,Siena Scalp EEG,Held-out Target (PN12),Domain Adaptation,PASS,"Calibrated on PN00 (T*=0.3495, tau*=0.3800), tested on PN12"
+Section 4.10,XAI Top Ranked Channels,"T7-P7, P3-O1, FP1-F7",research/phase_8/final_results/final_xai_results.csv,CHB-MIT,Test Seizure Windows,Explainability Metric,PASS,Integrated Gradients 50 steps attribution ranking
+Section 4.10,XAI Faithfulness Deletion Curve,0.8093 -> 0.2011,research/phase_8/final_results/final_xai_results.csv,CHB-MIT,Test Seizure Windows,XAI Validation,PASS,Monotonic degradation confirming explanation fidelity
+Section 4.11,Inference Latency on MPS,1.42 ms / window,research/phase_8/publication/tables/table_11_computational_complexity.csv,Hardware Benchmark,Apple Silicon MPS,Computational Metric,PASS,"1,760x faster than 2.5s real-time step"
+Section 3.1 / Checkpoint,Frozen Checkpoint SHA-256,2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca,research/phase_8/final_results/reproducibility_manifest.json,Model Artifact,Weights Checkpoint,Forensic Integrity,PASS,SHA-256 integrity hash of frozen_cnn_gnn_gru.pt

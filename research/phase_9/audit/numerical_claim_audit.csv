@@ -1,0 +1,41 @@
+Metric Name,Authoritative Value,Manuscript Rounded Value,Reported String,Audit Status
+Window Sensitivity,0.8383045525902669,0.8383,0.8383 (83.83%),PASS
+Window Specificity,0.9981803422233573,0.9982,0.9982 (99.82%),PASS
+Window Precision,0.572347266881029,0.5724,0.5724 (57.24%),PASS
+Window F1 Score,0.6802547770700638,0.68025,0.6803,PASS
+Balanced Accuracy,0.918242447406812,0.9182,0.9182 (91.82%),PASS
+AUROC,0.9897029820327955,0.9897,0.98970,PASS
+AUPRC,0.8068051488128347,0.80681,0.80681,PASS
+Event Sensitivity,0.9545454545454546,0.9545,95.45% (21/22),PASS
+False Alarms / 24h,62.66195524146055,62.66,62.66 FA/24h,PASS
+True Positives (TP),534.0,534.0,534,PASS
+True Negatives (TN),218873.0,218873.0,"218,873",PASS
+False Positives (FP),399.0,399.0,399,PASS
+False Negatives (FN),103.0,103.0,103,PASS
+Total Test Windows,219909.0,219909.0,"219,909",PASS
+Total Monitoring Hours,152.82,152.82,152.82,PASS
+Mean Detection Delay,10.571428571428571,10.57,10.57 s,PASS
+Median Detection Delay,9.0,9.0,9.0 s,PASS
+Total Parameters,91858.0,91858.0,"91,858",PASS
+Backbone Parameters,52497.0,52497.0,"52,497",PASS
+GRU Classifier Parameters,39361.0,39361.0,"39,361",PASS
+Graph Sparsity Threshold theta,0.3,0.3,0.30,PASS
+Spatial Graph Edges,40.0,40.0,40,PASS
+Spatial Graph Nodes,23.0,23.0,23,PASS
+Decision Threshold tau,0.5,0.5,0.50,PASS
+Temporal Sequence Length L,8.0,8.0,8,PASS
+Temporal Context Duration,22.5,22.5,22.5 s,PASS
+Window Duration,5.0,5.0,5.0 s,PASS
+Window Stride,2.5,2.5,2.5 s,PASS
+Model A Baseline Event Sens,0.5455,0.5455,54.55%,PASS
+Model A Baseline FA/24h,1946.6,1946.6,"1,946.56",PASS
+Model B GNN Event Sens,0.2727,0.2727,27.27%,PASS
+Model B GNN FA/24h,200.39,200.39,200.39,PASS
+Model B FA Reduction Pct,-89.71,-89.71,-89.7%,PASS
+Model C FA Reduction Pct vs A,-96.78,-96.78,-96.8%,PASS
+Siena Zero-Shot Event Sens,1.0,1.0,100% (4/4),PASS
+Siena Zero-Shot FA/24h,0.0,0.0,0.0,PASS
+Siena Zero-Shot Precision,0.9275,0.9275,92.75%,PASS
+Siena Zero-Shot F1 Score,0.6632,0.6632,0.6632,PASS
+Siena Adaptation PN12 F1 Gain,0.2323,0.2323,+23.2% (0.3043 -> 0.3750),PASS
+XAI Deletion Curve Drop,0.6082,0.6082,0.8093 -> 0.2011,PASS
