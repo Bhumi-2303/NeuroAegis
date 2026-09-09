@@ -1,0 +1,43 @@
+{
+  "phase": "Phase 5",
+  "title": "Explainable AI (XAI) & Attribution Validation",
+  "model_architecture": "CNN_GNN_GRU (Frozen Phase 4B)",
+  "model_checkpoint": "/Volumes/BLACK-BOX/NeuroAegis/research/phase_4b/frozen_cnn_gnn_gru.pt",
+  "model_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "frozen_graph_config": "/Volumes/BLACK-BOX/NeuroAegis/research/phase_4a/frozen_graph_config.json",
+  "frozen_graph_sha256": "7798862ec4493ae22ce43eba7791ee9838c4a266cd8b5cc49d096a2e61f0aa82",
+  "frozen_adjacency_sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+  "primary_xai_method": "Integrated Gradients (Sundararajan et al., 2017)",
+  "ig_baseline": "Zero Baseline (Resting Potential in Z-Score Normalized EEG)",
+  "ig_interpolation_steps": 25,
+  "secondary_xai_method": "Gradient x Input",
+  "sequence_length": 8,
+  "sequence_duration_sec": 22.5,
+  "window_duration_sec": 5.0,
+  "sampling_rate_hz": 256.0,
+  "number_of_channels": 23,
+  "channel_order_file": "/Volumes/BLACK-BOX/NeuroAegis/research/data/config/chbmit_channel_order.json",
+  "channel_order_sha256": "c4531b05efa6c3d0799aa9450beca81c9b82f9baaa5d2a13620a7b1829b861f2",
+  "test_patients": [
+    "chb01",
+    "chb02",
+    "chb03",
+    "chb05"
+  ],
+  "number_of_explained_events": 22,
+  "number_of_explained_windows": 25,
+  "mean_ig_completeness_delta": 0.04042336,
+  "mean_method_spearman_rho": 0.6419363636363635,
+  "audc_top": 0.4783650577068329,
+  "audc_random": 0.6643714278936386,
+  "auic_top": 0.7839085653424263,
+  "auic_random": 0.6805307731032372,
+  "top3_dominant_channels": [
+    "T7-P7",
+    "P3-O1",
+    "P7-T7"
+  ],
+  "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+  "execution_timestamp": "2026-09-08T03:17:02Z",
+  "clinician_validation_status": "Clinician validation not performed in Phase 5 because clinician annotations were not available."
+}

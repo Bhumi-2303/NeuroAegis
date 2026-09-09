@@ -1,0 +1,6 @@
+stage,modules_randomized,spearman_rho,p_value,top1_match,top3_overlap
+Original (Trained),None,1.0,0.0,True,3
+Randomize Classifier Head,classifier,0.8774,0.0,True,2
+Randomize Classifier + GRU,classifier+gru,0.6708,0.00046,True,2
+Randomize Classifier + GRU + GNN,classifier+gru+gcn,0.7677,1.9e-05,False,2
+Randomize Entire Network (Full Cascading),classifier+gru+gcn+cnn,0.5917,0.002939,False,2

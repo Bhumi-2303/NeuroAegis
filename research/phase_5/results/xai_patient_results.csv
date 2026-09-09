@@ -1,0 +1,5 @@
+patient_id,total_seizure_events,detected_seizure_events,mean_seizure_probability,top1_dominant_channel,top3_dominant_channels,top5_dominant_channels,mean_inside_seizure_ratio,mean_method_spearman_rho
+chb01,7,6,0.5459,FT10-T8,FT10-T8; P8-O2; F8-T8,FT10-T8; P8-O2; F8-T8; T8-P8; T8-P8,1.0,0.6414
+chb02,3,3,0.5621,T8-P8,T8-P8; T8-P8; P7-O1,T8-P8; T8-P8; P7-O1; P3-O1; P7-T7,0.8586,0.7746
+chb03,7,7,0.5386,P7-O1,P7-O1; T7-P7; P7-T7,P7-O1; T7-P7; P7-T7; P3-O1; C3-P3,0.984,0.6884
+chb05,5,5,0.6405,T7-FT9,T7-FT9; T8-P8; T8-P8,T7-FT9; T8-P8; T8-P8; F7-T7; P7-T7,1.0,0.498

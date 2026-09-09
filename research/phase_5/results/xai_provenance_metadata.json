@@ -1,0 +1,25 @@
+{
+  "execution_environment": {
+    "os": "macOS-26.6.2-arm64-arm-64bit",
+    "architecture": "arm64",
+    "python_version": "3.11.15",
+    "torch_version": "2.13.0",
+    "numpy_version": "1.26.4",
+    "pandas_version": "2.2.1",
+    "mne_version": "1.7.0",
+    "device": "mps"
+  },
+  "provenance_hashes": {
+    "model_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+    "frozen_graph_config_sha256": "7798862ec4493ae22ce43eba7791ee9838c4a266cd8b5cc49d096a2e61f0aa82",
+    "frozen_graph_adjacency_sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+    "channel_order_sha256": "c4531b05efa6c3d0799aa9450beca81c9b82f9baaa5d2a13620a7b1829b861f2",
+    "test_predictions_sha256": "e0707a42c91ed71d36ad58a778ed229b021b4bc19b201ddb891048c3ff37f7a8",
+    "test_events_sha256": "4bc3b8f474580d102ec378a670a9f020b8eeecb7945d87347c05c2b28c43b6e3"
+  },
+  "git_metadata": {
+    "git_commit": "17943cdaccfa1d6857f787b91e53b223dbbb8616",
+    "frozen_status": "LOCKED_IMMUTABLE"
+  },
+  "runtime_sec": 32.25
+}
