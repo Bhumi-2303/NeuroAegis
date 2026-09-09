@@ -1,0 +1,4 @@
+epoch,train_loss,val_loss,train_accuracy,val_accuracy,train_precision,val_precision,train_recall,val_recall,train_f1,val_f1,train_auroc,val_auroc,train_auprc,val_auprc,val_event_sensitivity,val_false_alarms_per_24h,val_detection_delay_sec,learning_rate,epoch_duration_sec
+1,0.01743,0.01351,0.94671,0.99204,0.89866,0.17402,0.46644,0.57645,0.61413,0.26734,0.89107,0.90811,0.69805,0.36814,0.6,238.1,9.97,0.0007525,3.5
+2,0.01421,0.02294,0.95636,0.94364,0.93878,0.02993,0.55623,0.68065,0.69856,0.05734,0.92299,0.90849,0.78037,0.26809,0.6,1919.6,8.63,0.00025750000000000013,4.0
+3,0.01321,0.02132,0.9582,0.94667,0.94123,0.03048,0.57618,0.65494,0.71479,0.05825,0.93663,0.9064,0.80293,0.311,0.6,1812.69,8.47,1e-05,4.1

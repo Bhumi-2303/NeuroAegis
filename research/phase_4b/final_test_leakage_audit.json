@@ -1,0 +1,46 @@
+{
+  "audit_timestamp": "2026-09-07T15:56:50Z",
+  "phase": "Phase 4B",
+  "master_window_index_sha256": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c",
+  "frozen_graph_config_sha256": "7798862ec4493ae22ce43eba7791ee9838c4a266cd8b5cc49d096a2e61f0aa82",
+  "frozen_model_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "patient_leakage": "PASS (0 overlapping patients)",
+  "recording_leakage": "PASS (0 overlapping recordings)",
+  "window_leakage": "PASS (0 overlapping windows)",
+  "sequence_leakage": "PASS (sequences strictly bounded within recordings)",
+  "causality_check": "PASS (unidirectional causal GRU with causal left-padding, zero future context)",
+  "validation_only_selection": "PASS (sequence length selected strictly on validation AUPRC)",
+  "final_test_single_pass": "PASS (test set evaluated exactly once with frozen checkpoint)",
+  "patient_splits": {
+    "train": [
+      "chb04",
+      "chb09",
+      "chb11",
+      "chb12",
+      "chb13",
+      "chb14",
+      "chb15",
+      "chb16",
+      "chb17",
+      "chb18",
+      "chb19",
+      "chb20",
+      "chb21",
+      "chb22",
+      "chb23",
+      "chb24"
+    ],
+    "validation": [
+      "chb06",
+      "chb07",
+      "chb08",
+      "chb10"
+    ],
+    "test": [
+      "chb01",
+      "chb02",
+      "chb03",
+      "chb05"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+experiment_id,seq_len,temporal_span_sec,best_epoch,val_auprc,val_auroc,val_sensitivity,val_specificity,val_precision,val_f1,val_balanced_accuracy,val_event_sensitivity,val_detected_events,val_total_events,val_detection_delay_sec,val_false_alarms,val_fa_per_24h
+PHASE4B_GRU_L01,1,5.0,3,0.27168,0.90486,0.57645,0.97964,0.06673,0.11961,0.77805,0.64,16,25,7.78,5958,701.57
+PHASE4B_GRU_L04,4,12.5,1,0.36814,0.90811,0.57645,0.99309,0.17402,0.26734,0.78477,0.6,15,25,9.97,2022,238.1
+PHASE4B_GRU_L08,8,22.5,1,0.42002,0.90414,0.64411,0.98474,0.0963,0.16755,0.81443,0.6,15,25,10.8,4467,526.0
+PHASE4B_GRU_L12,12,32.5,3,0.40407,0.9138,0.73072,0.93716,0.02853,0.05491,0.83394,0.64,16,25,8.28,18390,2165.47

@@ -1,0 +1,22 @@
+{
+  "threshold": 0.5,
+  "total_windows": 293410,
+  "true_positives": 426,
+  "false_positives": 2022,
+  "true_negatives": 290649,
+  "false_negatives": 313,
+  "sensitivity": 0.57645,
+  "specificity": 0.99309,
+  "precision": 0.17402,
+  "f1_score": 0.26734,
+  "balanced_accuracy": 0.78477,
+  "accuracy": 0.99204,
+  "auroc": 0.90811,
+  "auprc": 0.36814,
+  "total_duration_hours": 203.82,
+  "false_alarms_per_24h": 238.1,
+  "event_level_sensitivity": 0.6,
+  "mean_detection_delay_sec": 9.97,
+  "detected_seizures": 15,
+  "total_seizures": 25
+}
