@@ -21,27 +21,38 @@ def get_file_size(url: str) -> int:
     with urllib.request.urlopen(req, timeout=30) as resp:
         return int(resp.headers.get("Content-Length", 0))
 
-def download_chunk(url: str, start_byte: int, end_byte: int, out_chunk_path: Path):
-    """Download a byte range [start_byte, end_byte]."""
+def download_chunk(url: str, start_byte: int, end_byte: int, out_chunk_path: Path, max_retries: int = 3):
+    """Download a byte range [start_byte, end_byte] with retries."""
     headers = {
         "User-Agent": "Mozilla/5.0",
         "Range": f"bytes={start_byte}-{end_byte}"
     }
-    req = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(req, timeout=60) as resp, open(out_chunk_path, "wb") as f:
-        while True:
-            chunk = resp.read(1048576) # 1MB
-            if not chunk:
-                break
-            f.write(chunk)
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=90) as resp, open(out_chunk_path, "wb") as f:
+                while True:
+                    chunk = resp.read(1048576) # 1MB
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            return
+        except Exception as e:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(2 * (attempt + 1))
 
 def download_file_parallel(url: str, out_path: Path, n_threads: int = 8):
     """Download file in n_threads parallel byte ranges."""
-    if out_path.exists():
-        return
-
     out_path.parent.mkdir(parents=True, exist_ok=True)
     total_bytes = get_file_size(url)
+
+    if out_path.exists():
+        if out_path.stat().st_size == total_bytes and total_bytes > 0:
+            print(f"  ✓ {out_path.name} already complete ({total_bytes/1e6:.1f} MB)")
+            return
+        else:
+            out_path.unlink()
 
     if total_bytes == 0:
         # Fallback to single thread if server doesn't report size
