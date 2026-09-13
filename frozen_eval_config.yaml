@@ -1,0 +1,8 @@
+# Frozen Evaluation Config for Detection Event Policy
+# The harness will refuse to run if these parameters are missing.
+min_seizure_duration_sec: 10.0
+min_predicted_event_duration_sec: 5.0
+merge_gap_sec: 15.0
+allowed_delay_sec: 30.0
+multi_alarm_policy: "first_only"
+smoothing_window_size: 3
