@@ -1,0 +1,41 @@
+# Contract 2.2: Preprocessing Decisions Manifest
+# This file is the source of truth for the methods section.
+
+sampling_rate_hz: 256
+bandpass:
+  low_freq_hz: 0.5
+  high_freq_hz: 40.0
+
+windowing:
+  size_sec: 5.0
+  overlap_sec: 0.0
+
+labeling:
+  overlap_threshold_percent: 50.0
+
+common_channels:
+  - "FP1-F7"
+  - "F7-T7"
+  - "T7-P7"
+  - "P7-O1"
+  - "FP1-F3"
+  - "F3-C3"
+  - "C3-P3"
+  - "P3-O1"
+  - "FP2-F4"
+  - "F4-C4"
+  - "C4-P4"
+  - "P4-O2"
+  - "FP2-F8"
+  - "F8-T8"
+  - "T8-P8"
+  - "P8-O2"
+  - "FZ-CZ"
+  - "CZ-PZ"
+
+# Documentation / Justifications
+reasoning:
+  bandpass: "0.5 Hz removes baseline wander; 40 Hz removes high-frequency muscle artifact while preserving beta/gamma activity relevant to seizures."
+  windowing: "5-second windows balance temporal resolution for event detection with sufficient context for the model."
+  labeling: "A window is labeled as a seizure if at least 50% of its duration overlaps with a clinician-annotated seizure event."
+  common_channels: "Standard 10-20 bipolar longitudinal montage, common between CHB-MIT and Siena datasets. Missing channels will fail loudly."
