@@ -1,0 +1,2 @@
+patient,recording,event_idx,start,end,detected,delay,max_prob,onset_prob,missed_reason
+chb01,chb01_15,2,1732,1772,False,,0.481285,0.04446,Probabilities never exceeded threshold during event

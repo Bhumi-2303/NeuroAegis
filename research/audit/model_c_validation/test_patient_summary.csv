@@ -1,0 +1,5 @@
+patient,total_events,detected_events,mean_delay
+chb01,7,6,4.25
+chb02,3,3,4.666666666666667
+chb03,7,7,4.857142857142857
+chb05,5,5,8.7

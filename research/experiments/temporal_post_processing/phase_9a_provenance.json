@@ -1,0 +1,47 @@
+{
+    "hashes": {
+        "npz_sha256": "e9d91ee7bbd12af7bbf06159b57fd2a7deb68c2ce288a1c18b9817625eccccd8",
+        "csv_sha256": "c907f08fa78aa667aa08b23887440b82f90d1b0e4a231213e20f31361d66b26f",
+        "checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+        "manifest_sha256": "43538f95c35fb0c82f55b665df20aab89c788ad69395a13b29ce325032e1559a"
+    },
+    "npz_contents": {
+        "keys": [
+            "y_true",
+            "y_prob"
+        ],
+        "y_prob": {
+            "shape": [
+                293410
+            ],
+            "dtype": "float32",
+            "min": 0.009409557096660137,
+            "max": 0.7609256505966187,
+            "mean": 0.17962506413459778,
+            "std": 0.11925069987773895
+        }
+    },
+    "provenance": {
+        "source_checkpoint": "frozen_cnn_gnn_gru.pt",
+        "experiment_id": "PHASE4B_GRU_L08",
+        "model_architecture": "CNN_GNN_GRU (Causal)",
+        "graph_threshold": 0.3
+    },
+    "alignment": {
+        "sequence_count": 293410,
+        "probability_count": 293410,
+        "label_mismatches": 0,
+        "csv_max_absolute_difference": 2.9800415024539006e-08
+    },
+    "leakage_audit": {
+        "validation_patients": [
+            "chb06",
+            "chb07",
+            "chb08",
+            "chb10"
+        ],
+        "test_patients_present": false,
+        "training_patients_present": false
+    },
+    "status": "VALIDATION PREDICTION CACHE VERIFIED."
+}

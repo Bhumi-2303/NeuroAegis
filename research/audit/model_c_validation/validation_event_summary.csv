@@ -1,0 +1,26 @@
+patient,recording,event_idx,start,end,detected,delay,max_prob,onset_prob,missed_reason
+chb06,chb06_01,26,1724,1738,False,,0.193672,0.150125,Probabilities never exceeded threshold during event
+chb06,chb06_01,27,7461,7476,False,,0.229005,0.071576,Probabilities never exceeded threshold during event
+chb06,chb06_01,28,13525,13540,False,,0.131025,0.118656,Probabilities never exceeded threshold during event
+chb06,chb06_04,29,327,347,False,,0.28137,0.161208,Probabilities never exceeded threshold during event
+chb06,chb06_04,30,6211,6231,False,,0.292235,0.124984,Probabilities never exceeded threshold during event
+chb06,chb06_09,31,12500,12516,False,,0.418673,0.115071,Probabilities never exceeded threshold during event
+chb06,chb06_10,32,10833,10845,False,,0.123828,0.103292,Probabilities never exceeded threshold during event
+chb06,chb06_13,33,506,519,False,,0.362165,0.223751,Probabilities never exceeded threshold during event
+chb06,chb06_18,34,7799,7811,False,,0.322984,0.266551,Probabilities never exceeded threshold during event
+chb06,chb06_24,35,9387,9403,False,,0.430247,0.11636,Probabilities never exceeded threshold during event
+chb07,chb07_12,36,4920,5006,True,5.0,0.760926,0.082915,
+chb07,chb07_13,37,3285,3381,True,10.0,0.731778,0.124026,
+chb07,chb07_19,38,13688,13831,True,2.0,0.711749,0.152699,
+chb08,chb08_02,39,2670,2841,True,10.0,0.720735,0.096106,
+chb08,chb08_05,40,2856,3046,True,11.5,0.651836,0.17105,
+chb08,chb08_11,41,2988,3122,True,14.5,0.733638,0.076832,
+chb08,chb08_13,42,2417,2577,True,10.5,0.72387,0.090032,
+chb08,chb08_21,43,2083,2347,True,14.5,0.703954,0.116121,
+chb10,chb10_12,48,6313,6348,True,0.0,0.675275,0.467474,
+chb10,chb10_20,49,6888,6958,True,2.0,0.724937,0.463938,
+chb10,chb10_27,50,2382,2447,True,0.5,0.714832,0.404628,
+chb10,chb10_30,51,3021,3079,True,0.0,0.699345,0.521198,
+chb10,chb10_31,52,3801,3877,True,1.5,0.728384,0.424686,
+chb10,chb10_38,53,4618,4707,True,2.0,0.720087,0.406889,
+chb10,chb10_89,54,1383,1437,True,7.0,0.631474,0.218391,

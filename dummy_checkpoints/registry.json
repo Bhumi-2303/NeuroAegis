@@ -1,0 +1,36 @@
+{
+    "b07ee1c3286f9093b7eec7b2bb6014dcf70b53f1c5fffe7844b2b406e9c03257": {
+        "filepath": "dummy_checkpoints/exp1_cnn_epoch_1_b07ee1c3286f.pt",
+        "frozen": false,
+        "frozen_at": null,
+        "config": {
+            "experiment_name": "exp1_cnn",
+            "seed": 42,
+            "sampling_rate_hz": 256,
+            "bandpass": {
+                "low_freq_hz": 0.5,
+                "high_freq_hz": 40.0
+            },
+            "windowing": {
+                "size_sec": 5.0,
+                "overlap_sec": 0.0
+            },
+            "labeling": {
+                "overlap_threshold_percent": 50.0
+            },
+            "common_channels": [
+                "Fp1",
+                "Fp2"
+            ],
+            "model_name": "cnn",
+            "cnn_hidden_dim": 64,
+            "gnn_hidden_dim": 128,
+            "gru_hidden_dim": 256,
+            "graph_method": "correlation",
+            "loss": "weighted_bce",
+            "batch_size": 8,
+            "epochs": 1,
+            "learning_rate": 0.001
+        }
+    }
+}

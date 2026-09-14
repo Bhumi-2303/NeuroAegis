@@ -1,0 +1,56 @@
+commit 8b6a37ebd1088c2053ecc134ae9416c35c171383
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Fri Aug 7 22:22:48 2026 +0530
+
+    chore(models): align model metadata with model card and retrained patient-wise splits
+
+ apps/api/models/bonn/metadata.json   |   7 ++
+ apps/api/models/chbmit/metadata.json | 223 ++++++++++++++++++++++++++++-------
+ 2 files changed, 188 insertions(+), 42 deletions(-)
+commit 13abb21fff0a0c05d3852413b810e2f040ac759b
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 22:23:48 2026 +0530
+
+    feat(research-phase-9): generate publication tables, evidence traceability matrix, and audit verification suite
+
+commit c7c11897928d2e199143e41d819f68060573f0cf
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 22:23:35 2026 +0530
+
+    feat(research-phase-8): add master 23-sheet research workbook, 300 DPI publication figures, and publication tables
+
+commit 22e306904395dd2230bc40aebf1df6c950364ff0
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 22:23:21 2026 +0530
+
+    feat(research-phase-8): add cross-phase consistency audit, authoritative metric freeze, and validation reports
+
+commit 7b9f06f4b01e27fe9dfe86e48374160f982a737a
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 19:46:01 2026 +0530
+
+    docs(research): add consolidated research benchmark workbooks, final evaluations, and project documentation
+
+commit 31e47a3201228dc76dc7739c2e7e973112e12749
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 19:45:20 2026 +0530
+
+    feat(research-phase-7): implement statistical robustness evaluation, confidence intervals, and hypothesis testing
+
+commit ff5a76782b3e93927c32b9a396697bcf3e166282
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 19:45:12 2026 +0530
+
+    feat(research-phase-6): implement Siena scalp EEG cross-domain evaluation, channel harmonization, and adaptation
+
+commit e8eff56497e17f1c751f29dca3a2d7b470f01f55
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 19:40:09 2026 +0530
+
+    feat(research-phase-5): add explainable AI framework with integrated gradients and faithfulness evaluations
+
+commit 64cedb119bd6b04c917f0261265ae54d6b35a023
+Author: Tktirth <tktirth2006@gmail.com>
+Date:   Wed Sep 9 19:39:54 2026 +0530
+
+    feat(research-phase-4b): implement spatio-temporal CNN-GNN-GRU sequence model and temporal horizon benchmarks

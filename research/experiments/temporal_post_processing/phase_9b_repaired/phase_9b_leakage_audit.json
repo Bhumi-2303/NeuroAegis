@@ -1,0 +1,22 @@
+{
+    "validation_patients_only": true,
+    "no_test_predictions_loaded": true,
+    "no_test_labels_loaded": true,
+    "no_siena_data_loaded": true,
+    "checkpoint_unchanged": true,
+    "graph_unchanged": true,
+    "preprocessing_unchanged": true,
+    "probability_threshold_remains_050": true,
+    "no_retraining": true,
+    "no_test_based_selection": true,
+    "recording_boundaries_respected": true,
+    "evidence": {
+        "loaded_patients": [
+            "chb06",
+            "chb07",
+            "chb08",
+            "chb10"
+        ],
+        "monitoring_hours": 203.8138888888889
+    }
+}

@@ -1,0 +1,10 @@
+{
+    "checkpoint_path": "artifacts/checkpoints/frozen_cnn_gnn_gru.pt",
+    "checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+    "split_manifest_sha256": "43538f95c35fb0c82f55b665df20aab89c788ad69395a13b29ce325032e1559a",
+    "predictions_csv_sha256": "c907f08fa78aa667aa08b23887440b82f90d1b0e4a231213e20f31361d66b26f",
+    "inference_duration_sec": "NOT MEASURED",
+    "windows_per_sec": "NOT MEASURED",
+    "device": "cpu",
+    "method": "Recovered from Phase 4B L8 cache"
+}

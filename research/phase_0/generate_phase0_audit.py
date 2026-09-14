@@ -19,7 +19,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-BASE_DIR = "/Volumes/BLACK-BOX/NeuroAegis"
+BASE_DIR = "/home/bhumi/GitHub/NeuroAegis"
 PHASE0_DIR = os.path.join(BASE_DIR, "research", "phase_0")
 os.makedirs(PHASE0_DIR, exist_ok=True)
 

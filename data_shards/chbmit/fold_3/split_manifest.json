@@ -1,0 +1,63 @@
+{
+    "dataset": "chbmit",
+    "fold": 3,
+    "bonn_experiment": null,
+    "train_patients": [
+        "chb10",
+        "chb01",
+        "chb21",
+        "chb17",
+        "chb20",
+        "chb07",
+        "chb19",
+        "chb06",
+        "chb23",
+        "chb12",
+        "chb15",
+        "chb18",
+        "chb09",
+        "chb05",
+        "chb16",
+        "chb03",
+        "chb11",
+        "chb22",
+        "chb02",
+        "chb13",
+        "chb24",
+        "chb14",
+        "chb08"
+    ],
+    "test_patients": [
+        "chb04"
+    ],
+    "shards": {
+        "train": [
+            "data_shards/chbmit/fold_3/train_chb10.npz",
+            "data_shards/chbmit/fold_3/train_chb01.npz",
+            "data_shards/chbmit/fold_3/train_chb21.npz",
+            "data_shards/chbmit/fold_3/train_chb17.npz",
+            "data_shards/chbmit/fold_3/train_chb20.npz",
+            "data_shards/chbmit/fold_3/train_chb07.npz",
+            "data_shards/chbmit/fold_3/train_chb19.npz",
+            "data_shards/chbmit/fold_3/train_chb06.npz",
+            "data_shards/chbmit/fold_3/train_chb23.npz",
+            "data_shards/chbmit/fold_3/train_chb12.npz",
+            "data_shards/chbmit/fold_3/train_chb15.npz",
+            "data_shards/chbmit/fold_3/train_chb18.npz",
+            "data_shards/chbmit/fold_3/train_chb09.npz",
+            "data_shards/chbmit/fold_3/train_chb05.npz",
+            "data_shards/chbmit/fold_3/train_chb16.npz",
+            "data_shards/chbmit/fold_3/train_chb03.npz",
+            "data_shards/chbmit/fold_3/train_chb11.npz",
+            "data_shards/chbmit/fold_3/train_chb22.npz",
+            "data_shards/chbmit/fold_3/train_chb02.npz",
+            "data_shards/chbmit/fold_3/train_chb13.npz",
+            "data_shards/chbmit/fold_3/train_chb24.npz",
+            "data_shards/chbmit/fold_3/train_chb14.npz",
+            "data_shards/chbmit/fold_3/train_chb08.npz"
+        ],
+        "test": [
+            "data_shards/chbmit/fold_3/test_chb04.npz"
+        ]
+    }
+}

@@ -68,3 +68,14 @@ research/data/manifests/chbmit_window_index.csv
 ._*
 .Spotlight-V100
 .Trashes
+# NeuroAegis Restructuring Additions
+*.npz
+data/raw/
+data/interim/
+data/processed/
+data/cache/
+artifacts/checkpoints/
+artifacts/embeddings/
+artifacts/predictions/
+artifacts/exports/
+*.npy

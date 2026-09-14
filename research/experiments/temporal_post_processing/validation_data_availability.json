@@ -1,0 +1,19 @@
+{
+    "validation_patients_requested": [
+        "chb06",
+        "chb07",
+        "chb08",
+        "chb10"
+    ],
+    "validation_patients_found": [
+        "chb06",
+        "chb07",
+        "chb08",
+        "chb10"
+    ],
+    "total_edf_files": 82,
+    "all_readable": true,
+    "seizure_annotations_found": true,
+    "shards_required_for_inference": false,
+    "status": "VALIDATION DATA AVAILABLE - PHASE 9A CAN RESUME"
+}

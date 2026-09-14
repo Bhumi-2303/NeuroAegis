@@ -1,0 +1,77 @@
+{
+  "manifest_version": "1.0.0",
+  "phase": "Phase 8 Final Research Freeze",
+  "generated_timestamp": "2026-09-09T15:13:40.356804Z",
+  "git_metadata": {
+    "repository": "https://github.com/Bhumi-2303/NeuroAegis.git",
+    "head_branch": "main",
+    "git_commit": "7b9f06f4b01e27fe9dfe86e48374160f982a737a"
+  },
+  "system_environment": {
+    "os_name": "Darwin",
+    "os_release": "25.6.0",
+    "os_version": "Darwin Kernel Version 25.6.0: Fri Jul 31 19:11:03 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T8132",
+    "machine": "arm64",
+    "python_version": "3.11.15",
+    "torch_version": "2.13.0",
+    "torch_mps_available": true,
+    "torch_cuda_available": false
+  },
+  "cryptographic_hashes": {
+    "frozen_checkpoint_pt": {
+      "path": "artifacts/checkpoints/frozen_cnn_gnn_gru.pt",
+      "sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+      "expected": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca"
+    },
+    "spatial_graph_adjacency_csv": {
+      "path": "research/phase_4a/frozen_graph_adjacency.csv",
+      "sha256": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e",
+      "expected": "062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e"
+    },
+    "spatial_graph_config_json": {
+      "path": "research/phase_4a/frozen_graph_config.json",
+      "sha256": "7798862ec4493ae22ce43eba7791ee9838c4a266cd8b5cc49d096a2e61f0aa82"
+    },
+    "channel_order_json": {
+      "path": "research/data/config/chbmit_channel_order.json",
+      "sha256": "c4531b05efa6c3d0799aa9450beca81c9b82f9baaa5d2a13620a7b1829b861f2"
+    },
+    "chbmit_window_index_gz": {
+      "path": "data/manifests/chbmit_window_index.csv.gz",
+      "sha256": "43538f95c35fb0c82f55b665df20aab89c788ad69395a13b29ce325032e1559a",
+      "uncompressed_target_sha256": "f76dddb19fa2c24b3af24b989168b12465512b650c5e6d84bb0125a6d666302c"
+    },
+    "siena_channel_mapping_json": {
+      "path": "research/phase_6/config/siena_channel_mapping.json",
+      "sha256": "a6cdb2eeb437cee9ac5c7623ed712d622a24844cb73f5f6b9735f4e0ab3758bb"
+    }
+  },
+  "fixed_hyperparameters": {
+    "window_duration_seconds": 5.0,
+    "window_sampling_rate_hz": 256,
+    "window_samples": 1280,
+    "window_stride_seconds": 2.5,
+    "window_stride_samples": 640,
+    "temporal_overlap_percent": 50.0,
+    "sequence_length": 8,
+    "temporal_receptive_field_seconds": 22.5,
+    "decision_threshold_tau": 0.5,
+    "graph_threshold_theta": 0.3,
+    "negative_sampling_ratio": 10.0,
+    "focal_loss_gamma": 2.0,
+    "focal_loss_alpha": 0.25,
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "gru_hidden_dim": 64,
+    "gru_layers": 1,
+    "gru_direction": "unidirectional_causal",
+    "total_trainable_parameters": 91858
+  },
+  "random_seeds": {
+    "patient_split_seed": 42,
+    "dynamic_sampler_seed": 42,
+    "model_initialization_seed": 42,
+    "bootstrap_evaluation_seed": 42
+  }
+}

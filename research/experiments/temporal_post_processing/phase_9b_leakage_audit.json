@@ -1,0 +1,16 @@
+{
+    "no_test_patient_used": true,
+    "no_siena_data_used": true,
+    "no_test_labels_accessed": true,
+    "no_test_predictions_accessed": true,
+    "no_retraining": true,
+    "model_checkpoint_unchanged": true,
+    "graph_unchanged": true,
+    "preprocessing_unchanged": true,
+    "raw_probability_threshold_remains_050": true,
+    "only_validation_data_used_for_selection": true,
+    "event_definitions_unchanged": true,
+    "recording_boundaries_respected": true,
+    "temporal_windows_do_not_cross_recordings": true,
+    "status": "PASS"
+}

@@ -1,0 +1,12 @@
+{
+  "patient_leakage_train_val": false,
+  "patient_leakage_train_test": false,
+  "patient_leakage_val_test": false,
+  "recording_overlap": false,
+  "event_overlap": false,
+  "normalization_leakage": false,
+  "graph_leakage": false,
+  "threshold_leakage": false,
+  "test_label_leakage": false,
+  "siena_leakage": false
+}

@@ -1,0 +1,331 @@
+{
+    "current_checkpoint": {
+        "path": "artifacts/checkpoints/frozen_cnn_gnn_gru.pt",
+        "sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+        "size_bytes": 387437,
+        "mtime": "Sun Sep 13 19:19:26 2026"
+    },
+    "candidate_checkpoints": [
+        {
+            "path": "artifacts/checkpoints/frozen_cnn_gnn.pt",
+            "sha256": "b62bcf0c4e8821759a2a0d9c69df0be2caec242d707fcb4f26cb0ac8e2e9affa",
+            "size_bytes": 662523,
+            "mtime": "Sun Sep 13 19:19:33 2026"
+        },
+        {
+            "path": "artifacts/checkpoints/frozen_cnn_gnn_gru.pt",
+            "sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+            "size_bytes": 387437,
+            "mtime": "Sun Sep 13 19:19:26 2026"
+        }
+    ],
+    "structural_inspection": {
+        "is_state_dict_only": false,
+        "has_optimizer": false,
+        "has_epoch": true,
+        "total_parameters": 92743,
+        "expected_parameters": 91858,
+        "model_implementation_parameters": 91858,
+        "keys": {
+            "backbone.adj_norm": {
+                "shape": [
+                    23,
+                    23
+                ],
+                "dtype": "torch.float32",
+                "parameters": 529
+            },
+            "backbone.temporal_backbone.0.weight": {
+                "shape": [
+                    16,
+                    1,
+                    15
+                ],
+                "dtype": "torch.float32",
+                "parameters": 240
+            },
+            "backbone.temporal_backbone.1.weight": {
+                "shape": [
+                    16
+                ],
+                "dtype": "torch.float32",
+                "parameters": 16
+            },
+            "backbone.temporal_backbone.1.bias": {
+                "shape": [
+                    16
+                ],
+                "dtype": "torch.float32",
+                "parameters": 16
+            },
+            "backbone.temporal_backbone.1.running_mean": {
+                "shape": [
+                    16
+                ],
+                "dtype": "torch.float32",
+                "parameters": 16
+            },
+            "backbone.temporal_backbone.1.running_var": {
+                "shape": [
+                    16
+                ],
+                "dtype": "torch.float32",
+                "parameters": 16
+            },
+            "backbone.temporal_backbone.1.num_batches_tracked": {
+                "shape": [],
+                "dtype": "torch.int64",
+                "parameters": 1
+            },
+            "backbone.temporal_backbone.5.weight": {
+                "shape": [
+                    32,
+                    16,
+                    9
+                ],
+                "dtype": "torch.float32",
+                "parameters": 4608
+            },
+            "backbone.temporal_backbone.6.weight": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.temporal_backbone.6.bias": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.temporal_backbone.6.running_mean": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.temporal_backbone.6.running_var": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.temporal_backbone.6.num_batches_tracked": {
+                "shape": [],
+                "dtype": "torch.int64",
+                "parameters": 1
+            },
+            "backbone.temporal_backbone.10.weight": {
+                "shape": [
+                    64,
+                    32,
+                    7
+                ],
+                "dtype": "torch.float32",
+                "parameters": 14336
+            },
+            "backbone.temporal_backbone.11.weight": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.11.bias": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.11.running_mean": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.11.running_var": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.11.num_batches_tracked": {
+                "shape": [],
+                "dtype": "torch.int64",
+                "parameters": 1
+            },
+            "backbone.temporal_backbone.15.weight": {
+                "shape": [
+                    64,
+                    64,
+                    5
+                ],
+                "dtype": "torch.float32",
+                "parameters": 20480
+            },
+            "backbone.temporal_backbone.16.weight": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.16.bias": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.16.running_mean": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.16.running_var": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.temporal_backbone.16.num_batches_tracked": {
+                "shape": [],
+                "dtype": "torch.int64",
+                "parameters": 1
+            },
+            "backbone.gcn1.linear.weight": {
+                "shape": [
+                    64,
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 4096
+            },
+            "backbone.gcn1.linear.bias": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.gcn2.linear.weight": {
+                "shape": [
+                    64,
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 4096
+            },
+            "backbone.gcn2.linear.bias": {
+                "shape": [
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 64
+            },
+            "backbone.classifier.0.weight": {
+                "shape": [
+                    32,
+                    128
+                ],
+                "dtype": "torch.float32",
+                "parameters": 4096
+            },
+            "backbone.classifier.0.bias": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.classifier.3.weight": {
+                "shape": [
+                    1,
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "backbone.classifier.3.bias": {
+                "shape": [
+                    1
+                ],
+                "dtype": "torch.float32",
+                "parameters": 1
+            },
+            "gru.weight_ih_l0": {
+                "shape": [
+                    192,
+                    128
+                ],
+                "dtype": "torch.float32",
+                "parameters": 24576
+            },
+            "gru.weight_hh_l0": {
+                "shape": [
+                    192,
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 12288
+            },
+            "gru.bias_ih_l0": {
+                "shape": [
+                    192
+                ],
+                "dtype": "torch.float32",
+                "parameters": 192
+            },
+            "gru.bias_hh_l0": {
+                "shape": [
+                    192
+                ],
+                "dtype": "torch.float32",
+                "parameters": 192
+            },
+            "classifier.0.weight": {
+                "shape": [
+                    32,
+                    64
+                ],
+                "dtype": "torch.float32",
+                "parameters": 2048
+            },
+            "classifier.0.bias": {
+                "shape": [
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "classifier.3.weight": {
+                "shape": [
+                    1,
+                    32
+                ],
+                "dtype": "torch.float32",
+                "parameters": 32
+            },
+            "classifier.3.bias": {
+                "shape": [
+                    1
+                ],
+                "dtype": "torch.float32",
+                "parameters": 1
+            }
+        },
+        "missing_keys": [],
+        "unexpected_keys": [],
+        "match_status": "EXACT MATCH"
+    }
+}

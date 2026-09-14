@@ -1,0 +1,5 @@
+patient,event_sensitivity,fa_per_day,detected_events,missed_events
+chb06,0.0,137.76083188908146,0,10
+chb07,1.0,929.3546148507979,3,0
+chb08,1.0,71.5527950310559,5,0
+chb10,1.0,7383.490304709141,7,0

@@ -1,0 +1,23 @@
+{
+    "dataset": "bonn",
+    "fold": 0,
+    "bonn_experiment": "A",
+    "train_patients": [
+        "bonn_healthy_train",
+        "bonn_seizure_train"
+    ],
+    "test_patients": [
+        "bonn_seizure_test",
+        "bonn_healthy_test"
+    ],
+    "shards": {
+        "train": [
+            "data_shards/bonn_expA/fold_0/train_bonn_healthy_train.npz",
+            "data_shards/bonn_expA/fold_0/train_bonn_seizure_train.npz"
+        ],
+        "test": [
+            "data_shards/bonn_expA/fold_0/test_bonn_seizure_test.npz",
+            "data_shards/bonn_expA/fold_0/test_bonn_healthy_test.npz"
+        ]
+    }
+}

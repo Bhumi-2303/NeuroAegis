@@ -1,0 +1,33 @@
+{
+  "experiment_id": "PHASE6_SIENA_ZERO_SHOT",
+  "dataset": "Siena Scalp EEG Database",
+  "evaluated_recordings": 4,
+  "evaluated_patients": 2,
+  "total_duration_hours": 2.459722222222222,
+  "metrics": {
+    "total_windows": 3538,
+    "true_positives": 64,
+    "false_positives": 5,
+    "true_negatives": 3409,
+    "false_negatives": 60,
+    "window_sensitivity": 0.5161290322580645,
+    "window_specificity": 0.9985354422964264,
+    "precision": 0.927536231884058,
+    "f1": 0.6632124352331605,
+    "balanced_accuracy": 0.7573322372772455,
+    "auroc": 0.9120084282933651,
+    "auprc": 0.7135485574859992,
+    "total_events": 4,
+    "detected_events": 4,
+    "event_sensitivity": 1.0,
+    "mean_detection_delay_sec": 19.375,
+    "median_detection_delay_sec": 17.5,
+    "total_false_alarms": 0,
+    "fa_per_24h": 0.0
+  },
+  "artifacts": {
+    "predictions_csv": "research/phase_6/results/siena_zero_shot_predictions.csv",
+    "event_results_csv": "research/phase_6/results/siena_zero_shot_event_results.csv",
+    "patient_results_csv": "research/phase_6/results/siena_zero_shot_patient_results.csv"
+  }
+}

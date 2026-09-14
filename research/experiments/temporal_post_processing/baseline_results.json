@@ -1,0 +1,7 @@
+{
+    "total_events": 22,
+    "detected_events": 21,
+    "event_sensitivity": 0.9545454545454546,
+    "false_positives": 399,
+    "fa_per_24h": 62.705209882269486
+}

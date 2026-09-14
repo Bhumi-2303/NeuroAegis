@@ -1,0 +1,15 @@
+{
+  "dataset": "CHB-MIT",
+  "patient": "chb01",
+  "edf": "chb01_03.edf",
+  "channel": "FP1-F7",
+  "sampling_rate": 256.0,
+  "raw_duration": "3600 seconds",
+  "selected_segment": "2993-3003 seconds",
+  "window": "5 sec",
+  "samples": 1280,
+  "channels": 23,
+  "bandpass": "0.5-40.0 Hz (sosfiltfilt, order 4)",
+  "notch": "60.0 Hz (filtfilt, Q=30.0)",
+  "normalization": "z-score (recording-local per-channel)"
+}

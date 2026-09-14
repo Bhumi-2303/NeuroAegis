@@ -1,0 +1,597 @@
+.
+├── app
+│   ├── backend
+│   │   ├── api.log
+│   │   ├── app
+│   │   ├── config
+│   │   ├── data
+│   │   ├── Dockerfile
+│   │   ├── models
+│   │   ├── neuroaegis_api.egg-info
+│   │   ├── neuroaegis.db
+│   │   ├── pyproject.toml
+│   │   ├── pytest.ini
+│   │   ├── README.md
+│   │   ├── requirements-lock.txt
+│   │   ├── requirements.txt
+│   │   ├── test_patients.py
+│   │   ├── tests
+│   │   ├── training
+│   │   └── uv.lock
+│   ├── dashboard
+│   └── frontend
+├── artifacts
+│   ├── checkpoints
+│   │   ├── frozen_cnn_gnn_gru.pt
+│   │   ├── frozen_cnn_gnn.pt
+│   │   └── README.md
+│   ├── embeddings
+│   ├── exports
+│   └── predictions
+├── audit_and_generate.py
+├── audit_provenance.py
+├── bonn_mock.txt
+├── calculate_ranges.py
+├── chb01_03.csv
+├── chb_1hr_1sec.csv
+├── chb_1hr.csv
+├── chb_60s.csv
+├── chbmit_subset.parquet
+├── check_seq.py
+├── check_val2.py
+├── check_val.py
+├── configs
+│   ├── data
+│   ├── evaluation
+│   ├── experiments
+│   ├── models
+│   ├── preprocessing
+│   └── training
+├── CONTRACT.md
+├── contracts
+│   ├── metrics.py
+│   └── model.py
+├── data
+│   ├── cache
+│   ├── CHB-MIT Dataset
+│   │   ├── ANNOTATORS
+│   │   ├── chb01
+│   │   ├── chb02
+│   │   ├── chb03
+│   │   ├── chb04
+│   │   ├── chb05
+│   │   ├── chb06
+│   │   ├── chb07
+│   │   ├── chb08
+│   │   ├── chb09
+│   │   ├── chb10
+│   │   ├── chb11
+│   │   ├── chb12
+│   │   ├── chb13
+│   │   ├── chb14
+│   │   ├── chb15
+│   │   ├── chb16
+│   │   ├── chb17
+│   │   ├── chb18
+│   │   ├── chb19
+│   │   ├── chb20
+│   │   ├── chb21
+│   │   ├── chb22
+│   │   ├── chb23
+│   │   ├── chb24
+│   │   ├── index.html
+│   │   ├── RECORDS
+│   │   ├── RECORDS-WITH-SEIZURES
+│   │   ├── SHA256SUMS.txt
+│   │   ├── shoeb-icml-2010.pdf
+│   │   └── SUBJECT-INFO
+│   ├── interim
+│   ├── manifest.json
+│   ├── manifests
+│   │   ├── chbmit_channel_audit.csv
+│   │   ├── chbmit_data_quality.csv
+│   │   ├── chbmit_manifest.csv
+│   │   ├── chbmit_patient_manifest.csv
+│   │   ├── chbmit_seizure_events.csv
+│   │   └── chbmit_window_index.csv.gz
+│   ├── non_seizure_020.npy
+│   ├── non_seizure_021.npy
+│   ├── non_seizure_022.npy
+│   ├── non_seizure_023.npy
+│   ├── non_seizure_024.npy
+│   ├── non_seizure_025.npy
+│   ├── non_seizure_026.npy
+│   ├── non_seizure_027.npy
+│   ├── non_seizure_028.npy
+│   ├── non_seizure_029.npy
+│   ├── non_seizure_030.npy
+│   ├── non_seizure_031.npy
+│   ├── non_seizure_032.npy
+│   ├── non_seizure_033.npy
+│   ├── non_seizure_034.npy
+│   ├── non_seizure_035.npy
+│   ├── non_seizure_036.npy
+│   ├── non_seizure_037.npy
+│   ├── non_seizure_038.npy
+│   ├── non_seizure_039.npy
+│   ├── processed
+│   ├── raw
+│   ├── README.md
+│   ├── seizure_000.npy
+│   ├── seizure_001.npy
+│   ├── seizure_002.npy
+│   ├── seizure_003.npy
+│   ├── seizure_004.npy
+│   ├── seizure_005.npy
+│   ├── seizure_006.npy
+│   ├── seizure_007.npy
+│   ├── seizure_008.npy
+│   ├── seizure_009.npy
+│   ├── seizure_010.npy
+│   ├── seizure_011.npy
+│   ├── seizure_012.npy
+│   ├── seizure_013.npy
+│   ├── seizure_014.npy
+│   ├── seizure_015.npy
+│   ├── seizure_016.npy
+│   ├── seizure_017.npy
+│   ├── seizure_018.npy
+│   ├── seizure_019.npy
+│   └── siena-scalp-eeg
+│       ├── LICENSE.txt
+│       ├── PN00
+│       ├── PN01
+│       ├── PN03
+│       ├── PN05
+│       ├── PN06
+│       ├── PN07
+│       ├── PN09
+│       ├── PN10
+│       ├── PN11
+│       ├── PN12
+│       ├── PN13
+│       ├── PN14
+│       ├── PN16
+│       ├── PN17
+│       ├── RECORDS
+│       ├── SHA256SUMS.txt
+│       └── subject_info.csv
+├── data_shards
+│   ├── bonn_expA
+│   │   └── fold_0
+│   └── chbmit
+│       └── fold_3
+├── docker-compose.yml
+├── docs
+│   ├── AGENT.md
+│   ├── api-examples.md
+│   ├── architecture
+│   │   └── model_c.md
+│   ├── ARCHITECTURE 2.md
+│   ├── ARCHITECTURE.md
+│   ├── deployment
+│   ├── DESIGN 2.md
+│   ├── DESIGN.md
+│   ├── development
+│   ├── IMPLEMENTATIONPLAN 2.md
+│   ├── IMPLEMENTATIONPLAN.md
+│   ├── MEMORY 2.md
+│   ├── MEMORY.md
+│   ├── PHASES.md
+│   ├── PRD.md
+│   ├── research
+│   │   └── evaluation_protocol.md
+│   ├── RULES.md
+│   ├── TRD.md
+│   └── troubleshooting
+├── dummy_checkpoints
+│   ├── exp1_cnn_epoch_1_b07ee1c3286f.pt
+│   └── registry.json
+├── .env.example
+├── evaluate_baseline.py
+├── evaluate_raw.py
+├── files_to_update_4a.txt
+├── files_to_update.txt
+├── finalize_phase_9b.py
+├── fix_imports.sh
+├── fix_manifest_paths.sh
+├── fix_meta.py
+├── fix_models2.sh
+├── fix_models.sh
+├── fix_neuroaegis_imports.sh
+├── fix.py
+├── fix_test_imports.sh
+├── fix_window_metrics.sh
+├── frozen_eval_config.yaml
+├── generate_figures_9b.py
+├── generate_phase_9a_recovery.py
+├── generate_phase_9a_report.py
+├── get_mismatches.py
+├── .github
+│   └── workflows
+│       └── parity.yml
+├── .gitignore
+├── hardcoded_paths.txt
+├── inventory_script.py
+├── LICENSE
+├── mock_frozen_model.pt
+├── model_card.md
+├── neuroaegis
+│   ├── adaptation
+│   │   ├── experiment.py
+│   │   ├── __init__.py
+│   │   └── variants.py
+│   ├── data
+│   │   ├── build.py
+│   │   ├── __init__.py
+│   │   ├── schemas.py
+│   │   └── synthetic.py
+│   ├── eval
+│   │   ├── harness.py
+│   │   ├── __init__.py
+│   │   ├── metrics.py
+│   │   ├── reporting.py
+│   │   └── schemas.py
+│   ├── guardrails
+│   │   ├── checks.py
+│   │   ├── FROZEN_REGISTRY.md
+│   │   ├── __init__.py
+│   │   └── test_checks.py
+│   ├── models
+│   │   ├── baselines.py
+│   │   ├── cnn_gnn_gru_attention.py
+│   │   ├── graph.py
+│   │   ├── __init__.py
+│   │   ├── losses.py
+│   │   └── schemas.py
+│   ├── tracking
+│   │   ├── checkpoints.py
+│   │   ├── cli.py
+│   │   ├── config.py
+│   │   ├── __init__.py
+│   │   ├── logger.py
+│   │   └── reproducibility.py
+│   └── xai
+│       ├── agreement.py
+│       ├── frequency.py
+│       ├── harness.py
+│       ├── __init__.py
+│       └── methods.py
+├── NeuroAegis_bonn_dataset_model
+│   ├── features
+│   │   ├── bonn_raw_dataset.npz
+│   │   ├── coif3_denoised_dataset.npz
+│   │   ├── feature_matrix.npz
+│   │   ├── feature_names.json
+│   │   ├── features.csv
+│   │   ├── metadata.csv
+│   │   ├── selected_features.json
+│   │   └── train_test_split.npz
+│   ├── models
+│   │   ├── best_baseline_model.pkl
+│   │   ├── final_lightgbm_full_dataset.pkl
+│   │   ├── lightgbm_baseline.pkl
+│   │   ├── lightgbm_optimized.pkl
+│   │   ├── random_forest_baseline.pkl
+│   │   └── xgboost_baseline.pkl
+│   ├── plots
+│   │   ├── accuracy_comparison.png
+│   │   ├── class_distribution.png
+│   │   ├── correlation_heatmap.png
+│   │   ├── example_signals.png
+│   │   ├── f1_comparison.png
+│   │   ├── fft_comparison.png
+│   │   ├── kappa_comparison.png
+│   │   ├── lightgbm_confusion_matrix.png
+│   │   ├── lightgbm_optimized_confusion_matrix.png
+│   │   ├── lightgbm_optimized_roc_curve.png
+│   │   ├── lightgbm_roc_curve.png
+│   │   ├── mcc_comparison.png
+│   │   ├── mean_signals.png
+│   │   ├── original_vs_denoised.png
+│   │   ├── precision_comparison.png
+│   │   ├── psd_comparison.png
+│   │   ├── random_forest_confusion_matrix.png
+│   │   ├── random_forest_roc_curve.png
+│   │   ├── recall_comparison.png
+│   │   ├── roc_auc_comparison.png
+│   │   ├── signal_std_distribution.png
+│   │   ├── top20_feature_importance.png
+│   │   ├── wavelet_comparison.png
+│   │   ├── xgboost_confusion_matrix.png
+│   │   └── xgboost_roc_curve.png
+│   ├── README.txt
+│   └── reports
+│       ├── correlation_matrix.csv
+│       ├── dataset_audit.csv
+│       ├── dominant_frequencies.csv
+│       ├── feature_importance.csv
+│       ├── feature_importance.png
+│       ├── feature_ranking.csv
+│       ├── feature_variance.csv
+│       ├── FINAL_REPORT.md
+│       ├── high_correlation_pairs.csv
+│       ├── lightgbm_metrics.csv
+│       ├── lightgbm_optimized_metrics.csv
+│       ├── lightgbm_random_search_results.csv
+│       ├── model_comparison.csv
+│       ├── random_forest_metrics.csv
+│       ├── shap_beeswarm.png
+│       ├── shap_dependence.png
+│       ├── shap_feature_importance.csv
+│       ├── shap_summary_bar.png
+│       ├── shap_values.pkl
+│       ├── signal_statistics.csv
+│       ├── training_metadata.json
+│       ├── wavelet_benchmark.csv
+│       └── xgboost_metrics.csv
+├── neuroaegis_chbmit_project(1)
+│   ├── NeuroAegis_CHB_MIT
+│   │   ├── artifacts
+│   │   └── config.json
+│   └── .virtual_documents
+│       └── __notebook_source__.ipynb
+├── NeuroAegis_Research_Documentation.xlsx
+├── nginx
+│   ├── Dockerfile
+│   └── nginx.conf
+├── notebooks
+│   ├── exploration
+│   ├── neuroaegis-v1.ipynb
+│   ├── validation
+│   └── visualization
+├── package.json
+├── package-lock.json
+├── packages
+│   └── model-contracts
+│       ├── package.json
+│       └── src
+├── paper
+│   └── methods_scaffold.md
+├── preprocessing_manifest.yaml
+├── PRIVACY.md
+├── .pytest_cache
+│   ├── CACHEDIR.TAG
+│   ├── .gitignore
+│   ├── README.md
+│   └── v
+│       └── cache
+├── README.md
+├── render_phase_9b.py
+├── render_repaired_phase_9b.py
+├── research
+│   ├── audit
+│   │   ├── model_c_validation
+│   │   └── repository_structure
+│   ├── audits
+│   │   ├── data
+│   │   ├── leakage
+│   │   ├── models
+│   │   ├── README.md
+│   │   ├── repository
+│   │   ├── reproducibility
+│   │   └── validation_audit
+│   ├── config
+│   │   ├── chbmit_preprocessing.yaml
+│   │   └── class_imbalance.yaml
+│   ├── experiments
+│   │   ├── ablation
+│   │   ├── baselines
+│   │   ├── cnn
+│   │   ├── cnn_baseline
+│   │   ├── cnn_gnn
+│   │   ├── cnn_gnn_gru
+│   │   ├── dataset_annotation_pipeline
+│   │   ├── eegnet
+│   │   ├── gnn
+│   │   ├── gnn_candidates
+│   │   ├── gru
+│   │   ├── imbalance
+│   │   ├── lstm
+│   │   ├── model_c
+│   │   ├── pretrained
+│   │   ├── README.md
+│   │   ├── siena
+│   │   ├── tcn
+│   │   ├── temporal_post_processing
+│   │   ├── transformer
+│   │   ├── visualizations
+│   │   ├── windowing_labeling
+│   │   └── xai
+│   ├── figures
+│   │   ├── architecture
+│   │   ├── manuscript
+│   │   ├── performance
+│   │   ├── preprocessing
+│   │   └── xai
+│   ├── model_inventory
+│   │   ├── auprc_comparison.png
+│   │   ├── auroc_comparison.png
+│   │   ├── detection_delay_comparison.png
+│   │   ├── event_sensitivity_comparison.png
+│   │   ├── f1_comparison.png
+│   │   ├── false_alarm_comparison.png
+│   │   ├── MODEL_DECISION_REPORT.md
+│   │   ├── model_performance_summary.csv
+│   │   ├── model_performance_summary.json
+│   │   ├── NeuroAegis_Model_Performance_Master.xlsx
+│   │   └── parameter_count_comparison.png
+│   ├── phase_0
+│   │   ├── current_metrics.csv
+│   │   ├── current_models.csv
+│   │   ├── dataset_audit.csv
+│   │   ├── generate_phase0_audit.py
+│   │   ├── hardcoded_values.csv
+│   │   ├── Phase_0_Audit.xlsx
+│   │   ├── phase_0_summary.json
+│   │   ├── repository_audit.md
+│   │   └── research_risks.md
+│   ├── phase_2_5
+│   │   ├── decision2_audit.json
+│   │   └── decision2_audit_report.md
+│   ├── protocols
+│   └── reports
+│       ├── audits
+│       ├── experiments
+│       ├── literature
+│       └── manuscript
+├── run_fast.py
+├── run_inference.py
+├── run_phase_9a_inference.py
+├── run_phase_9b_optimization.py
+├── run_repaired_phase_9b.py
+├── run_temporal_postprocessing.py
+├── sample_eeg_data
+│   ├── S001_seizure.txt
+│   ├── S002_seizure.csv
+│   ├── S003_seizure.csv
+│   ├── Z001_healthy.txt
+│   └── Z002_healthy.txt
+├── scratch
+│   ├── analyze_bonn.py
+│   ├── analyze_chbmit.py
+│   ├── check_job.py
+│   ├── check_lgb_splits.py
+│   ├── compare_splits.py
+│   ├── extract_scaler.py
+│   ├── generate_metrics.py
+│   ├── loo_validation.py
+│   ├── playwright_upload.js
+│   ├── pr_curve_chb02.png
+│   ├── pr_curve_chb03.png
+│   ├── scan_windows_chb01.py
+│   ├── scan_windows.py
+│   ├── simulate_detector.py
+│   ├── simulate_frontend_upload_chb01.py
+│   ├── simulate_frontend_upload.py
+│   ├── test_bg_vs_seizure.py
+│   ├── test_bonn_upload.py
+│   ├── test_edf_length.py
+│   ├── test_feature_extract.py
+│   ├── test_file_length.py
+│   ├── test_plot.png
+│   ├── test_predictor.py
+│   ├── test_scan_line_length.py
+│   ├── test_shap_top.py
+│   └── test_slice_logic.py
+├── scripts
+│   ├── analysis
+│   ├── audit
+│   ├── compare_denoise.py
+│   ├── cross_dataset_generalization.py
+│   ├── data
+│   ├── evaluation
+│   ├── extract_chbmit_subset.py
+│   ├── extracted_notebook.py
+│   ├── extract_multichannel.py
+│   ├── fast_physionet_downloader.py
+│   ├── fetch_models.sh
+│   ├── integration_test.py
+│   ├── maintenance
+│   ├── print_features.py
+│   ├── print_mismatches.py
+│   ├── retrain_chbmit_patient_wise.py
+│   ├── test_adaptation.py
+│   ├── test_eval.py
+│   ├── test_models.py
+│   ├── test_parity2.py
+│   ├── test_parity3.py
+│   ├── test_parity_denoised.py
+│   ├── test_parity_final_11500.py
+│   ├── test_parity_final_metrics.py
+│   ├── test_parity_final.py
+│   ├── test_parity_metrics.py
+│   ├── test_parity.py
+│   ├── test_tracking.py
+│   ├── test_xai.py
+│   └── training
+├── src
+│   └── neuroaegis
+│       ├── data
+│       ├── evaluation
+│       ├── explainability
+│       ├── graphs
+│       ├── inference
+│       ├── __init__.py
+│       ├── models
+│       ├── postprocessing
+│       ├── schemas
+│       ├── training
+│       └── utils
+├── structure.txt
+├── summarize.py
+├── test_baseline.py
+├── test_load.py
+├── tests
+│   ├── data
+│   ├── evaluation
+│   ├── integration
+│   ├── models
+│   ├── reproducibility
+│   │   ├── test_class_imbalance.py
+│   │   ├── test_evaluator_unit.py
+│   │   ├── test_final_research_audit.py
+│   │   ├── test_labeling_strategy.py
+│   │   ├── test_paper_integrity.py
+│   │   ├── test_phase2_preprocessing.py
+│   │   ├── test_phase3_baseline.py
+│   │   ├── test_phase4a_baseline.py
+│   │   ├── test_phase_4a_c_audit.py
+│   │   ├── test_phase_4b_audit.py
+│   │   ├── test_phase_5_audit.py
+│   │   ├── test_phase_6_audit.py
+│   │   ├── test_phase_6b_audit.py
+│   │   └── test_phase_7_audit.py
+│   └── unit
+├── tree_output.txt
+├── .uv
+│   ├── env
+│   ├── env.fish
+│   ├── uv
+│   └── uvx
+└── .venv-310
+    ├── bin
+    │   ├── activate
+    │   ├── activate.bat
+    │   ├── activate.csh
+    │   ├── activate.fish
+    │   ├── activate.nu
+    │   ├── activate.ps1
+    │   ├── activate_this.py
+    │   ├── deactivate.bat
+    │   ├── dotenv
+    │   ├── f2py
+    │   ├── fonttools
+    │   ├── idna
+    │   ├── mne
+    │   ├── normalizer
+    │   ├── numba
+    │   ├── pip
+    │   ├── pip3
+    │   ├── pip3.10
+    │   ├── pydoc.bat
+    │   ├── pyftmerge
+    │   ├── pyftsubset
+    │   ├── pygmentize
+    │   ├── py.test
+    │   ├── pytest
+    │   ├── python -> /usr/bin/python3.10
+    │   ├── python3 -> python
+    │   ├── python3.10 -> python
+    │   ├── tqdm
+    │   ├── ttx
+    │   ├── uvicorn
+    │   └── wheel
+    ├── CACHEDIR.TAG
+    ├── .gitignore
+    ├── include
+    │   └── site
+    ├── lib
+    │   └── python3.10
+    ├── lib64 -> lib
+    ├── .lock
+    ├── pyvenv.cfg
+    └── share
+        └── man
+
+202 directories, 393 files

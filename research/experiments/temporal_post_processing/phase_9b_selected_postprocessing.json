@@ -1,0 +1,18 @@
+{
+    "probability_threshold": 0.5,
+    "n_of_m": "3-of-4",
+    "min_duration_sec": 15.0,
+    "merge_interval_sec": 60.0,
+    "refractory_period_sec": 0.0,
+    "event_matching_tolerance": "strict window overlap",
+    "selection_criterion": "Minimize FA/day s.t. Event Sensitivity >= 0.90",
+    "validation_metrics": {
+        "event_sensitivity": 0.6,
+        "false_alarms_per_day": 16.84359769605671,
+        "median_delay_sec": 95.0,
+        "total_alarms": 158,
+        "true_positive_alarms": 15,
+        "false_positive_alarms": 143
+    },
+    "timestamp": "2026-09-14T03:38:23.970852Z"
+}

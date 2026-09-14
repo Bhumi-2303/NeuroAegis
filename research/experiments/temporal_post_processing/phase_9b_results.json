@@ -1,0 +1,12 @@
+{
+    "baseline": {
+        "event_sensitivity": 0.6,
+        "false_alarms_per_day": 93.99
+    },
+    "optimized": {
+        "event_sensitivity": 0.6,
+        "false_alarms_per_day": 16.84359769605671,
+        "median_delay_sec": 95.0
+    },
+    "reduction_pct": 82.07937259702446
+}

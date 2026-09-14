@@ -1,0 +1,2 @@
+n,m,min_dur,merge_int,refract,total_episodes,tp_alarms,fp_alarms,fa_per_day,detected_events,total_events,missed_events,event_sens,mean_delay,median_delay,std_delay,min_delay,max_delay
+1,1,0,0,0,816,18,798,93.96808090169408,15,25,10,0.6,6.066666666666666,5.0,5.160318680942959,0.0,14.5

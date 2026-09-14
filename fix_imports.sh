@@ -1,0 +1,26 @@
+find . -type f -name "*.py" -not -path "*/\.*" -not -path "*/venv/*" -not -path "*/node_modules/*" -exec sed -i \
+  -e 's/research\.phase_1/research.experiments.dataset_annotation_pipeline/g' \
+  -e 's/research\/phase_1/research\/experiments\/dataset_annotation_pipeline/g' \
+  -e 's/research\.phase_2/research.experiments.windowing_labeling/g' \
+  -e 's/research\/phase_2/research\/experiments\/windowing_labeling/g' \
+  -e 's/research\.phase_3/research.experiments.cnn_baseline/g' \
+  -e 's/research\/phase_3/research\/experiments\/cnn_baseline/g' \
+  -e 's/research\.phase_4a_c/research.experiments.gnn_candidates/g' \
+  -e 's/research\/phase_4a_c/research\/experiments\/gnn_candidates/g' \
+  -e 's/research\.phase_4a/research.experiments.gnn/g' \
+  -e 's/research\/phase_4a/research\/experiments\/gnn/g' \
+  -e 's/research\.phase_4b/research.experiments.model_c/g' \
+  -e 's/research\/phase_4b/research\/experiments\/model_c/g' \
+  -e 's/research\.phase_5/research.experiments.xai/g' \
+  -e 's/research\/phase_5/research\/experiments\/xai/g' \
+  -e 's/research\.phase_6/research.experiments.siena/g' \
+  -e 's/research\/phase_6/research\/experiments\/siena/g' \
+  -e 's/research\.phase_7/research.experiments.ablation/g' \
+  -e 's/research\/phase_7/research\/experiments\/ablation/g' \
+  -e 's/research\.phase_8/research.audits.validation_audit/g' \
+  -e 's/research\/phase_8/research\/audits\/validation_audit/g' \
+  -e 's/research\.phase_9/research.experiments.temporal_post_processing/g' \
+  -e 's/research\/phase_9/research\/experiments\/temporal_post_processing/g' \
+  -e 's/research\.imbalance/research.experiments.imbalance/g' \
+  -e 's/research\/imbalance/research\/experiments\/imbalance/g' \
+  {} +

@@ -1,0 +1,49 @@
+{
+    "dataset": {
+        "validation_patients": [
+            "chb06",
+            "chb07",
+            "chb08",
+            "chb10"
+        ],
+        "edf_count": 82,
+        "total_windows": 293410,
+        "total_hours": 203.76,
+        "positive_windows": 739,
+        "total_events": 3,
+        "detected_events": 1
+    },
+    "predictions": {
+        "min_prob": 0.009409557096660137,
+        "max_prob": 0.7609256505966187,
+        "mean_prob": 0.17962506413459778,
+        "median_prob": 0.14049634337425232,
+        "std_prob": 0.11925069987773895,
+        "total_predictions": 293410,
+        "predictions_over_050": 4943,
+        "pct_over_050": 1.6847
+    },
+    "window_metrics_at_050": {
+        "threshold": 0.5,
+        "total_windows": 293410,
+        "true_positives": 476,
+        "false_positives": 4467,
+        "true_negatives": 288204,
+        "false_negatives": 263,
+        "sensitivity": 0.64411,
+        "specificity": 0.98474,
+        "precision": 0.0963,
+        "f1_score": 0.16755,
+        "balanced_accuracy": 0.81443,
+        "accuracy": 0.98388,
+        "auroc": 0.90414,
+        "auprc": 0.42002,
+        "total_duration_hours": 203.76,
+        "false_alarms_per_24h": 526.16
+    },
+    "event_metrics_at_050": {
+        "total_seizure_events": 3,
+        "detected_seizure_events": 1,
+        "event_level_sensitivity": 0.3333
+    }
+}

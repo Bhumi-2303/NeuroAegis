@@ -1,0 +1,4 @@
+{
+    "status": "NO_CONFIGURATION_MEETS_PRESPECIFIED_CONSTRAINT",
+    "reason": "Baseline sensitivity is 60.00%, making >= 90% impossible without retraining or threshold optimization."
+}

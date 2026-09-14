@@ -1,0 +1,6 @@
+{
+    "checkpoint_path": "artifacts/checkpoints/frozen_cnn_gnn_gru.pt",
+    "expected_hash": "2ec84897c39d31d68cfbf1e5c8708d5073fe19450576bf4f9132929c1832ca",
+    "actual_hash": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+    "hash_match": false
+}
