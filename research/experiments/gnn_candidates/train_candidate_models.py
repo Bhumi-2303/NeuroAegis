@@ -246,7 +246,7 @@ def train_single_candidate(
         y_epoch = y_epoch[perm]
         
         dataset = TensorDataset(X_epoch, y_epoch)
-        dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
+        dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False, num_workers=0, pin_memory=False)
         
         in_prog_str = f"Epoch {epoch+1}/{NUM_EPOCHS}: Training on 36,388 Windows"
         update_live_status(status_file, "TRAINING", completed_steps, in_prog_str, queued_steps, start_time, epoch+1, NUM_EPOCHS)
@@ -269,12 +269,20 @@ def train_single_candidate(
             
             epoch_loss += loss.item()
             n_batches += 1
+            del batch_x, batch_y, logits, loss
             
         current_lr = scheduler.get_last_lr()[0]
         scheduler.step()
         avg_train_loss = epoch_loss / n_batches if n_batches > 0 else 0.0
         t_train1 = time.time()
         print(f"Epoch {epoch+1} Training: Loss = {avg_train_loss:.5f} ({t_train1 - t_train0:.1f}s)")
+        
+        del X_neg, y_neg, X_epoch, y_epoch, dataset, dataloader
+        import gc
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+
         
         # Validation Evaluation
         in_prog_str = f"Epoch {epoch+1}/{NUM_EPOCHS}: Validation Evaluation (293,410 Windows)"
@@ -440,7 +448,14 @@ def train_single_candidate(
     completed_steps.append("Validation Event & Latency Evaluation (PASS)")
     update_live_status(status_file, "COMPLETE", completed_steps, "Finished", [], start_time, NUM_EPOCHS, NUM_EPOCHS)
     
+    del model, optimizer, scheduler, best_val_prob, best_val_true
+    import gc
+    gc.collect()
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
+        
     return val_summary
+
 
 
 def evaluate_frozen_phase4a_reference(

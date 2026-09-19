@@ -24,29 +24,36 @@ class IntegratedGradients:
         
         # We process step by step to save memory, or all at once if batch fits.
         # Given memory constraints (1-5M params, batch 4-8), we process sequentially.
-        grads_list = []
+        accumulated_grads = torch.zeros_like(x)
         
-        for step_idx in range(self.steps):
-            inp = scaled_inputs[step_idx].requires_grad_(True)
-            out = self.model(inp)
-            logits = out.logits
-            
-            # Select target class
-            if logits.size(-1) > 1:
-                score = logits[0, target_class]
-            else:
-                score = logits[0, 0] # Binary classification
-                if target_class == 0:
-                    score = -score # flip gradient direction for class 0 if using a single logit
-            
-            score.backward()
-            grads_list.append(inp.grad.detach())
-            
-        grads = torch.stack(grads_list, dim=0) # (steps, 1, channels, seq_len)
-        avg_grads = grads.mean(dim=0)          # (1, channels, seq_len)
-        
-        ig_attributions = (x - baseline) * avg_grads
-        return ig_attributions
+        try:
+            for step_idx in range(self.steps):
+                inp = scaled_inputs[step_idx].requires_grad_(True)
+                out = self.model(inp)
+                logits = out.logits
+                
+                # Select target class
+                if logits.size(-1) > 1:
+                    score = logits[0, target_class]
+                else:
+                    score = logits[0, 0] # Binary classification
+                    if target_class == 0:
+                        score = -score # flip gradient direction for class 0 if using a single logit
+                
+                score.backward()
+                if inp.grad is not None:
+                    accumulated_grads += inp.grad.detach()
+                self.model.zero_grad(set_to_none=True)
+                del inp, out, logits, score
+                
+            avg_grads = accumulated_grads / self.steps
+            ig_attributions = (x - baseline) * avg_grads
+            return ig_attributions
+        finally:
+            self.model.zero_grad(set_to_none=True)
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+
 
 class AttentionExtractor:
     """

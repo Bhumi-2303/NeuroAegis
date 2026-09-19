@@ -362,7 +362,7 @@ def run_phase_4b_training():
             train_y_np = train_labels[epoch_seq_indices]
             
             train_dataset = TensorDataset(torch.from_numpy(train_x_np), torch.from_numpy(train_y_np))
-            train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
+            train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False, num_workers=0, pin_memory=False)
             
             # Model train pass
             model.train()
@@ -386,6 +386,7 @@ def run_phase_4b_training():
                 probs = logits_to_probabilities(logits).detach().cpu().numpy()
                 train_preds.append(probs)
                 train_trues.append(by.cpu().numpy())
+                del bx, by, logits, loss
                 
             scheduler.step()
             train_loss /= len(train_dataset)
@@ -394,6 +395,11 @@ def run_phase_4b_training():
             y_tr_pred = np.concatenate(train_preds)
             y_tr_true = np.concatenate(train_trues)
             tr_metrics = SeizureEvaluationMetrics.compute_window_metrics(y_tr_true, y_tr_pred, threshold=0.5)
+            del train_dataset, train_loader, train_x_np, train_preds, train_trues, y_tr_pred, y_tr_true
+            import gc
+            gc.collect()
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
             
             # Full Validation Pass
             model.eval()
@@ -405,8 +411,13 @@ def run_phase_4b_training():
                     logits = model(b_chunk)
                     p = logits_to_probabilities(logits).cpu().numpy()
                     val_preds.append(p)
+                    del b_chunk, logits
             val_probs = np.concatenate(val_preds)
             t_val1 = time.time()
+            del val_preds
+            gc.collect()
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
             
             val_metrics = SeizureEvaluationMetrics.compute_window_metrics(
                 y_true=val_labels,
@@ -415,6 +426,7 @@ def run_phase_4b_training():
                 total_duration_hours=val_manifest_duration_hours,
                 stride_sec=2.5
             )
+
             
             # Event metrics
             det_delay, det_ev, tot_ev, _ = compute_detection_delay_details(
@@ -521,6 +533,14 @@ def run_phase_4b_training():
             queued_steps.remove(step_name)
         elif len(queued_steps) > 0:
             queued_steps.pop(0)
+            
+        # Clean up candidate model and validation tensors
+        del model, optimizer, scheduler, t_val_x, val_seq_tensor, val_indices_matrix, train_indices_matrix
+        import gc
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+
         
     # 4. Validation Model Comparison & Selection
     print("\n" + "=" * 80)

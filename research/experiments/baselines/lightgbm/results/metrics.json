@@ -1,0 +1,17 @@
+{
+    "model": "LightGBM",
+    "auroc": 0.69973,
+    "auprc": 0.00692,
+    "sensitivity": 0.06907,
+    "specificity": 0.98748,
+    "precision": 0.01578,
+    "f1_score": 0.02569,
+    "balanced_accuracy": 0.52828,
+    "event_sensitivity": 0.04545,
+    "detection_delay_sec": 30.0,
+    "false_positive_windows": 2745,
+    "false_alarm_episodes": 344,
+    "fa_per_24h": 54.02,
+    "accuracy": 0.98482,
+    "latency_ms": 0.0027
+}

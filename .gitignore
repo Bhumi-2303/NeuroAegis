@@ -7,6 +7,7 @@
 venv/
 env/
 .uv/
+.cache/
 
 # TLS / Secrets
 nginx/server.key
@@ -42,9 +43,14 @@ neuroaegis_chbmit_project(1)/
 # Local Database
 apps/api/neuroaegis.db
 
-# Large Data files
+# Large Data files & Caches
 *.edf
 *.parquet
+*.npy
+*.npz
+*.gz
+*.tar
+*.zip
 data/bonn_raw/
 data/chbmit_edf/
 data/bonn_features.csv
@@ -61,7 +67,11 @@ CHB-MIT Dataset/
 data/siena_edf/
 scratch/matplotlib_cache/
 research/phase_4b/embeddings_cache/
-research/data/manifests/chbmit_window_index.csv
+research/data/manifests/chbmit_window_index.csv*
+train_cache/
+research/experiments/eeg_specific/train_cache/
+research/repository_audit/*.csv
+artifacts/
 
 # macOS metadata
 .DS_Store

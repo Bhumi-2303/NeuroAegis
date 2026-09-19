@@ -1,0 +1,20 @@
+bandpass_highcut_hz: 40.0
+bandpass_lowcut_hz: 0.5
+channel_count: 23
+checkpoint_sha256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca
+decision_threshold: 0.5
+event_merge_interval_sec: 10.0
+event_min_duration_sec: 5.0
+event_smoothing_window: 3
+event_tolerance_sec: 10.0
+experiment_name: Siena Cross-Domain Zero-Shot Generalization
+frozen_model: NeuroAegis Model C (CNN + GNN + GRU)
+model_parameters: 91858
+notch_frequency_hz: 50.0
+notch_q: 30.0
+sampling_rate_hz: 256.0
+sequence_length: 8
+source_dataset: CHB-MIT
+stride_sec: 2.5
+target_dataset: Siena Scalp EEG Database
+window_size_sec: 5.0

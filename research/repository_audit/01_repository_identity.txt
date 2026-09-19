@@ -1,0 +1,25 @@
+============================================================
+NEUROAEGIS — REPOSITORY IDENTITY
+============================================================
+Current Working Directory: /Volumes/BLACK-BOX/NeuroAegis
+Project Root: /Volumes/BLACK-BOX/NeuroAegis
+Git Repository Root: /Volumes/BLACK-BOX/NeuroAegis
+Remote GitHub URL(s):
+origin	https://github.com/Bhumi-2303/NeuroAegis.git (fetch)
+origin	https://github.com/Bhumi-2303/NeuroAegis.git (push)
+
+Current Branch: main
+Current Commit: 2ac037b0f58af7033faaf08ddc6444d5bbfeb771
+Current Commit Message: feat(research-phase-9): add final IEEE scientific manuscript and complete publication release package
+Current HEAD: 2ac037b0f58af7033faaf08ddc6444d5bbfeb771
+Upstream Branch: origin/main
+
+Working Tree Status:
+CLEAN (excluding untracked audit directory)
+
+Git Status Output:
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+============================================================

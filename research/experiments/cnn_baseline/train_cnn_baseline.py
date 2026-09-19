@@ -267,7 +267,7 @@ def run_phase3_training():
         y_epoch = y_epoch[perm]
         
         dataset = TensorDataset(X_epoch, y_epoch)
-        dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
+        dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False, num_workers=0, pin_memory=False)
         
         model.train()
         epoch_loss = 0.0
@@ -287,11 +287,19 @@ def run_phase3_training():
             
             epoch_loss += loss.item()
             n_batches += 1
+            del batch_x, batch_y, logits, loss
             
         scheduler.step()
         avg_train_loss = epoch_loss / n_batches if n_batches > 0 else 0.0
         t_train1 = time.time()
         print(f"Epoch {epoch+1} Training: Loss = {avg_train_loss:.5f} ({t_train1 - t_train0:.1f}s)")
+        
+        # Free epoch training data before full validation
+        del X_neg, y_neg, X_epoch, y_epoch, dataset, dataloader
+        import gc
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         
         in_prog_str = f"Epoch {epoch+1}/{NUM_EPOCHS}: Full Validation Evaluation (293,410 Windows, 82 Recordings)"
         update_live_status("VALIDATION", completed_steps, in_prog_str, queued_steps, start_time, epoch+1, NUM_EPOCHS)
@@ -314,6 +322,10 @@ def run_phase3_training():
             threshold=0.5,
             stride_sec=2.5
         )
+        del val_true, val_prob
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         
         val_auprc = val_metrics["auprc"] if val_metrics["auprc"] is not None else 0.0
         val_auroc = val_metrics["auroc"] if val_metrics["auroc"] is not None else 0.0
@@ -354,10 +366,14 @@ def run_phase3_training():
             print(f"  -> Best model checkpoint saved at epoch {best_epoch} with Val AUPRC = {best_val_auprc:.5f}")
             
         completed_steps.append(f"Epoch {epoch+1}/{NUM_EPOCHS} (Loss={avg_train_loss:.4f}, Val AUPRC={val_auprc:.4f})")
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         
     training_duration = time.time() - start_time
     print("\n" + "=" * 80)
     print(f"TRAINING COMPLETE in {training_duration:.2f}s ({training_duration/60:.2f} min)")
+
     print(f"Best Epoch: {best_epoch} with Validation AUPRC: {best_val_auprc:.5f}")
     print("=" * 80)
     

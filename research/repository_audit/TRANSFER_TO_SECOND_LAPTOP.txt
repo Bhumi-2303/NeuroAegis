@@ -1,0 +1,112 @@
+================================================================================
+NEUROAEGIS — ARTIFACT TRANSFER MANIFEST FOR TARGET LAPTOP
+================================================================================
+PURPOSE:
+Defines the EXACT list of files that must be transferred from this laptop to the
+receiving user's laptop.
+The receiving user clones the repository from GitHub and ALREADY possesses
+the raw CHB-MIT and Siena EDF datasets.
+
+Total Size of P0 Transfer: ~1.03 MB
+Total Size of P0 + P1 Transfer: ~694.0 MB
+
+================================================================================
+SECTION A — MUST TRANSFER (P0: CRITICAL RUNTIME ASSETS)
+================================================================================
+These artifacts are missing from GitHub because *.pt is in .gitignore.
+Without them, the receiving user CANNOT run inference and CANNOT reproduce
+predictions without retraining the models.
+
+1. research/phase_4b/frozen_cnn_gnn_gru.pt
+   Size: 387,437 bytes (378.4 KB)
+   SHA256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca
+   Role: Authoritative final model weights (Channel-preserving 1D CNN + Spatial GCN + Causal GRU).
+   Total parameters: 91,858 (52,497 frozen backbone + 39,361 trainable GRU).
+   Reason: Mandatory for final model execution.
+
+2. research/phase_4a/frozen_cnn_gnn.pt
+   Size: 662,523 bytes (647.0 KB)
+   SHA256: b62bcf0c4e8821759a2a0d9c69df0be2caec242d707fcb4f26cb0ac8e2e9affa
+   Role: Spatial GNN backbone checkpoint (theta=0.30).
+   Total parameters: 52,497.
+   Reason: Mandatory for modular feature extraction and embedding generation.
+
+================================================================================
+SECTION B — STRONGLY RECOMMENDED (P1: BENCHMARK & ACCELERATION CACHES)
+================================================================================
+These artifacts allow instant validation of baseline comparisons and speed up
+experiments by eliminating 2+ hours of GPU/MPS embedding generation.
+
+1. research/phase_3/best_cnn_baseline.pt
+   Size: 2,110,323 bytes (2.01 MB)
+   SHA256: 6d700012cdd4add4c507029ae70f54ca7a2fdd8302cef0a7c90a9fd164b9f589
+   Role: Phase 3 1D CNN baseline checkpoint (174,309 parameters).
+   Reason: Allows running baseline inference without retraining Phase 3.
+
+2. research/phase_4b/embeddings_cache/test_embeddings_unified.npy
+   Size: 112,599,168 bytes (107.38 MB)
+   SHA256: 01bd3a7523e036e1899790c8a6099e46c72c08dd761b262ca15fe83246acc74d
+   Role: Precomputed 128-dim node embeddings for the test cohort.
+   Reason: Evaluates GRU on test cohort in <10 seconds without slicing raw EDFs.
+
+3. research/phase_4b/embeddings_cache/val_embeddings_unified.npy
+   Size: 150,229,120 bytes (143.27 MB)
+   SHA256: 6f5ab7c164b13101293beb694d9d62b5645dc074bd79e6d793a71f6ec85e5528
+   Role: Precomputed 128-dim node embeddings for the validation cohort.
+   Reason: Instant validation without raw EEG windowing.
+
+4. research/phase_4b/embeddings_cache/train_embeddings_unified.npy
+   Size: 461,510,784 bytes (440.13 MB)
+   SHA256: d16997e9fa78d1870340c144e01a2189819f273afb8c41521a41de41964eb533
+   Role: Precomputed 128-dim node embeddings for the training cohort.
+   Reason: Accelerates temporal GRU training runs from 2.5 hours to 15 minutes.
+
+================================================================================
+SECTION C — OPTIONAL (P2: INTERMEDIATE ABLATION CHECKPOINTS)
+================================================================================
+Artifacts that document historical research progression or uncompressed manifests.
+Not required for final paper reproduction.
+
+1. research/phase_4a_c/theta_025/best_cnn_gnn.pt (662,523 bytes)
+   SHA256: d081a2745b0bf957f54f157c260f65bc10452e9e752c6ccefcf9f34b4fbc1234
+2. research/phase_4b/experiments/L1/best_model.pt (387,061 bytes)
+   SHA256: b2ee91f1d8df8b4f3cef8d14173e04efc2fe90cd4d76a0d2a9d92aeb9c6d45d8
+3. research/phase_4b/experiments/L4/best_model.pt (387,061 bytes)
+   SHA256: 838500ace976d6f33589e3f7d5d46a3f063336f586e24d49b3c274817700d370
+4. research/phase_4b/experiments/L8/best_model.pt (387,061 bytes)
+   SHA256: 1c8e4135515eb3171111c51c6f7f321ce8eaba89d02ec5dd94e4e0300137a33c
+5. research/phase_4b/experiments/L12/best_model.pt (387,061 bytes)
+   SHA256: 30bc620e3ee36598aacd63d36ec1a610ae07259d5f40f715d8cd488e040fe945
+6. research/data/manifests/chbmit_window_index.csv (164,904,785 bytes, 157.27 MB)
+   Note: The exact compressed version chbmit_window_index.csv.gz (17.89 MB) is
+   already tracked in Git. This uncompressed file is completely redundant.
+
+================================================================================
+SECTION D — DO NOT TRANSFER (P3 / EXCLUDED / SENSITIVE / ALREADY POSSESSED)
+================================================================================
+DO NOT transfer the following directories and files:
+
+1. RAW DATASETS:
+   - CHB-MIT Dataset/ (*.edf, ~35 GB)
+   - data/siena_edf/ (*.edf, ~3.2 GB)
+   Reason: Receiving user ALREADY possesses the complete raw EEG datasets.
+
+2. SECURITY / LOCAL SECRETS:
+   - .env (508 bytes)
+   - apps/api/.env (391 bytes)
+   - apps/web/.env (158 bytes)
+   Reason: Contains local ports, development keys, and local environment bindings.
+
+3. ENVIRONMENT & DEPENDENCIES:
+   - .venv/ (41,935 files, ~3.8 GB)
+   - node_modules/ (52,324 files, ~650 MB)
+   Reason: Platform-specific binaries. Target laptop should install cleanly via:
+     python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+     npm install
+
+4. OS / TEMPORARY CLUTTER:
+   - .DS_Store
+   - ._* (AppleDouble resource fork files)
+   - scratch/ (temporary experiment scripts)
+   - __pycache__/ (*.pyc files)
+================================================================================

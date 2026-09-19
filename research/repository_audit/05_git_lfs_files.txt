@@ -1,0 +1,8 @@
+# Git LFS Configuration & Tracked Files Report
+.gitattributes exists: False
+
+.gitattributes content:
+No .gitattributes file present.
+
+Git LFS tracked files:
+Git LFS command failed or not installed/configured: Command '['git', 'lfs', 'ls-files']' returned non-zero exit status 1.

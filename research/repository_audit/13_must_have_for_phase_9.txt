@@ -1,0 +1,114 @@
+================================================================================
+NEUROAEGIS — MUST HAVE FOR PHASE 9 (PAPER WRITING & PUBLICATION PACKAGE)
+================================================================================
+AUDIT SCOPE:
+Examines which artifacts are necessary for the receiving user to continue
+manuscript preparation, verify statistical evidence, inspect figures, and
+compile the final publication package WITHOUT rerunning expensive experiments.
+
+================================================================================
+PHASE 9 ARTIFACT FORENSIC INVENTORY
+================================================================================
+
+1. Final Model Checkpoint (frozen_cnn_gnn_gru.pt)
+   Required for Paper? YES
+   Why? Verifies architecture weight hash in Table 1, allows referee code review.
+   Present Locally? YES (387.4 KB, SHA256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca)
+   Present in GitHub? NO (Ignored by *.pt)
+   Transfer Required? YES (P0)
+
+2. Frozen Graph Structure & Config (frozen_graph_adjacency.csv, frozen_graph_config.json)
+   Required for Paper? YES
+   Why? Documents Figure 2 (spatial graph topology, 23 nodes, 40 edges, theta=0.30).
+   Present Locally? YES
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+3. Final Test Predictions (research/phase_4b/results/final_test_predictions.csv)
+   Required for Paper? YES
+   Why? Primary evidentiary source for PR curves, ROC curves, and Tables 2-4.
+   Present Locally? YES (15.16 MB, 65,584 window predictions)
+   Present in GitHub? YES (Tracked in Git, SHA256: 82a5c43d837651a26d116c4e043ba4c10cbf83ad397b250ddf13a3febe1f77d3)
+   Transfer Required? NO (Already in GitHub)
+
+4. Final Event-Level & Patient-Level Results
+   Required for Paper? YES
+   Why? Documents patient-stratified metrics (Sens=91.67%, FAR=0.23/h, Latency=3.12s).
+   Present Locally? YES (research/phase_4b/results/final_test_metrics.json, patient_metrics.csv)
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+5. Ablation Study Results (Phase 3, 4A, 4B, 7)
+   Required for Paper? YES
+   Why? Fills Table 3 (Baseline 1D CNN vs CNN+GNN vs CNN+GNN+GRU ablation progression).
+   Present Locally? YES (research/phase_7/results/master_ablation_table.csv)
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+6. Statistical Robustness & Hypothesis Testing Results
+   Required for Paper? YES
+   Why? Supplies 95% bootstrap confidence intervals, p-values (p<0.001) in Table 4.
+   Present Locally? YES (research/phase_7/results/bootstrap_distributions.csv, statistical_tests.json)
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+7. Explainable AI (XAI) Attribution Results
+   Required for Paper? YES
+   Why? Supplies Figure 3 & Figure 4 (spatial top-k channel attributions, temporal dynamics).
+   Present Locally? YES (research/phase_5/results/channel_attributions.csv, temporal_attributions.csv)
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+8. Siena Cross-Domain Evaluation & Adaptation Results
+   Required for Paper? YES
+   Why? Supplies Table 5 (Zero-shot vs Temperature-scaled domain transfer performance).
+   Present Locally? YES (research/phase_6/results/siena_adapted_summary.json, siena_test_predictions.csv)
+   Present in GitHub? YES (Tracked in Git)
+   Transfer Required? NO (Already in GitHub)
+
+9. High-Resolution Publication Figures
+   Required for Paper? YES
+   Why? Directly included in LaTeX manuscript (Figure 1-5, PDF/PNG 300+ DPI).
+   Present Locally? YES (research/phase_9/figures/ and research/phase_8/figures/)
+   Present in GitHub? YES (Tracked in Git, all figures committed)
+   Transfer Required? NO (Already in GitHub)
+
+10. Master Publication Workbook
+    Required for Paper? YES
+    Why? Consolidated supplementary data file for journal submission.
+    Present Locally? YES (research/phase_8/tables/phase_8_master_results_workbook.xlsx)
+    Present in GitHub? YES (Tracked in Git, 34.5 KB)
+    Transfer Required? NO (Already in GitHub)
+
+11. Full LaTeX Manuscript & Supplementary Information Source Code
+    Required for Paper? YES
+    Why? Editable publication manuscript files.
+    Present Locally? YES (research/phase_9/paper/manuscript.tex, supplementary_information.tex)
+    Present in GitHub? YES (Tracked in Git)
+    Transfer Required? NO (Already in GitHub)
+
+12. Compiled Publication PDFs
+    Required for Paper? YES
+    Why? Immediate distribution / review copy.
+    Present Locally? YES (research/phase_9/paper/manuscript.pdf, supplementary_information.pdf)
+    Present in GitHub? YES (Tracked in Git)
+    Transfer Required? NO (Already in GitHub)
+
+13. Scientific Evidence Traceability Map
+    Required for Paper? YES
+    Why? Cross-links all manuscript claims to underlying numeric data files.
+    Present Locally? YES (research/phase_8/audit/scientific_evidence_map.csv)
+    Present in GitHub? YES (Tracked in Git)
+    Transfer Required? NO (Already in GitHub)
+
+================================================================================
+PHASE 9 CONCLUSION:
+================================================================================
+EVERY SINGLE scientific evidence table, prediction record, attribution metric,
+ablation result, figure, and manuscript file is ALREADY COMMITTED AND PUSHED
+TO GITHUB (commit 2ac037b).
+
+The only piece missing for complete technical reproducibility is the model
+weight checkpoint `frozen_cnn_gnn_gru.pt` (378.4 KB). Once transferred,
+Phase 9 writing and verification is 100% complete and fully reproducible.
+================================================================================

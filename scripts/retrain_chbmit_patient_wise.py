@@ -62,7 +62,7 @@ LGBM_PARAMS = {
     "reg_alpha": 0.1,
     "reg_lambda": 1.0,
     "random_state": 42,
-    "n_jobs": -1,
+    "n_jobs": 2,
     "importance_type": "split",
     "verbosity": -1,
     # scale_pos_weight will be computed from data
@@ -103,11 +103,14 @@ def main():
     print(f"  Shape: {df.shape}")
 
     feature_cols = [c for c in df.columns if c not in DROP_COLS]
-    X = df[feature_cols].values
-    y = df["target"].values
+    X = df[feature_cols].to_numpy(dtype=np.float32, copy=False)
+    y = df["target"].to_numpy(dtype=np.int32, copy=False)
     groups = df["patient_id"].values
-
     patients = sorted(df["patient_id"].unique())
+    del df
+    import gc
+    gc.collect()
+
     print(f"  Patients: {patients}")
     print(f"  Target distribution: 0={int((y==0).sum())}, 1={int((y==1).sum())}")
     print(f"  Features: {len(feature_cols)}")

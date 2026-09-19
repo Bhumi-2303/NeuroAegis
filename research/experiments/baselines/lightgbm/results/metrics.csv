@@ -1,0 +1,2 @@
+model,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms
+LightGBM,0.69973,0.00692,0.06907,0.98748,0.01578,0.02569,0.52828,0.04545,30.0,2745,344,54.02,0.98482,0.0027

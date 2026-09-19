@@ -1,0 +1,61 @@
+{
+  "experiment": "NeuroAegis Experiment 6: Cross-Domain Zero-Shot Generalization",
+  "dataset_name": "Siena Scalp EEG Database (Available Subset)",
+  "source_model": "NeuroAegis Model C (CNN + Spatial GNN + Causal GRU)",
+  "model_parameters": 91858,
+  "model_c_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "zero_shot_rule": "Strictly enforced: 0 Siena training labels, 0 threshold tuning, frozen tau=0.50",
+  "evaluated_patients_count": 2,
+  "evaluated_recordings_count": 6,
+  "evaluated_duration_hours": 2.6721,
+  "total_evaluated_windows": 3840,
+  "decision_threshold": 0.5,
+  "window_metrics": {
+    "auroc": 0.89934,
+    "auprc": 0.70284,
+    "sensitivity": 0.51613,
+    "specificity": 0.99865,
+    "precision": 0.92754,
+    "f1_score": 0.66321,
+    "balanced_accuracy": 0.75739,
+    "accuracy": 0.98307,
+    "confusion_matrix": {
+      "tp": 64,
+      "fp": 5,
+      "tn": 3711,
+      "fn": 60
+    }
+  },
+  "event_metrics": {
+    "total_seizure_events": 4,
+    "detected_seizure_events": 4,
+    "missed_seizure_events": 0,
+    "event_sensitivity": 1.0,
+    "mean_detection_delay_sec": 19.38,
+    "median_detection_delay_sec": 17.5,
+    "min_detection_delay_sec": 10.5,
+    "max_detection_delay_sec": 32.0
+  },
+  "alarm_metrics": {
+    "raw_false_positive_windows": 5,
+    "raw_fp_windows_per_24h": 44.91,
+    "clustered_false_alarm_episodes": 0,
+    "false_alarms_per_24h": 0.0
+  },
+  "complete_recordings_subset_metrics": {
+    "description": "Evaluation restricted to the 4 complete recordings containing full seizure contexts",
+    "recordings_count": 4,
+    "duration_hours": 2.4597,
+    "total_windows": 3538,
+    "auroc": 0.91201,
+    "auprc": 0.71355,
+    "window_sensitivity": 0.51613,
+    "window_specificity": 0.99854,
+    "precision": 0.92754,
+    "f1_score": 0.66321,
+    "event_sensitivity": "4/4 (100.0%)",
+    "mean_detection_delay_sec": 19.38,
+    "false_alarm_episodes": 0,
+    "fa_per_24h": 0.0
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "model_type": "gru",
+  "selected_best_epoch": 1,
+  "validation_metrics": {
+    "threshold": 0.5,
+    "total_windows": 293410,
+    "true_positives": 428,
+    "false_positives": 5739,
+    "true_negatives": 286932,
+    "false_negatives": 311,
+    "sensitivity": 0.57916,
+    "specificity": 0.98039,
+    "precision": 0.0694,
+    "f1_score": 0.12395,
+    "balanced_accuracy": 0.77978,
+    "accuracy": 0.97938,
+    "auroc": 0.89046,
+    "auprc": 0.39365,
+    "total_duration_hours": 203.82,
+    "false_alarms_per_24h": 675.78,
+    "event_level_sensitivity": 0.6,
+    "mean_detection_delay_sec": 11.8,
+    "detected_seizures": 15,
+    "total_seizures": 25
+  },
+  "test_metrics": {
+    "total_windows": 219909,
+    "recording_hours": 152.82,
+    "auroc": 0.9834,
+    "auprc": 0.7545,
+    "sensitivity": 0.76766,
+    "specificity": 0.99875,
+    "precision": 0.64173,
+    "f1_score": 0.69907,
+    "balanced_accuracy": 0.88321,
+    "confusion_matrix": {
+      "tp": 489,
+      "fp": 273,
+      "tn": 218999,
+      "fn": 148
+    },
+    "event_metrics": {
+      "total_events": 22,
+      "detected_events": 21,
+      "missed_events": 1,
+      "event_sensitivity": 0.9545,
+      "mean_detection_delay_sec": 11.88,
+      "median_detection_delay_sec": 9.0,
+      "min_detection_delay_sec": 5.5,
+      "max_detection_delay_sec": 29.5
+    },
+    "false_alarm_metrics": {
+      "false_alarm_count": 273,
+      "non_seizure_hours": 152.82,
+      "false_alarms_per_24h": 42.87
+    },
+    "patient_breakdown": [
+      {
+        "patient_id": "chb01",
+        "total_windows": 58353,
+        "recording_hours": 40.52,
+        "num_seizures": 7,
+        "detected_seizures": 6,
+        "missed_seizures": 1,
+        "event_sensitivity": 0.8571,
+        "window_sensitivity": 0.75556,
+        "window_specificity": 0.99991,
+        "false_alarms_count": 5,
+        "false_alarms_per_day": 2.96,
+        "mean_detection_delay_sec": 12.58
+      },
+      {
+        "patient_id": "chb02",
+        "total_windows": 50747,
+        "recording_hours": 35.24,
+        "num_seizures": 3,
+        "detected_seizures": 3,
+        "missed_seizures": 0,
+        "event_sensitivity": 1.0,
+        "window_sensitivity": 0.78571,
+        "window_specificity": 0.99939,
+        "false_alarms_count": 31,
+        "false_alarms_per_day": 21.11,
+        "mean_detection_delay_sec": 9.67
+      },
+      {
+        "patient_id": "chb03",
+        "total_windows": 54684,
+        "recording_hours": 37.98,
+        "num_seizures": 7,
+        "detected_seizures": 7,
+        "missed_seizures": 0,
+        "event_sensitivity": 1.0,
+        "window_sensitivity": 0.65031,
+        "window_specificity": 0.99866,
+        "false_alarms_count": 73,
+        "false_alarms_per_day": 46.14,
+        "mean_detection_delay_sec": 9.14
+      },
+      {
+        "patient_id": "chb05",
+        "total_windows": 56125,
+        "recording_hours": 38.98,
+        "num_seizures": 5,
+        "detected_seizures": 5,
+        "missed_seizures": 0,
+        "event_sensitivity": 1.0,
+        "window_sensitivity": 0.85714,
+        "window_specificity": 0.99707,
+        "false_alarms_count": 164,
+        "false_alarms_per_day": 100.99,
+        "mean_detection_delay_sec": 16.2
+      }
+    ]
+  },
+  "resource_metrics": {
+    "trainable_parameters": 39361,
+    "frozen_backbone_parameters": 52497,
+    "total_parameters": 91858,
+    "checkpoint_size_mb": 0.154,
+    "training_time_sec": 151.21,
+    "inference_duration_sec": 0.671,
+    "latency_ms_per_window": 0.4621,
+    "peak_rss_mb": 2677.6,
+    "mps_allocated_mb": 0.79
+  }
+}

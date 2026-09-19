@@ -1,0 +1,2 @@
+model,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms
+Linear SVM,0.65417,0.01189,0.72527,0.44104,0.00376,0.00747,0.58316,0.86364,1.32,122565,3286,516.06,0.44186,0.0001

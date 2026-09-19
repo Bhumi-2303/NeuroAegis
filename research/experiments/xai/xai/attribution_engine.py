@@ -84,18 +84,26 @@ class AttributionEngine:
         # Linear interpolation from baseline to input
         alphas = torch.linspace(1.0 / steps, 1.0, steps, device=self.device)
         
-        for alpha in alphas:
-            x_step = baseline + alpha * delta
-            x_step.requires_grad_(True)
-            
-            logit = self.model.forward_differentiable(x_step)
-            logit.backward()
-            
-            with torch.no_grad():
-                accumulated_grads += x_step.grad
+        try:
+            for alpha in alphas:
+                x_step = baseline + alpha * delta
+                x_step.requires_grad_(True)
                 
-        avg_grads = accumulated_grads / steps
-        attribution = (delta * avg_grads).detach()
+                logit = self.model.forward_differentiable(x_step)
+                logit.backward()
+                
+                with torch.no_grad():
+                    if x_step.grad is not None:
+                        accumulated_grads += x_step.grad
+                self.model.zero_grad(set_to_none=True)
+                del x_step, logit
+                    
+            avg_grads = accumulated_grads / steps
+            attribution = (delta * avg_grads).detach()
+        finally:
+            self.model.zero_grad(set_to_none=True)
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
         
         # Completeness check: sum(IG) should approximate logit_input - logit_baseline
         ig_sum = attribution.sum().item()
@@ -128,14 +136,20 @@ class AttributionEngine:
         x_seq = x_seq.to(self.device).float().clone()
         x_seq.requires_grad_(True)
         
-        logit = self.model.forward_differentiable(x_seq)
-        logit.backward()
-        
-        grad = x_seq.grad.detach()
-        attribution = (x_seq.detach() * grad)
-        
-        logit_val = logit.item()
-        prob_val = torch.sigmoid(torch.tensor(logit_val)).item()
+        try:
+            logit = self.model.forward_differentiable(x_seq)
+            logit.backward()
+            
+            grad = x_seq.grad.detach() if x_seq.grad is not None else torch.zeros_like(x_seq)
+            attribution = (x_seq.detach() * grad)
+            
+            logit_val = logit.item()
+            prob_val = torch.sigmoid(torch.tensor(logit_val)).item()
+            del logit
+        finally:
+            self.model.zero_grad(set_to_none=True)
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
         
         return {
             "attribution": attribution,  # (1, 8, 23, 1280)
@@ -143,6 +157,7 @@ class AttributionEngine:
             "prob_input": prob_val,
             "method": "Gradient x Input"
         }
+
 
     def compute_gnn_node_attribution(
         self,

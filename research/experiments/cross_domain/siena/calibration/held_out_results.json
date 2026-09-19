@@ -1,0 +1,44 @@
+{
+  "experiment": "NeuroAegis Experiment 6B: Cross-Domain Calibration (Held-Out Evaluation)",
+  "held_out_patient": "PN12",
+  "held_out_recording": "PN12/PN12-3.edf",
+  "held_out_duration_hours": 0.5525,
+  "held_out_windows": 794,
+  "held_out_seizures": 1,
+  "frozen_calibrated_threshold": 0.5,
+  "zero_shot_threshold": 0.5,
+  "comparison": {
+    "zero_shot_baseline": {
+      "threshold": 0.5,
+      "auroc": 0.9098,
+      "auprc": 0.6932,
+      "window_sensitivity": 0.17949,
+      "window_specificity": 1.0,
+      "precision": 1.0,
+      "f1_score": 0.30435,
+      "event_sensitivity": 1.0,
+      "detected_events": 1,
+      "total_events": 1,
+      "mean_detection_delay_sec": 10.5,
+      "raw_fp_windows": 0,
+      "false_alarm_episodes": 0,
+      "fa_per_24h": 0.0
+    },
+    "calibrated_operating_point": {
+      "threshold": 0.5,
+      "auroc": 0.9098,
+      "auprc": 0.6932,
+      "window_sensitivity": 0.17949,
+      "window_specificity": 1.0,
+      "precision": 1.0,
+      "f1_score": 0.30435,
+      "event_sensitivity": 1.0,
+      "detected_events": 1,
+      "total_events": 1,
+      "mean_detection_delay_sec": 10.5,
+      "raw_fp_windows": 0,
+      "false_alarm_episodes": 0,
+      "fa_per_24h": 0.0
+    }
+  }
+}

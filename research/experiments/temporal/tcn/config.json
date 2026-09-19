@@ -1,0 +1,47 @@
+{
+  "experiment": "temporal_tcn",
+  "model_type": "tcn",
+  "input_dimension": 128,
+  "sequence_length": 8,
+  "temporal_span_sec": 22.5,
+  "batch_size": 4,
+  "epochs": 3,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "loss_function": "BinaryFocalLossWithLogits(gamma=2.0, alpha=0.25)",
+  "negative_sampling_ratio": 10.0,
+  "random_seed": 42,
+  "device": "mps",
+  "git_commit": "f6b32ee20036e86aa626aa11217b80e999fdfc2e",
+  "train_patients": [
+    "chb04",
+    "chb09",
+    "chb11",
+    "chb12",
+    "chb13",
+    "chb14",
+    "chb15",
+    "chb16",
+    "chb17",
+    "chb18",
+    "chb19",
+    "chb20",
+    "chb21",
+    "chb22",
+    "chb23",
+    "chb24"
+  ],
+  "val_patients": [
+    "chb06",
+    "chb07",
+    "chb08",
+    "chb10"
+  ],
+  "test_patients": [
+    "chb01",
+    "chb02",
+    "chb03",
+    "chb05"
+  ],
+  "timestamp": "2026-09-18T17:25:09Z"
+}

@@ -1,0 +1,4 @@
+epoch,train_loss,val_auprc,val_auroc,val_sensitivity,val_specificity,val_precision,val_f1,val_balanced_accuracy,val_event_sensitivity,val_false_alarms_per_24h,val_mean_detection_delay_sec,live_rss_mb,peak_rss_mb,epoch_time_sec
+1,0.02263,0.04071,0.77024,0.49797,0.85883,0.00883,0.01735,0.6784,0.88,4865.07,5.66,1979.9,6342.0,535.7
+2,0.01832,0.03338,0.77104,0.36401,0.90256,0.00934,0.01822,0.63328,0.76,3358.19,7.26,1985.5,6342.0,521.3
+3,0.01627,0.06439,0.81239,0.42219,0.91917,0.01302,0.02525,0.67068,0.8,2785.79,7.47,1988.5,6342.0,513.9

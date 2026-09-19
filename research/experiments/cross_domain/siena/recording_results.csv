@@ -1,0 +1,7 @@
+patient_id,recording_id,duration_sec,duration_hours,total_windows,positive_windows,negative_windows,seizure_count,detected_seizures,missed_seizures,event_sensitivity,mean_detection_delay_sec,raw_fp_windows,false_alarm_episodes,fa_per_24h,inference_time_sec,is_truncated
+PN00,PN00/PN00-1.edf,2625.0,0.7292,1049,28,1021,1,1,0,1.0,32.0,0,0,0.0,29.42,False
+PN00,PN00/PN00-2.edf,380.0,0.1056,151,0,151,0,0,0,1.0,,0,0,0.0,1.14,True
+PN00,PN00/PN00-3.edf,380.0,0.1056,151,0,151,0,0,0,1.0,,0,0,0.0,1.0,True
+PN00,PN00/PN00-4.edf,2102.0,0.5839,839,30,809,1,1,0,1.0,19.0,1,0,0.0,5.87,False
+PN00,PN00/PN00-5.edf,2143.0,0.5953,856,27,829,1,1,0,1.0,16.0,4,0,0.0,5.15,False
+PN12,PN12/PN12-3.edf,1989.0,0.5525,794,39,755,1,1,0,1.0,10.5,0,0,0.0,4.55,False

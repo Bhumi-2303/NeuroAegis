@@ -1,0 +1,51 @@
+best_val_auprc: 0.00548
+decision_threshold: 0.4
+eval_config:
+  allowed_delay_sec: 30.0
+  merge_gap_sec: 15.0
+  min_predicted_event_duration_sec: 5.0
+  min_seizure_duration_sec: 10.0
+  multi_alarm_policy: first_only
+  smoothing_window_size: 3
+feature_count: 57
+git_commit: f6b32ee20036e86aa626aa11217b80e999fdfc2e
+inference_latency_ms: 0.001
+model: Random Forest
+seed: 42
+selected_hyperparameters:
+  class_weight: balanced
+  max_depth: 10
+  n_estimators: 100
+  n_jobs: 4
+  random_state: 42
+test_patients:
+- chb01
+- chb02
+- chb03
+- chb05
+test_samples: 219909
+train_patients:
+- chb04
+- chb09
+- chb11
+- chb12
+- chb13
+- chb14
+- chb15
+- chb16
+- chb17
+- chb18
+- chb19
+- chb20
+- chb21
+- chb22
+- chb23
+- chb24
+train_samples: 36388
+training_time_sec: 6.6072
+validation_patients:
+- chb06
+- chb07
+- chb08
+- chb10
+validation_samples: 293410

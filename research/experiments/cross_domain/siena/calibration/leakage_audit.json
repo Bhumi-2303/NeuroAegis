@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-09-19T07:21:34Z",
+  "model_c_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "patient_leakage_check": {
+    "calibration_patients": [
+      "PN00"
+    ],
+    "held_out_patients": [
+      "PN12"
+    ],
+    "overlap": [],
+    "status": "PASSED (0 patient overlap)"
+  },
+  "recording_leakage_check": {
+    "calibration_recordings": [
+      "PN00/PN00-1.edf",
+      "PN00/PN00-4.edf",
+      "PN00/PN00-5.edf",
+      "PN00/PN00-2.edf",
+      "PN00/PN00-3.edf"
+    ],
+    "held_out_recordings": [
+      "PN12/PN12-3.edf"
+    ],
+    "overlap": [],
+    "status": "PASSED (0 recording overlap)"
+  },
+  "seizure_event_leakage_check": {
+    "calibration_seizures": [
+      "PN00_sz04",
+      "PN00_sz03",
+      "PN00_sz05",
+      "PN00_sz01",
+      "PN00_sz02"
+    ],
+    "held_out_seizures": [
+      "PN12_sz03"
+    ],
+    "overlap": [],
+    "status": "PASSED (0 seizure overlap)"
+  },
+  "strict_isolation_summary": "Zero held-out labels, predictions, or statistics were used during calibration."
+}

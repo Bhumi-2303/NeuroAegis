@@ -133,11 +133,18 @@ class EmbeddingCacheManager:
                 batch = windows[b:b+self.batch_size].to(self.device)
                 emb = self.model.extract_backbone_embedding(batch).cpu()
                 embs.append(emb)
+                del batch
 
         if len(embs) > 0:
             rec_embs = torch.cat(embs, dim=0).numpy().astype(np.float32)
         else:
             rec_embs = np.zeros((0, 128), dtype=np.float32)
+
+        del raw, rec_data, t_data, windows, embs
+        import gc
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
 
         # Atomic write to disk
         temp_path = cache_path.replace(".npy", "_tmp.npy")
@@ -182,6 +189,9 @@ class EmbeddingCacheManager:
                 progress_callback(rec_idx + 1, total_recs, rec_id)
 
         unified_embs = np.concatenate(all_embs, axis=0).astype(np.float32)
+        del all_embs
+        import gc
+        gc.collect()
         
         # Save unified array
         temp_path = unified_path.replace(".npy", "_tmp.npy")
@@ -189,3 +199,4 @@ class EmbeddingCacheManager:
         os.replace(temp_path, unified_path)
 
         return unified_embs
+

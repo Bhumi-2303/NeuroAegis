@@ -1,0 +1,17 @@
+{
+    "model": "Linear SVM",
+    "auroc": 0.65417,
+    "auprc": 0.01189,
+    "sensitivity": 0.72527,
+    "specificity": 0.44104,
+    "precision": 0.00376,
+    "f1_score": 0.00747,
+    "balanced_accuracy": 0.58316,
+    "event_sensitivity": 0.86364,
+    "detection_delay_sec": 1.32,
+    "false_positive_windows": 122565,
+    "false_alarm_episodes": 3286,
+    "fa_per_24h": 516.06,
+    "accuracy": 0.44186,
+    "latency_ms": 0.0001
+}

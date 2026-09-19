@@ -1,0 +1,17 @@
+{
+    "model": "XGBoost",
+    "auroc": 0.71778,
+    "auprc": 0.0098,
+    "sensitivity": 0.01413,
+    "specificity": 0.99762,
+    "precision": 0.01695,
+    "f1_score": 0.01541,
+    "balanced_accuracy": 0.50587,
+    "event_sensitivity": 0.0,
+    "detection_delay_sec": 0.0,
+    "false_positive_windows": 522,
+    "false_alarm_episodes": 75,
+    "fa_per_24h": 11.78,
+    "accuracy": 0.99477,
+    "latency_ms": 0.0002
+}

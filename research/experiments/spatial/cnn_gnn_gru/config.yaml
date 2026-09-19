@@ -1,0 +1,18 @@
+eval_config:
+  allowed_delay_sec: 30.0
+  merge_gap_sec: 15.0
+  min_predicted_event_duration_sec: 5.0
+  min_seizure_duration_sec: 10.0
+  multi_alarm_policy: first_only
+  smoothing_window_size: 3
+git_commit: f6b32ee20036e86aa626aa11217b80e999fdfc2e
+model_name: CNN + GNN + GRU (Model C Frozen)
+parameters: 91858
+stage: 'Step 2: + Temporal Sequence'
+test_hours: 152.82
+test_patients:
+- chb01
+- chb02
+- chb03
+- chb05
+threshold: 0.5

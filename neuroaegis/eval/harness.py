@@ -42,27 +42,35 @@ def run_loso_evaluation(
         model = model_factory(f"fold_{i}")
         test_loader = data_loader_factory(list(test_patients), "test")
         
-        y_true_all = []
-        y_pred_probs_all = []
+        y_true_chunks = []
+        y_pred_probs_chunks = []
         total_hours = 0.0
         
         # Inference
         for X_batch, y_batch in test_loader:
             with torch.no_grad():
                 out = model(X_batch)
-                probs = torch.sigmoid(out.logits).cpu().numpy().flatten()
+                probs = torch.sigmoid(out.logits).cpu().numpy().astype(np.float32).flatten()
                 
-            y_true_all.extend(y_batch.cpu().numpy().flatten())
-            y_pred_probs_all.extend(probs)
+            y_true_chunks.append(y_batch.cpu().numpy().astype(np.float32).flatten())
+            y_pred_probs_chunks.append(probs)
             # Rough proxy for duration: assume each window is 5 sec
             total_hours += (X_batch.size(0) * 5.0) / 3600.0
+            del X_batch, y_batch, out, probs
             
+        y_true_arr = np.concatenate(y_true_chunks, axis=0) if y_true_chunks else np.array([], dtype=np.float32)
+        y_pred_arr = np.concatenate(y_pred_probs_chunks, axis=0) if y_pred_probs_chunks else np.array([], dtype=np.float32)
+        del y_true_chunks, y_pred_probs_chunks
+        
         metrics = evaluate_event_level(
-            np.array(y_true_all),
-            np.array(y_pred_probs_all),
+            y_true_arr,
+            y_pred_arr,
             eval_config,
             total_duration_hours=total_hours
         )
+        del y_true_arr, y_pred_arr, model, test_loader
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         fold_metrics.append(metrics)
         
     return fold_metrics
@@ -87,26 +95,35 @@ def run_external_evaluation(
     model = model_loader(model_path)
     test_loader = data_loader_factory(test_patients, "test")
     
-    y_true_all = []
-    y_pred_probs_all = []
+    y_true_chunks = []
+    y_pred_probs_chunks = []
     total_hours = 0.0
     
     # Inference
     for X_batch, y_batch in test_loader:
         with torch.no_grad():
             out = model(X_batch)
-            probs = torch.sigmoid(out.logits).cpu().numpy().flatten()
+            probs = torch.sigmoid(out.logits).cpu().numpy().astype(np.float32).flatten()
             
-        y_true_all.extend(y_batch.cpu().numpy().flatten())
-        y_pred_probs_all.extend(probs)
+        y_true_chunks.append(y_batch.cpu().numpy().astype(np.float32).flatten())
+        y_pred_probs_chunks.append(probs)
         total_hours += (X_batch.size(0) * 5.0) / 3600.0
+        del X_batch, y_batch, out, probs
         
+    y_true_arr = np.concatenate(y_true_chunks, axis=0) if y_true_chunks else np.array([], dtype=np.float32)
+    y_pred_arr = np.concatenate(y_pred_probs_chunks, axis=0) if y_pred_probs_chunks else np.array([], dtype=np.float32)
+    del y_true_chunks, y_pred_probs_chunks
+    
     metrics = evaluate_event_level(
-        np.array(y_true_all),
-        np.array(y_pred_probs_all),
+        y_true_arr,
+        y_pred_arr,
         eval_config,
         total_duration_hours=total_hours
     )
+    del y_true_arr, y_pred_arr, model, test_loader
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()
     
     # Return as list of 1 to be compatible with aggregator
     return [metrics]
+

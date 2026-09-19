@@ -126,11 +126,16 @@ class MultiChannelEEGDataset(Dataset):
             self.data_array = normalized_flat.reshape(N_samples, self.n_channels, self.n_features)
             
         # Metadata
-        self.labels = self.df['target'].values
+        self.num_samples = N_samples
+        self.labels = self.df['target'].to_numpy(dtype=np.int32, copy=False)
         self.patient_ids = self.df['patient_id'].values
+        del self.df
+        import gc
+        gc.collect()
 
     def __len__(self) -> int:
-        return len(self.df)
+        return self.num_samples
+
 
     def __getitem__(self, idx: int) -> Dict[str, Any]:
         """

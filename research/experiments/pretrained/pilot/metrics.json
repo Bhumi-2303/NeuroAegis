@@ -1,0 +1,18 @@
+{
+    "model": "BENDR Biosignal Transformer",
+    "tier": "GREEN (Feasible Pilot)",
+    "parameters": 2467521,
+    "auroc": 0.58518,
+    "auprc": 0.0046,
+    "sensitivity": 1.0,
+    "specificity": 0.0,
+    "precision": 0.0029,
+    "f1_score": 0.00578,
+    "event_sensitivity": 1.0,
+    "detected_events": 22,
+    "total_events": 22,
+    "detection_delay_sec": 0.0,
+    "fa_per_24h": 0.0,
+    "latency_ms": 1.7796,
+    "peak_rss_mb": 2495.9
+}

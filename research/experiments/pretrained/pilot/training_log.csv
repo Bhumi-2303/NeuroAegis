@@ -1,0 +1,4 @@
+epoch,train_loss,val_auprc,val_auroc,val_sensitivity,val_specificity,val_f1,epoch_time_sec,peak_rss_mb
+1,0.0303,0.00462,0.67718,0.0,1.0,0.0,663.6,6552.5
+2,0.02946,0.00476,0.68645,0.0,1.0,0.0,642.8,6552.5
+3,0.02944,0.00479,0.68854,0.0,1.0,0.0,645.7,6552.5

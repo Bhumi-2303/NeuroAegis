@@ -1,0 +1,23 @@
+patient_id,recording_id,seizure_id,seizure_start_sec,seizure_end_sec,seizure_duration_sec,detected,matched_alarm_id,alarm_start_sec,alarm_end_sec,alarm_duration_sec,onset_delay_sec,maximum_probability,probability_at_alarm_onset,threshold,event_match_status,false_alarm_related,notes
+chb01,chb01_03,seizure_01,2996.0,3036.0,40.0,True,ALARM_001,3000.0,3042.5,42.5,4.0,0.675203,0.509395,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb01,chb01_04,seizure_01,1467.0,1494.0,27.0,True,ALARM_002,1470.0,1512.5,42.5,3.0,0.67156,0.580378,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb01,chb01_15,seizure_01,1732.0,1772.0,40.0,False,,,,,,0.481285,,0.5,MISSED_BELOW_THRESHOLD,False,Missed: Maximum probability (0.4813) was below threshold tau=0.50.
+chb01,chb01_16,seizure_01,1015.0,1066.0,51.0,True,ALARM_003,1027.5,1062.5,35.0,12.5,0.64267,0.528101,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb01,chb01_18,seizure_01,1720.0,1810.0,90.0,True,ALARM_004,1725.0,1812.5,87.5,5.0,0.707671,0.543435,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb01,chb01_21,seizure_01,327.0,420.0,93.0,True,ALARM_005,330.0,420.0,90.0,3.0,0.706664,0.537501,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb01,chb01_26,seizure_01,1862.0,1963.0,101.0,True,ALARM_006,1870.0,1965.0,95.0,8.0,0.732499,0.519408,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb02,chb02_16,seizure_01,130.0,212.0,82.0,True,ALARM_012,137.5,217.5,80.0,7.5,0.753803,0.501244,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb02,chb02_16+,seizure_01,2972.0,3053.0,81.0,True,ALARM_011,2977.5,3062.5,85.0,5.5,0.755921,0.501677,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb02,chb02_19,seizure_01,3369.0,3378.0,9.0,True,ALARM_013,3370.0,3387.5,17.5,1.0,0.606596,0.570238,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_01,seizure_01,362.0,414.0,52.0,True,ALARM_014,365.0,420.0,55.0,3.0,0.642686,0.506342,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_02,seizure_01,731.0,796.0,65.0,True,ALARM_015,735.0,802.5,67.5,4.0,0.668483,0.500338,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_03,seizure_01,432.0,501.0,69.0,True,ALARM_016,432.5,505.0,72.5,0.5,0.630397,0.51785,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_04,seizure_01,2162.0,2214.0,52.0,True,ALARM_018,2165.0,2232.5,67.5,3.0,0.651755,0.53885,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_34,seizure_01,1982.0,2029.0,47.0,True,ALARM_022,1997.5,2062.5,65.0,15.5,0.616495,0.52693,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_35,seizure_01,2592.0,2656.0,64.0,True,ALARM_024,2595.0,2672.5,77.5,3.0,0.656912,0.510589,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb03,chb03_36,seizure_01,1725.0,1778.0,53.0,True,ALARM_025,1730.0,1795.0,65.0,5.0,0.676555,0.516112,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb05,chb05_06,seizure_01,417.0,532.0,115.0,True,ALARM_026,422.5,532.5,110.0,5.5,0.809268,0.558704,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb05,chb05_13,seizure_01,1086.0,1196.0,110.0,True,ALARM_043,1092.5,1180.0,87.5,6.5,0.733695,0.520938,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb05,chb05_16,seizure_01,2317.0,2413.0,96.0,True,ALARM_048,2320.0,2415.0,95.0,3.0,0.75033,0.504195,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb05,chb05_17,seizure_01,2451.0,2571.0,120.0,True,ALARM_050,2455.0,2572.5,117.5,4.0,0.774881,0.515293,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.
+chb05,chb05_22,seizure_01,2348.0,2465.0,117.0,True,ALARM_051,2372.5,2465.0,92.5,24.5,0.782485,0.576835,0.5,DETECTED_WITHIN_TOLERANCE,False,Detected by Protocol V1 alarm episode.

@@ -1,0 +1,30 @@
+{
+  "experiment": "NeuroAegis Experiment 6B: Cross-Domain Calibration",
+  "model": "Model C (CNN + Spatial GNN + Causal GRU)",
+  "model_c_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "calibration_patient": "PN00",
+  "calibration_recordings_count": 5,
+  "calibration_duration_hours": 2.12,
+  "calibration_total_windows": 3046,
+  "selected_optimal_threshold": 0.5,
+  "selection_rule": "Maximize F1 on PN00 subject to Event Sensitivity >= 90%",
+  "calibration_performance": {
+    "auroc": 0.91259,
+    "auprc": 0.77098,
+    "sensitivity": 0.67059,
+    "specificity": 0.99831,
+    "precision": 0.91935,
+    "f1_score": 0.77551,
+    "balanced_accuracy": 0.83445,
+    "event_sensitivity": 1.0,
+    "detected_seizures": 3,
+    "total_seizures": 3,
+    "mean_detection_delay_sec": 22.33,
+    "false_alarm_episodes": 0,
+    "fa_per_24h": 0.0
+  },
+  "secondary_operating_points": {
+    "max_auprc_threshold": 0.05,
+    "max_event_sensitivity_threshold": 0.05
+  }
+}

@@ -1,0 +1,47 @@
+{
+    "model": "BENDR Biosignal Transformer (Green-Tier Pilot)",
+    "parameters": 2467521,
+    "d_model": 256,
+    "nhead": 8,
+    "num_layers": 4,
+    "dim_feedforward": 512,
+    "dropout": 0.1,
+    "decision_threshold": 0.1,
+    "best_val_auprc": 0.00479,
+    "git_commit": "f6b32ee20036e86aa626aa11217b80e999fdfc2e",
+    "seed": 42,
+    "batch_size": 64,
+    "epochs": 3,
+    "peak_rss_mb": 2495.9,
+    "latency_ms": 1.7796,
+    "train_patients": [
+        "chb04",
+        "chb09",
+        "chb11",
+        "chb12",
+        "chb13",
+        "chb14",
+        "chb15",
+        "chb16",
+        "chb17",
+        "chb18",
+        "chb19",
+        "chb20",
+        "chb21",
+        "chb22",
+        "chb23",
+        "chb24"
+    ],
+    "validation_patients": [
+        "chb06",
+        "chb07",
+        "chb08",
+        "chb10"
+    ],
+    "test_patients": [
+        "chb01",
+        "chb02",
+        "chb03",
+        "chb05"
+    ]
+}

@@ -340,7 +340,7 @@ def run_phase4a_training():
             y_epoch = y_epoch[perm]
             
             dataset = TensorDataset(X_epoch, y_epoch)
-            dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False)
+            dataloader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True, drop_last=False, num_workers=0, pin_memory=False)
             
             model.train()
             epoch_loss = 0.0
@@ -360,11 +360,19 @@ def run_phase4a_training():
                 
                 epoch_loss += loss.item()
                 n_batches += 1
+                del batch_x, batch_y, logits, loss
                 
             scheduler.step()
             avg_train_loss = epoch_loss / n_batches if n_batches > 0 else 0.0
             t_train1 = time.time()
             print(f"Epoch {epoch+1} Training: Loss = {avg_train_loss:.5f} ({t_train1 - t_train0:.1f}s)")
+            
+            # Free training data before validation
+            del X_neg, y_neg, X_epoch, y_epoch, dataset, dataloader
+            import gc
+            gc.collect()
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
             
             in_prog_str = f"Epoch {epoch+1}/{NUM_EPOCHS}: Full Validation Evaluation (293,410 Windows, 82 Recordings)"
             update_live_status("VALIDATION", completed_steps, in_prog_str, queued_steps, start_time, epoch+1, NUM_EPOCHS)
@@ -396,12 +404,19 @@ def run_phase4a_training():
                 p_clamped = torch.clamp(t_val_prob, eps, 1.0 - eps)
                 t_val_logits = torch.log(p_clamped / (1.0 - p_clamped))
                 val_loss = criterion(t_val_logits, t_val_true).item()
+                del t_val_true, t_val_prob, p_clamped, t_val_logits
                 
+            del val_true, val_prob
+            gc.collect()
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+            
             val_auprc = val_metrics["auprc"] if val_metrics["auprc"] is not None else 0.0
             val_auroc = val_metrics["auroc"] if val_metrics["auroc"] is not None else 0.0
             val_sens = val_metrics["sensitivity"]
             val_spec = val_metrics["specificity"]
             val_f1 = val_metrics["f1_score"]
+
             
             print(f"Epoch {epoch+1} Validation ({t_val1 - t_val0:.1f}s):")
             print(f"  Val Loss:      {val_loss:.5f}")

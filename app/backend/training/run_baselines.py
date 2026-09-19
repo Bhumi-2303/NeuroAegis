@@ -41,6 +41,7 @@ sys.path.insert(0, str(REPO_ROOT / "apps" / "api"))
 
 from training.data import MultiChannelEEGDataset, collate_fn, get_patient_splits
 from training.evaluate import calculate_sensitivity_at_fp_rate
+from neuroaegis.utils.memory import flush_memory
 
 
 class ConcatMLP(nn.Module):
@@ -168,8 +169,8 @@ def run_concat_baseline(parquet_path: str, output_dir: Path, epochs: int = 30, l
         train_sub = Subset(dataset, train_idx)
         val_sub = Subset(dataset, val_idx)
 
-        train_loader = DataLoader(train_sub, batch_size=32, shuffle=True, collate_fn=collate_fn)
-        val_loader = DataLoader(val_sub, batch_size=32, shuffle=False, collate_fn=collate_fn)
+        train_loader = DataLoader(train_sub, batch_size=32, shuffle=True, collate_fn=collate_fn, num_workers=0, pin_memory=False)
+        val_loader = DataLoader(val_sub, batch_size=32, shuffle=False, collate_fn=collate_fn, num_workers=0, pin_memory=False)
 
         model = ConcatMLP(concat_dim).to(device)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=1e-5)
@@ -191,12 +192,13 @@ def run_concat_baseline(parquet_path: str, output_dir: Path, epochs: int = 30, l
                 x = batch["features"].reshape(batch["features"].shape[0], -1).to(device)
                 y = batch["labels"].to(device)
 
-                optimizer.zero_grad()
+                optimizer.zero_grad(set_to_none=True)
                 preds = model(x)
                 weights = torch.where(y == 1.0, torch.tensor(pos_weight, device=device), torch.tensor(1.0, device=device))
                 loss = (criterion(preds, y) * weights).mean()
                 loss.backward()
                 optimizer.step()
+                del x, y, preds, weights, loss
 
             # Validation
             model.eval()
@@ -208,6 +210,7 @@ def run_concat_baseline(parquet_path: str, output_dir: Path, epochs: int = 30, l
                     preds = model(x).cpu().numpy().flatten()
                     val_preds.extend(preds)
                     val_targets.extend(y)
+                    del x, preds
 
             val_targets = np.array(val_targets)
             val_preds = np.array(val_preds)
@@ -240,6 +243,9 @@ def run_concat_baseline(parquet_path: str, output_dir: Path, epochs: int = 30, l
         })
 
         print(f"Patient {pid:<6} | AUROC: {auroc:.4f} | AUPRC: {max(best_val_auprc, 0):.4f} | Sens@1FP/h: {sens1:.4f} | Sens@0.25FP/h: {sens025:.4f}")
+
+        del model, optimizer, train_loader, val_loader, train_sub, val_sub
+        flush_memory()
 
     mean_auroc = np.mean([m["auroc"] for m in metrics_per_fold])
     mean_auprc = np.mean([m["auprc"] for m in metrics_per_fold])

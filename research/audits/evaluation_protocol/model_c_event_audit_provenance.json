@@ -1,0 +1,19 @@
+{
+  "audit_version": "v1.0-event-level",
+  "audit_timestamp": "2026-09-19T08:58:00Z",
+  "auditor": "Lead Clinical Event Audit Engineer",
+  "evaluation_protocol_version": "v1.0",
+  "protocol_freeze_status": "FULLY_FROZEN",
+  "git_commit": "HEAD",
+  "model_c_checkpoint_path": "research/phase_4b/frozen_cnn_gnn_gru.pt",
+  "model_c_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "prediction_artifact_path": "research/phase_4b/results/final_test_predictions.csv",
+  "prediction_artifact_sha256": "5bc83aa93740e557b7eef270e5ffabdcdd124317183e870191834ce47dfadce7",
+  "events_manifest_sha256": "a6f671c6d3df3efb756be2e684ee2c388275e030f2f36f6d8fbfe609806443c7",
+  "recordings_manifest_sha256": "37f485db1fc588939c89ce583f7a188beebaa3a8e945c2ecb27376c6691456a0",
+  "protocol_config_sha256": "4038676d1a967520e7df5d4ca8115682df6504a79402517ba634f19b165be3f8",
+  "python_version": "3.11.12",
+  "pytorch_version": "2.5.1",
+  "platform": "Darwin-24.3.0-arm64-arm-64bit",
+  "hardware_device": "Apple Silicon M4 (MPS / CPU)"
+}

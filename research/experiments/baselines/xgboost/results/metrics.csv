@@ -1,0 +1,2 @@
+model,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms
+XGBoost,0.71778,0.0098,0.01413,0.99762,0.01695,0.01541,0.50587,0.0,0.0,522,75,11.78,0.99477,0.0002

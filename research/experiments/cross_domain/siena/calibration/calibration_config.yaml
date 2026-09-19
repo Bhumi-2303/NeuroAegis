@@ -1,0 +1,15 @@
+alarm_merge_gap_sec: 10.0
+alarm_min_duration_sec: 5.0
+alarm_smoothing_window: 3
+alarm_tolerance_sec: 10.0
+calibration_patient: PN00
+calibration_rule: Maximize F1 subject to Event Sens >= 90%
+checkpoint_sha256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca
+experiment_id: NEUROAEGIS_EXP_6B_CALIBRATION
+frozen_model: Model C (CNN + Spatial GNN + Causal GRU)
+held_out_patient: PN12
+model_parameters: 91858
+selected_calibrated_threshold: 0.5
+source_dataset: CHB-MIT
+target_dataset: Siena Scalp EEG
+zero_shot_reference_threshold: 0.5

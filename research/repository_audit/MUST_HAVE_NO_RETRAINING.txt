@@ -1,0 +1,171 @@
+================================================================================
+NEUROAEGIS — MUST HAVE TO CONTINUE WITHOUT RETRAINING
+================================================================================
+AUDIT SCOPE:
+Minimal set of critical technical artifacts required for a receiving user to
+execute inference, evaluate test sets, and reproduce predictions WITHOUT retraining.
+The receiving user ALREADY possesses the raw EEG dataset (CHB-MIT and Siena).
+
+================================================================================
+RUNTIME-CRITICAL ARTIFACTS INVENTORY & STATUS
+================================================================================
+
+[X] 1. Final CNN+GNN+GRU Checkpoint
+    Path: research/phase_4b/frozen_cnn_gnn_gru.pt
+    Size: 387,437 bytes (378.4 KB)
+    SHA256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca
+    Status: PRESENT LOCALLY ONLY (MISSING FROM GITHUB)
+    Reason: Excluded by *.pt in .gitignore
+    Impact: CRITICAL BLOCKER (P0). Cannot run inference without retraining if absent.
+    Transfer Action: MUST TRANSFER (P0)
+
+[X] 2. Final Checkpoint SHA256 Verification Digest
+    Expected SHA256: 2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY
+    Location: research/phase_4b/frozen_gru_config.json, research/phase_8/audit/
+    Impact: Integrity verification anchor. Matches local file byte-for-byte.
+    Transfer Action: Already present in GitHub.
+
+[X] 3. Frozen Graph Configuration
+    Path: research/phase_4a/frozen_graph_config.json
+    Size: 1,327 bytes
+    SHA256: 6fa70f80bc2e4da8846bb463d1e6702d73347f7a7989fa7a5ae15a3df6ba312f
+    Parameters: theta=0.30, nodes=23, edges=40, density=15.81%, components=2
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Model initialization parameter.
+    Transfer Action: Already present in GitHub.
+
+[X] 4. Final Graph Adjacency Matrix
+    Path: research/phase_4a/frozen_graph_adjacency.csv
+    Size: 1,085 bytes
+    SHA256: 062c6aaffdc32ea1b9b5b97c82c224d40e0ab3b7e9b2afad5fd5b3e5f52db48e
+    Matrix: 23x23 symmetric binary adjacency matrix with self-loops
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Required input to GCN layer forward pass.
+    Transfer Action: Already present in GitHub.
+
+[X] 5. Frozen Spatial GNN Backbone Checkpoint
+    Path: research/phase_4a/frozen_cnn_gnn.pt
+    Size: 662,523 bytes (647.0 KB)
+    SHA256: b62bcf0c4e8821759a2a0d9c69df0be2caec242d707fcb4f26cb0ac8e2e9affa
+    Parameters: 52,497
+    Status: PRESENT LOCALLY ONLY (MISSING FROM GITHUB)
+    Reason: Excluded by *.pt in .gitignore
+    Impact: Required to generate 128-dim node embeddings or modular backbone runs.
+    Transfer Action: MUST TRANSFER (P0 / P1)
+
+[X] 6. Canonical Channel Order Configuration
+    Path: research/data/config/chbmit_channel_order.json
+    Size: 1,180 bytes
+    SHA256: 86b7201c136365ae0f73ee9f3900b95764d93ee93e3d237ba51ba801a61c4fd3
+    Channels: 23 standard bipolar montage channels (FP1-F7, F7-T7, ...)
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Prevents channel-permutation errors during raw EEG ingestion.
+    Transfer Action: Already present in GitHub.
+
+[X] 7. Preprocessing Configuration Specification
+    Path: research/data/manifests/chbmit_preprocessing_spec.json
+    Size: 724 bytes
+    Specs: 0.5-40 Hz bandpass, 50Hz notch, 256Hz sampling rate, robust z-score standardization
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Ensures identical preprocessing pipeline for raw EEG signals.
+    Transfer Action: Already present in GitHub.
+
+[X] 8. Windowing Configuration Specification
+    Path: research/data/manifests/chbmit_window_spec.json
+    Size: 588 bytes
+    Specs: 2.5s window length (640 samples), 50% overlap (1.25s step), >=50% seizure overlap rule
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Standardizes window slicing across recordings.
+    Transfer Action: Already present in GitHub.
+
+[X] 9. Patient Split Configuration
+    Path: research/imbalance/class_imbalance_config.json & research/config/class_imbalance.yaml
+    Partition: Train (16 patients), Val (4 patients), Test (4 patients: chb01, chb02, chb03, chb05)
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Strict zero-leakage patient-stratified evaluation partition.
+    Transfer Action: Already present in GitHub.
+
+[X] 10. Final Model Architecture Source Code
+    Path: research/phase_4b/cnn_gnn_gru_model.py
+    Components: CNN_GNN_GRU class, TemporalSequenceClassifier
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: PyTorch class definition for model construction.
+    Transfer Action: Already present in GitHub.
+
+[X] 11. Inference Source Code
+    Path: research/phase_4b/evaluate_test_split.py & research/phase_4b/run_inference_demo.py
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Script to run single-batch or full-cohort forward passes.
+    Transfer Action: Already present in GitHub.
+
+[X] 12. Sequence Construction Code
+    Path: research/phase_4b/sequence_dataset.py
+    Specs: L=8 causal window history buffer, stride=1, strictly backward-looking
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Packs sequences into (B, 8, 23, 1280) tensors for GRU input.
+    Transfer Action: Already present in GitHub.
+
+[X] 13. Graph Construction and GNN Layer Code
+    Path: research/phase_4a/graph_construction.py & research/phase_4a/cnn_gnn_model.py
+    Components: GraphConvolution layer, spatial correlation estimator, adjacency thresholding
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Implements spatial message passing over 23-node graph.
+    Transfer Action: Already present in GitHub.
+
+[X] 14. Normalization and Signal Processing Logic
+    Path: research/data/preprocessing.py & research/data/dataset.py
+    Specs: Per-channel robust z-score standardization (median & IQR)
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Normalizes signal amplitudes.
+    Transfer Action: Already present in GitHub.
+
+[X] 15. Label Definition and Window Index Manifest
+    Path: research/data/manifests/chbmit_window_index.csv.gz
+    Size: 18,756,128 bytes (17.89 MB compressed, 157.27 MB uncompressed)
+    Records: 65,584 windows across 684 recording sessions
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Full ground-truth metadata index without regenerating from raw data.
+    Transfer Action: Already present in GitHub.
+
+[X] 16. Siena Domain Harmonization Source Code
+    Path: research/phase_6/siena_harmonization.py
+    Specs: 15 shared 10-20 system electrode channel mapping and projection
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Cross-domain channel alignment between CHB-MIT (bipolar) and Siena (monopolar).
+    Transfer Action: Already present in GitHub.
+
+[X] 17. Siena Adaptation & Calibration Configuration
+    Path: research/phase_6/results/siena_adapted_summary.json
+    Parameters: Optimal temperature T*=0.3495, Optimal threshold tau*=0.3800
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Pre-fitted zero-shot domain calibration parameters.
+    Transfer Action: Already present in GitHub.
+
+[X] 18. Explainable AI (XAI) Configuration
+    Path: research/phase_5/config/xai_config.json
+    Specs: Integrated Gradients, 50 Riemann approximation steps, baseline reference
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Reproduces feature attribution without modifying parameters.
+    Transfer Action: Already present in GitHub.
+
+[X] 19. Python Environment & Dependency Specifications
+    Path: requirements.txt, pyproject.toml, package.json
+    Status: PRESENT IN GITHUB & PRESENT LOCALLY (TRACKED)
+    Impact: Recreates exact virtual environment (PyTorch 2.6.0, MNE, Pandas, SciPy).
+    Transfer Action: Already present in GitHub.
+
+================================================================================
+SUMMARY VERDICT FOR CONTINUATION WITHOUT RETRAINING:
+================================================================================
+Number of required items: 19
+Items already in GitHub: 17
+Items present locally only: 2 (frozen_cnn_gnn_gru.pt, frozen_cnn_gnn.pt)
+Items missing everywhere: 0
+
+CONCLUSION:
+With only 2 files transferred (frozen_cnn_gnn_gru.pt and frozen_cnn_gnn.pt,
+totaling ~1.03 MB), a fresh clone of the GitHub repository will have 100% of
+all technical assets required to run inference, evaluate test splits, and
+reproduce predictions with ZERO RETRAINING.
+================================================================================

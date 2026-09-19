@@ -1,0 +1,17 @@
+{
+    "model": "Random Forest",
+    "auroc": 0.62465,
+    "auprc": 0.00407,
+    "sensitivity": 0.01884,
+    "specificity": 0.98656,
+    "precision": 0.00406,
+    "f1_score": 0.00667,
+    "balanced_accuracy": 0.5027,
+    "event_sensitivity": 0.0,
+    "detection_delay_sec": 0.0,
+    "false_positive_windows": 2947,
+    "false_alarm_episodes": 513,
+    "fa_per_24h": 80.57,
+    "accuracy": 0.98376,
+    "latency_ms": 0.001
+}

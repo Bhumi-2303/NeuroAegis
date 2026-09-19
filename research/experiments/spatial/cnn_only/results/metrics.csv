@@ -1,0 +1,2 @@
+model_id,model_name,ablation_stage,component_added,active_modules,parameters,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detected_events,total_events,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms,flops
+cnn_only,CNN-only (1D CNN Temporal),Baseline: Temporal Conv,1D CNN Backbone,Conv1D Temporal,173601,0.36389,0.04148,0.16013,0.94347,0.00816,0.01553,0.5518,0.31818,7,22,7.14,12395,2100,329.8,0.9412,0.34,135.2 MFLOPs

@@ -1,0 +1,47 @@
+# ==============================================================================
+# NeuroAegis Authoritative Evaluation Protocol V1.0 Configuration
+# ==============================================================================
+protocol_version: "v1.0"
+status: "FROZEN"
+freeze_date: "2026-09-19"
+
+# Dataset & Windowing Protocol
+sampling_rate_hz: 256.0
+window_duration_sec: 5.0
+window_stride_sec: 2.5
+window_samples: 1280
+window_overlap_pct: 50.0
+label_rule: "label_50pct_overlap"
+decision_threshold: 0.50
+
+# Temporal Smoothing & Alarm Episode Post-Processing
+smoothing_method: "majority"
+smoothing_window_size: 3
+merge_gap_sec: 15.0
+min_predicted_event_duration_sec: 5.0
+
+# Event Matching & Latency Standards
+min_seizure_duration_sec: 10.0
+allowed_delay_sec: 30.0
+multi_alarm_policy: "first_only"
+delay_reference: "onset"
+
+# Target Test Cohorts
+chbmit_test_cohort:
+  patients: ["chb01", "chb02", "chb03", "chb05"]
+  num_recordings: 155
+  total_monitoring_hours: 152.8231
+  total_windows: 219909
+  total_positive_windows: 637
+  total_negative_windows: 219272
+  total_seizure_events: 22
+
+siena_test_cohort:
+  calibration_patient: "PN00"
+  calibration_recordings: 5
+  calibration_hours: 2.12
+  calibration_seizures: 3
+  held_out_patient: "PN12"
+  held_out_recordings: 1
+  held_out_hours: 0.55
+  held_out_seizures: 1

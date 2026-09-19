@@ -1,0 +1,2 @@
+model_id,model_name,ablation_stage,component_added,active_modules,parameters,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detected_events,total_events,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms,flops
+cnn_gnn_gru,CNN + GNN + GRU (Model C Frozen),Step 2: + Temporal Sequence,"Causal GRU (L=8, 22.5s context)",Conv1D + GNN + Causal GRU,91858,0.9897,0.80681,0.8383,0.99818,0.57235,0.68025,0.91824,0.86364,19,22,12.89,399,51,8.01,0.99772,0.01,43.1 MFLOPs

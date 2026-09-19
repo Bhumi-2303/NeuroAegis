@@ -1,0 +1,2 @@
+model_id,model_name,ablation_stage,component_added,active_modules,parameters,auroc,auprc,sensitivity,specificity,precision,f1_score,balanced_accuracy,event_sensitivity,detected_events,total_events,detection_delay_sec,false_positive_windows,false_alarm_episodes,fa_per_24h,accuracy,latency_ms,flops
+cnn_gnn,CNN + GNN (Spatial Topology),Step 1: + Spatial Topology,Spatial GNN (θ=0.30),Conv1D + GNN,52497,0.19431,0.00492,0.04239,0.99418,0.02072,0.02784,0.51828,0.18182,4,22,10.0,1276,209,32.82,0.99142,0.82,42.8 MFLOPs

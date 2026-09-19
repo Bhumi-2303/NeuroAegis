@@ -58,11 +58,13 @@ class VariantC_Calibration(nn.Module):
         with torch.no_grad():
             for x_batch, y_batch in loader:
                 out = self.model(x_batch)
-                logits_list.append(out.logits)
-                labels_list.append(y_batch)
+                logits_list.append(out.logits.detach().cpu())
+                labels_list.append(y_batch.detach().cpu())
+                del out
                 
         logits = torch.cat(logits_list).detach()
         labels = torch.cat(labels_list).float().detach()
+        del logits_list, labels_list
         
         # Optimize temperature
         optimizer = optim.LBFGS([self.temperature], lr=0.01, max_iter=50)
@@ -76,6 +78,9 @@ class VariantC_Calibration(nn.Module):
             return loss
             
         optimizer.step(eval_loss)
+        del logits, labels, optimizer
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         
     def forward(self, x: torch.Tensor) -> ModelOutput:
         out = self.model(x)
@@ -103,11 +108,13 @@ class VariantD_Combined(nn.Module):
         with torch.no_grad():
             for x_batch, y_batch in loader:
                 out = self.normalized_model(x_batch)
-                logits_list.append(out.logits)
-                labels_list.append(y_batch)
+                logits_list.append(out.logits.detach().cpu())
+                labels_list.append(y_batch.detach().cpu())
+                del out
                 
         logits = torch.cat(logits_list).detach()
         labels = torch.cat(labels_list).float().detach()
+        del logits_list, labels_list
         
         optimizer = optim.LBFGS([self.temperature], lr=0.01, max_iter=50)
         
@@ -119,6 +126,10 @@ class VariantD_Combined(nn.Module):
             return loss
             
         optimizer.step(eval_loss)
+        del logits, labels, optimizer
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
+
         
     def forward(self, x: torch.Tensor) -> ModelOutput:
         out = self.normalized_model(x)

@@ -1,0 +1,24 @@
+index,target_neuroaegis_channel,siena_differential_derivation,siena_anode,siena_cathode,mapping_method,anatomical_justification
+0,FP1-F7,EEG Fp1 - EEG F7,FP1,F7,Exact 1:1 anatomical match,Direct subtraction of referential FP1 and F7 electrodes.
+1,F7-T7,EEG F7 - EEG T3,F7,T3,10-20 Standard Equivalent (T3 == T7),"International 10-20 standard designates T3 as the mid-temporal electrode, renamed T7 in modern 10-10 nomenclature."
+2,T7-P7,EEG T3 - EEG T5,T3,T5,"10-20 Standard Equivalent (T3 == T7, T5 == P7)",T3 corresponds to T7; T5 corresponds to posterior-temporal P7.
+3,P7-O1,EEG T5 - EEG O1,T5,O1,"10-20 Standard Equivalent (T5 == P7, O1 == O1)",T5 corresponds to P7; O1 is direct 1:1 match.
+4,FP1-F3,EEG Fp1 - EEG F3,FP1,F3,Exact 1:1 anatomical match,Direct subtraction of referential FP1 and F3 electrodes.
+5,F3-C3,EEG F3 - EEG C3,F3,C3,Exact 1:1 anatomical match,Direct subtraction of referential F3 and C3 electrodes.
+6,C3-P3,EEG C3 - EEG P3,C3,P3,Exact 1:1 anatomical match,Direct subtraction of referential C3 and P3 electrodes.
+7,P3-O1,EEG P3 - EEG O1,P3,O1,Exact 1:1 anatomical match,Direct subtraction of referential P3 and O1 electrodes.
+8,FP2-F4,EEG Fp2 - EEG F4,FP2,F4,Exact 1:1 anatomical match,Direct subtraction of referential FP2 and F4 electrodes.
+9,F4-C4,EEG F4 - EEG C4,F4,C4,Exact 1:1 anatomical match,Direct subtraction of referential F4 and C4 electrodes.
+10,C4-P4,EEG C4 - EEG P4,C4,P4,Exact 1:1 anatomical match,Direct subtraction of referential C4 and P4 electrodes.
+11,P4-O2,EEG P4 - EEG O2,P4,O2,Exact 1:1 anatomical match,Direct subtraction of referential P4 and O2 electrodes.
+12,FP2-F8,EEG Fp2 - EEG F8,FP2,F8,Exact 1:1 anatomical match,Direct subtraction of referential FP2 and F8 electrodes.
+13,F8-T8,EEG F8 - EEG T4,F8,T4,10-20 Standard Equivalent (T4 == T8),T4 corresponds to right mid-temporal electrode T8.
+14,T8-P8,EEG T4 - EEG T6,T4,T6,"10-20 Standard Equivalent (T4 == T8, T6 == P8)",T4 corresponds to T8; T6 corresponds to right posterior-temporal P8.
+15,P8-O2,EEG T6 - EEG O2,T6,O2,"10-20 Standard Equivalent (T6 == P8, O2 == O2)",T6 corresponds to P8; O2 is direct 1:1 match.
+16,FZ-CZ,EEG Fz - EEG Cz,FZ,CZ,Exact 1:1 anatomical match,Midline frontal-central bipolar derivation.
+17,CZ-PZ,EEG Cz - EEG Pz,CZ,PZ,Exact 1:1 anatomical match,Midline central-parietal bipolar derivation.
+18,P7-T7,EEG T5 - EEG T3,T5,T3,"10-20 Standard Equivalent (T5 == P7, T3 == T7)",Inversion derivation of temporal-parietal link (T5 - T3 = -(T3 - T5)).
+19,T7-FT9,EEG T3 - EEG F9,T3,F9,"10-20 Standard Equivalent (T3 == T7, F9 == FT9)",F9 corresponds to the anterior inferior temporal electrode FT9.
+20,FT9-FT10,EEG F9 - EEG F10,F9,F10,"10-20 Standard Equivalent (F9 == FT9, F10 == FT10)",Cross-hemispheric anterior temporal bridge.
+21,FT10-T8,EEG F10 - EEG T4,F10,T4,"10-20 Standard Equivalent (F10 == FT10, T4 == T8)",Right anterior temporal to mid-temporal link.
+22,T8-P8,EEG T4 - EEG T6,T4,T6,"10-20 Standard Equivalent (T4 == T8, T6 == P8)",Canonical CHB-MIT channel 23 is identical to channel 14 (T8-P8).

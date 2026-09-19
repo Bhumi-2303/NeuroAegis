@@ -1,0 +1,13 @@
+{
+  "protocol_version": "v1.0",
+  "timestamp": "2026-09-19T08:39:23Z",
+  "git_commit": "f6b32ee20036e86aa626aa11217b80e999fdfc2e",
+  "model_c_checkpoint_sha256": "2ec84897c39d31d68cfbf1f7e5c8708d5073fe19450576bf4f9132929c1832ca",
+  "evaluation_config_sha256": "b6698350309e61343aaecc105bc2f6814b91496228fdda0d4d46dfbd97c86e82",
+  "chbmit_events_manifest_sha256": "2e5aa495eb3a3bf84dc531827e1c9c7538541971d168b4162b53a27999bfee4e",
+  "chbmit_recordings_manifest_sha256": "dfd7c4991f386ef8e07e15ed317011e58e64d0acf92e35fd37e645190dffffd4",
+  "python_version": "3.11.15",
+  "pytorch_version": "2.13.0",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "device": "Apple Silicon M4 (MPS / CPU)"
+}

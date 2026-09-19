@@ -1,0 +1,4 @@
+cohort,patient,hours,threshold,AUROC,AUPRC,window_sensitivity,window_specificity,event_sensitivity,detected_events,mean_onset_delay_s,raw_fp_per_24h,clinical_fa_per_24h
+Siena Zero-Shot (All 6 EDFs),PN00 + PN12,2.67,0.5,0.89934,0.70284,0.52419,0.99865,0.5,3/6,14.33,44.94,8.99
+Siena Calibration Split (Exp 6B),PN00,2.12,0.5,0.91259,0.77098,0.67059,0.99831,0.4,2/5,17.5,56.6,11.32
+Siena Held-Out Test Split (Exp 6B),PN12,0.55,0.5,0.9098,0.6932,0.20513,1.0,1.0,1/1,8.0,0.0,0.0

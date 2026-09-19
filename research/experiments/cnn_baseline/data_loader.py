@@ -22,7 +22,18 @@ from research.experiments.windowing_labeling.chbmit_preprocessor import (
     CHBMITSignalFilter,
     CHBMITNormalizer
 )
-from research.experiments.imbalance.focal_loss import logits_to_probabilities
+try:
+    from research.experiments.imbalance.focal_loss import logits_to_probabilities
+except ImportError:
+    from research.imbalance.focal_loss import logits_to_probabilities
+
+from neuroaegis.streaming import (
+    BoundedChunkConfig,
+    BoundedStreamingDataPipeline,
+    IncrementalPredictionWriter,
+    StreamingTrainer,
+    StreamingEvaluator,
+)
 
 
 class CHBMITDataPipeline:
@@ -72,8 +83,10 @@ class CHBMITDataPipeline:
                 windows[i] = data.astype(np.float32)
             except Exception:
                 pass
-                
+        
+        del raw
         return windows, labels.astype(np.float32)
+
 
     def load_epoch_windows(
         self,
@@ -150,8 +163,10 @@ class CHBMITDataPipeline:
                 win_tensor = np.zeros((n_win, 23, self.window_samples), dtype=np.float32)
                 for w_i, s in enumerate(starts):
                     win_tensor[w_i] = rec_data[:, s:s+self.window_samples]
-                    
+                
+                del raw, rec_data
                 t_input = torch.from_numpy(win_tensor).float()
+                del win_tensor
                 
                 rec_probs = []
                 for b_start in range(0, n_win, batch_size):
@@ -159,14 +174,27 @@ class CHBMITDataPipeline:
                     logits = model(b_tensor)
                     probs = logits_to_probabilities(logits).cpu().numpy()
                     rec_probs.append(probs)
+                    del b_tensor, logits
                     
+                del t_input
                 if rec_probs:
                     all_probs.append(np.concatenate(rec_probs))
                     all_trues.append(lbls)
+                    del rec_probs
                     
+                if (rec_idx + 1) % 5 == 0:
+                    import gc
+                    gc.collect()
+                    if torch.backends.mps.is_available():
+                        torch.mps.empty_cache()
+                        
                 if progress_callback and (rec_idx + 1) % 10 == 0:
                     progress_callback(rec_idx + 1, total_recs, rec_id)
                     
         y_prob = np.concatenate(all_probs)
         y_true = np.concatenate(all_trues)
+        del all_probs, all_trues
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         return y_true, y_prob
+
