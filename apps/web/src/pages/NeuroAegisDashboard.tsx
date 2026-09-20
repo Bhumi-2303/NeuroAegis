@@ -23,6 +23,7 @@ import { ShapExplanationView } from '../components/analytics/ShapExplanationView
 import { AlertDrawer } from '../components/alerts/AlertDrawer';
 import { ThresholdControlPanel } from '../components/controls/ThresholdControlPanel';
 import { PatientDetailModal } from '../components/patient/PatientDetailModal';
+import { uploadEeg, waitForJob } from '../services/api';
 
 export const NeuroAegisDashboard: React.FC = () => {
   // Lifecycle State Discriminated Union
@@ -36,6 +37,9 @@ export const NeuroAegisDashboard: React.FC = () => {
   const [audioEnabled, setAudioEnabled] = useState<boolean>(true);
   const [isManualSeizureActive, setIsManualSeizureActive] = useState<boolean>(false);
   const [isPatientModalOpen, setIsPatientModalOpen] = useState<boolean>(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<string>("No EEG file selected");
+  const [isRealAnalysis, setIsRealAnalysis] = useState<boolean>(false);
 
   // Configuration State
   const [config, setConfig] = useState<ModelThresholdConfig>({
@@ -61,7 +65,7 @@ export const NeuroAegisDashboard: React.FC = () => {
 
   // Live Telemetry Loop (250ms polling tick simulating live 256Hz WebSocket stream)
   useEffect(() => {
-    if (lifecycleState.status !== 'ready' || !isStreaming) {
+    if (lifecycleState.status !== 'ready' || !isStreaming || isRealAnalysis) {
       if (timerRef.current) clearInterval(timerRef.current);
       return;
     }
@@ -104,6 +108,7 @@ export const NeuroAegisDashboard: React.FC = () => {
   }, [
     lifecycleState.status,
     isStreaming,
+    isRealAnalysis,
     isManualSeizureActive,
     config.gainMultiplier,
     config.sensitivityThreshold,
@@ -118,6 +123,93 @@ export const NeuroAegisDashboard: React.FC = () => {
   const handleToggleAudio = useCallback(() => {
     setAudioEnabled((prev) => !prev);
   }, []);
+
+  const handleUploadEeg = useCallback(async (file: File) => {
+    setIsRealAnalysis(true);
+    setUploadedFileName(file.name);
+    setUploadStatus("Uploading EEG...");
+    try {
+      setUploadStatus("Analyzing EEG...");
+      const submitted = await uploadEeg(file);
+      setUploadStatus("Waiting for model prediction...");
+      const completed = await waitForJob(submitted.job_id);
+
+      if (!completed.result) {
+        throw new Error("Backend completed without a prediction result");
+      }
+
+      const visualization = completed.result.eeg_visualization;
+
+      if (!visualization || visualization.channels.length === 0) {
+        throw new Error("Backend completed without EEG visualization data");
+      }
+
+      const realChannels: EegChannelData[] = visualization.channels.map((channel) => ({
+        id: channel.id,
+        name: channel.name,
+        voltageMicrovolts: channel.samples,
+        baselineOffset: 0,
+      }));
+
+      setChannels(realChannels);
+
+      const seizureProbability = completed.result.probability_seizure;
+      const confidenceValue = Math.max(seizureProbability, 1 - seizureProbability);
+
+      const modelName =
+        completed.modelName === "random_forest" ||
+        completed.modelName === "xgboost" ||
+        completed.modelName === "lightgbm"
+          ? completed.modelName
+          : "lightgbm";
+
+      const realPrediction: ModelPrediction = {
+        modelName,
+        label: completed.result.prediction_label,
+        probabilities: {
+          seizure: seizureProbability,
+          non_seizure: 1 - seizureProbability,
+        },
+        confidence: {
+          value: confidenceValue,
+          band: completed.result.confidence_band,
+        },
+        explanation: {
+          baseValue: completed.result.shap_explanation.baseValue,
+          features: completed.result.shap_explanation.features.map((feature) => ({
+            featureName: feature.featureName,
+            value: feature.value,
+            contribution: feature.value,
+          })),
+        },
+        generatedAt: new Date().toISOString(),
+      };
+
+      setPrediction(realPrediction);
+      setUploadStatus("Analysis complete");
+
+      if (realPrediction.probabilities.seizure >= config.sensitivityThreshold) {
+        setAlerts((prevAlerts) => {
+          const newAlert: SeizureAlert = {
+            id: `real-${Date.now()}`,
+            timestamp: new Date().toLocaleTimeString(),
+            severity: "critical",
+            probability: realPrediction.probabilities.seizure,
+            primaryChannel: "EEG",
+            durationSeconds: config.temporalWindowSeconds,
+            acknowledged: false,
+          };
+
+          return [newAlert, ...prevAlerts.slice(0, 19)];
+        });
+      }
+
+      console.log("NeuroAegis real EEG prediction:", realPrediction);
+    } catch (error) {
+      setUploadStatus("Analysis failed");
+      console.error("NeuroAegis EEG analysis failed:", error);
+    }
+  }, [config.sensitivityThreshold, config.temporalWindowSeconds]);
 
   const handleTriggerManualSeizure = useCallback(() => {
     setIsManualSeizureActive((prev) => !prev);
@@ -184,6 +276,8 @@ export const NeuroAegisDashboard: React.FC = () => {
     },
     [patientVitals, prediction, alerts, channels]
   );
+
+
 
   // Render correct view state according to standard UI lifecycle
   if (lifecycleState.status === 'loading') {
@@ -269,6 +363,26 @@ export const NeuroAegisDashboard: React.FC = () => {
               Simulate Empty
             </button>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 px-4 py-3 rounded-xl">
+          <div>
+            <div className="text-sm font-medium text-slate-200">Real EEG Analysis</div>
+            <div className="text-xs text-slate-500">{uploadedFileName ? uploadedFileName + " • " + uploadStatus : uploadStatus}</div>
+          </div>
+          <label className="cursor-pointer px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">
+            Upload EEG
+            <input
+              type="file"
+              accept=".csv,.txt,.edf"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleUploadEeg(file);
+                event.target.value = "";
+              }}
+            />
+          </label>
         </div>
 
         {/* Real-time Waveform Canvas + Controls */}

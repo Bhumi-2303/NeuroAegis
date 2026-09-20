@@ -44,7 +44,8 @@ def get_latest_job(db: Session = Depends(get_db)):
             "prediction_label": job.prediction_label,
             "probability_seizure": job.probability_seizure,
             "confidence_band": job.confidence_band,
-            "shap_explanation": job.shap_explanation
+            "shap_explanation": job.shap_explanation,
+            "eeg_visualization": job.eeg_visualization
         }
     elif job.status == "Failed":
         response["error"] = job.error or "Job failed during processing"
@@ -71,7 +72,8 @@ def get_job(job_id: str, db: Session = Depends(get_db)):
             "prediction_label": job.prediction_label,
             "probability_seizure": job.probability_seizure,
             "confidence_band": job.confidence_band,
-            "shap_explanation": job.shap_explanation
+            "shap_explanation": job.shap_explanation,
+            "eeg_visualization": job.eeg_visualization
         }
     elif job.status == "Failed":
         response["error"] = job.error or "Job failed during processing"

@@ -49,6 +49,7 @@ class PredictionJob(Base):
     probability_seizure = Column(Float, nullable=True)
     confidence_band = Column(String, nullable=True)
     shap_explanation = Column(JSON, nullable=True)
+    eeg_visualization = Column(JSON, nullable=True)
     
     # Dataset detection info
     detected_dataset = Column(String, nullable=True)

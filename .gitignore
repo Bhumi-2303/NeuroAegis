@@ -42,6 +42,8 @@ neuroaegis_chbmit_project(1)/
 
 # Local Database
 apps/api/neuroaegis.db
+neuroaegis.db
+*.tsbuildinfo
 
 # Large Data files & Caches
 *.edf

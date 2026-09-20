@@ -5,6 +5,7 @@ import os
 from typing import Any
 
 import pandas as pd
+import numpy as np
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -27,6 +28,52 @@ router = APIRouter()
 import logging
 
 logger = logging.getLogger("neuroaegis")
+
+
+def build_eeg_visualization(eeg_data, channel_names, fs, max_points=1500):
+    """Create a bounded JSON-safe representation of the analyzed EEG window."""
+    data = np.asarray(eeg_data, dtype=float)
+
+    if data.ndim == 1:
+        data = data.reshape(1, -1)
+
+    if data.ndim != 2:
+        raise ValueError(f"EEG visualization expects 2D data, got shape {data.shape}")
+
+    total_samples = data.shape[1]
+    target_points = min(total_samples, max_points)
+
+    if target_points == total_samples:
+        indices = np.arange(total_samples)
+    else:
+        indices = np.linspace(0, total_samples - 1, target_points).round().astype(int)
+
+    channels = []
+    for channel_index in range(data.shape[0]):
+        signal = np.nan_to_num(
+            data[channel_index],
+            nan=0.0,
+            posinf=0.0,
+            neginf=0.0,
+        )
+        samples = signal[indices].tolist()
+        name = (
+            str(channel_names[channel_index])
+            if channel_index < len(channel_names)
+            else f"CH{channel_index + 1}"
+        )
+        channels.append({
+            "id": f"eeg-{channel_index + 1}",
+            "name": name,
+            "samples": samples,
+        })
+
+    return {
+        "samplingRate": float(fs),
+        "originalSampleCount": int(total_samples),
+        "visualizationSampleCount": int(target_points),
+        "channels": channels,
+    }
 
 def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, dataset: str, model_name: str):
     db = SessionLocal()
@@ -57,6 +104,11 @@ def process_and_save_prediction(job_id: str, eeg_data, channel_names, fs, datase
             job.probability_seizure = result["prediction"]["probabilities"]["seizure"]
             job.confidence_band = result["confidence"]["band"]
             job.shap_explanation = result["explanation"]
+            job.eeg_visualization = build_eeg_visualization(
+                eeg_data=eeg_data,
+                channel_names=channel_names,
+                fs=fs,
+            )
             job.status = "Completed"
             job.progress = 100
             import datetime
