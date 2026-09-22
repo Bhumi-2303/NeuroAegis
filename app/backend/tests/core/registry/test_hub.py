@@ -1,6 +1,6 @@
 import pytest
-from apps.api.app.core.registry.base_registry import BaseRegistry
-from apps.api.app.core.registry.hub import RegistryHub
+from app.core.registry.base_registry import BaseRegistry
+from app.core.registry.hub import RegistryHub
 
 
 @pytest.fixture(autouse=True)

@@ -2,9 +2,9 @@ import threading
 from typing import Any
 
 import pytest
-from apps.api.app.core.exceptions import PluginNotFoundError, PluginRegistrationError
-from apps.api.app.core.registry.base_registry import BaseRegistry
-from apps.api.app.domain.protocols.plugin_protocol import PluginProtocol
+from app.core.exceptions import PluginNotFoundError, PluginRegistrationError
+from app.core.registry.base_registry import BaseRegistry
+from app.domain.protocols.plugin_protocol import PluginProtocol
 
 
 class DummyPlugin(PluginProtocol):

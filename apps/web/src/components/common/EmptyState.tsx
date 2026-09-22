@@ -20,7 +20,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
         <div className="space-y-2">
           <h2 className="text-xl font-bold text-white">No Active EEG Session Connected</h2>
           <p className="text-sm text-slate-400">
-            Select a benchmark clinical recording or connect an ICU patient stream to initiate real-time 16-channel seizure prediction.
+            Start the labeled demo simulation or upload an EDF recording for real EEG analysis.
           </p>
         </div>
 
@@ -31,7 +31,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             className="px-4 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm flex items-center justify-center space-x-2 transition shadow-lg shadow-indigo-600/30"
           >
             <Play className="h-4 w-4 fill-white" />
-            <span>Load CHB-MIT-01</span>
+            <span>Start Demo Simulation</span>
           </button>
           <button
             type="button"

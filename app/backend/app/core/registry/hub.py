@@ -1,7 +1,7 @@
 from __future__ import annotations
 from threading import Lock
 
-from apps.api.app.domain.protocols import (
+from app.domain.protocols import (
     DatasetDetectorProtocol,
     ExplainerProtocol,
     FeatureExtractorProtocol,

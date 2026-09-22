@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 import pytest
-from apps.api.app.core.events.bus import EventBus
-from apps.api.app.domain.events.base import DomainEvent
+from app.core.events.bus import EventBus
+from app.domain.events.base import DomainEvent
 
 
 class SampleEvent(DomainEvent):

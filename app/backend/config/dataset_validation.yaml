@@ -1,0 +1,9 @@
+# Dataset-specific observed ranges are reported separately from acceptance policy.
+# Null means no authoritative dataset-specific byte limit is configured.
+datasets:
+  chbmit:
+    min_allowed_bytes: null
+    max_allowed_bytes: null
+  siena:
+    min_allowed_bytes: null
+    max_allowed_bytes: null

@@ -3,10 +3,19 @@ import { ShapExplanation } from '../../types/neuroaegis';
 import { HelpCircle } from 'lucide-react';
 
 interface ShapExplanationViewProps {
-  readonly explanation: ShapExplanation;
+  readonly explanation: ShapExplanation | null;
 }
 
 export const ShapExplanationView: React.FC<ShapExplanationViewProps> = ({ explanation }) => {
+  if (!explanation) {
+    return (
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-5 shadow-lg">
+        <h3 className="text-xs uppercase font-bold tracking-wider text-slate-400">XAI biomarkers (SHAP)</h3>
+        <p className="text-xs text-slate-500 mt-3">No SHAP explanation available.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 lg:p-5 space-y-4 shadow-lg">
       <div className="flex items-center justify-between">
@@ -26,6 +35,8 @@ export const ShapExplanationView: React.FC<ShapExplanationViewProps> = ({ explan
         </span>
       </div>
 
+      <p className="text-[10px] text-slate-500">Feature-level explanation only. SHAP values are not channel-level seizure localization.</p>
+
       <div className="space-y-3 pt-1">
         {explanation.features.map((feat) => {
           const isPositive = feat.contribution > 0;
@@ -44,6 +55,12 @@ export const ShapExplanationView: React.FC<ShapExplanationViewProps> = ({ explan
                   {feat.contribution.toFixed(2)}
                 </span>
               </div>
+              {feat.rawValue !== undefined && (
+                <div className="text-[10px] text-slate-500 font-mono">
+                  Raw value: {feat.rawValue.toFixed(3)}
+                  {feat.referenceRange && ` | Reference: ${feat.referenceRange[0].toFixed(3)}-${feat.referenceRange[1].toFixed(3)}`}
+                </div>
+              )}
 
               {/* Bi-directional contribution bar */}
               <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden flex">

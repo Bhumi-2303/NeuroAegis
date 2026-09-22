@@ -1,5 +1,6 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
+import re
 
 import pandas as pd
 
@@ -74,3 +75,49 @@ class DefaultDatasetScorer:
             all_reasons.extend(reasons)
             
         return total_score, all_reasons
+
+
+class RecordingMetadataScorer:
+    """Scores an EDF header without reading signal samples."""
+
+    def score(
+        self,
+        *,
+        file_name: str | None,
+        total_channels: int,
+        sampling_rate: float,
+        duration_seconds: float,
+        metadata: DatasetMetadata,
+    ) -> tuple[float, list[str]]:
+        score = 0.0
+        reasons: list[str] = []
+
+        if file_name and metadata.filename_patterns:
+            if any(re.search(pattern, file_name) for pattern in metadata.filename_patterns):
+                score += 0.25
+                reasons.append("Filename matches known dataset pattern")
+
+        if sampling_rate > 0:
+            rate_difference = abs(sampling_rate - metadata.sampling_rate)
+            if rate_difference <= metadata.sampling_rate_tolerance:
+                score += 0.40
+                reasons.append(f"Sampling rate matches ({sampling_rate:g} Hz)")
+            elif rate_difference <= max(metadata.sampling_rate_tolerance * 10, 10.0):
+                score += 0.10
+
+        channel_match = False
+        if metadata.allowed_channel_counts:
+            channel_match = total_channels in metadata.allowed_channel_counts
+        elif metadata.channel_count_min is not None and metadata.channel_count_max is not None:
+            channel_match = metadata.channel_count_min <= total_channels <= metadata.channel_count_max
+        else:
+            channel_match = total_channels == metadata.expected_channels
+
+        if channel_match:
+            score += 0.35
+            reasons.append(f"Channel configuration matches ({total_channels} channels)")
+
+        if duration_seconds > 0 and duration_seconds == duration_seconds:
+            reasons.append(f"Recording duration is available ({duration_seconds:g} seconds)")
+
+        return min(score, 1.0), reasons

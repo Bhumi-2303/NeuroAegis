@@ -1,10 +1,10 @@
 from uuid import uuid4
 
 import pytest
-from apps.api.app.domain.entities.job import Job, JobStatus
-from apps.api.app.domain.entities.pipeline import Pipeline
-from apps.api.app.domain.entities.prediction import Prediction
-from apps.api.app.domain.value_objects.confidence import ConfidenceBand, ConfidenceScore
+from app.domain.entities.job import Job, JobStatus
+from app.domain.entities.pipeline import Pipeline
+from app.domain.entities.prediction import Prediction
+from app.domain.value_objects.confidence import ConfidenceBand, ConfidenceScore
 from pydantic import ValidationError
 
 

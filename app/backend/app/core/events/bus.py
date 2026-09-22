@@ -4,7 +4,7 @@ import logging
 from collections.abc import Callable, Coroutine
 from typing import Any
 
-from apps.api.app.domain.events.base import DomainEvent
+from app.domain.events.base import DomainEvent
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,20 @@
+.git
+.gitignore
+.venv
+app/backend/.venv
+node_modules
+apps/web/node_modules
+apps/web/dist
+CHB-MIT Dataset
+scratch
+*.db
+*.sqlite3
+*.pyc
+__pycache__
+.pytest_cache
+.coverage
+htmlcov
+.DS_Store
+._*
+**/._*
+**/.DS_Store

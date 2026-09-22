@@ -28,7 +28,7 @@ if [[ -d "/app/models" ]]; then
 else
     # Running locally from repo root
     REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-    MODELS_DIR="${MODELS_DIR:-${REPO_ROOT}/apps/api/models}"
+    MODELS_DIR="${MODELS_DIR:-${REPO_ROOT}/app/backend/models}"
 fi
 
 # ── Dataset definitions ──────────────────────────────────────────────
@@ -75,7 +75,7 @@ fetch_remote() {
 copy_local() {
     local dataset="$1"
     local target_dir="$2"
-    local source_dir="${REPO_ROOT}/apps/api/models/${dataset}"
+    local source_dir="${REPO_ROOT}/app/backend/models/${dataset}"
 
     # Inside Docker the source and target may be the same (mounted volume)
     if [[ "$(realpath "${source_dir}" 2>/dev/null)" == "$(realpath "${target_dir}" 2>/dev/null)" ]]; then

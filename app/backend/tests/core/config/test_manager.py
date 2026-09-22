@@ -1,7 +1,7 @@
 
 import pytest
 import yaml
-from apps.api.app.core.config.manager import ConfigurationManager
+from app.core.pipeline_config.manager import ConfigurationManager
 from pydantic import ValidationError
 
 

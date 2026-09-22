@@ -2,8 +2,8 @@ from __future__ import annotations
 from threading import RLock
 from typing import Generic, TypeVar
 
-from apps.api.app.core.exceptions import PluginNotFoundError, PluginRegistrationError
-from apps.api.app.domain.protocols.plugin_protocol import PluginProtocol
+from app.core.exceptions import PluginNotFoundError, PluginRegistrationError
+from app.domain.protocols.plugin_protocol import PluginProtocol
 
 T = TypeVar('T', bound=PluginProtocol)
 

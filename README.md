@@ -56,8 +56,8 @@
 
 | Capability | Description |
 |:---|:---|
-| **Multi-Format Ingestion** | Upload `.edf`, `.csv`, or `.txt` EEG files — the system handles the rest |
-| **Automatic Dataset Detection** | Rule-based engine identifies Bonn vs. CHB-MIT signal characteristics on the fly |
+| **EDF-Only Ingestion** | Upload validated `.edf` EEG recordings; other file formats are rejected |
+| **Automatic Dataset Detection** | Rule-based engine identifies CHB-MIT, Siena, or unknown recordings from EDF metadata |
 | **57-Feature Extraction** | Time, frequency, and wavelet domain features extracted in a single pass |
 | **Explainable Predictions** | Every seizure score comes with a SHAP breakdown showing *exactly* which features drove the decision |
 | **Zero-Shot Transfer** | Models trained on single-channel Bonn data generalize to multi-channel CHB-MIT scalp EEG (AUC 0.83) |
@@ -110,13 +110,13 @@ NeuroAegis is organized as a **monorepo** using NPM Workspaces, with clear separ
 └────────────────┬──────────────────────────┬─────────────────────┘
                  │                          │
        ┌─────────▼──────────┐    ┌──────────▼──────────┐
-       │    apps/web         │    │    apps/api          │
+       │    apps/web         │    │    app/backend       │
        │  ────────────────── │    │  ──────────────────  │
-       │  React 18 + TS      │    │  FastAPI (Python)    │
+       │  React 19 + TS      │    │  FastAPI (Python)    │
        │  Vite + TailwindCSS │    │  ML Inference Engine │
        │  Three.js (3D)      │    │  SHAP Explainer      │
        │  Framer Motion      │    │  SSE Streaming       │
-       │  Zustand + TanStack │    │  Dataset Detection   │
+       │  Zustand            │    │  Dataset Detection   │
        └─────────────────────┘    └──────────┬──────────┘
                                              │
                                    ┌─────────▼─────────┐
@@ -144,10 +144,10 @@ sequenceDiagram
     participant S as SHAP Explainer
     participant DB as PostgreSQL
 
-    U->>W: Upload EEG file (.edf/.csv/.txt)
-    W->>A: POST /api/v2/predict (multipart/form-data)
+    U->>W: Upload EEG file (.edf)
+    W->>A: POST /api/v1/predict/ (multipart/form-data)
     A->>DB: Create Patient + PredictionJob
-    A->>A: Parse & validate EEG signal
+    A->>A: Stream, validate EDF header, and read model window
     A->>D: Auto-detect dataset origin
     D-->>A: bonn / chbmit + confidence
     A->>A: Extract 57 multi-domain features
@@ -279,17 +279,14 @@ docker-compose up --build
 **Terminal 1 — Backend (FastAPI)**
 
 ```bash
-cd apps/api
+cd app/backend
 
 # Create and activate virtual environment
-python3.12 -m venv ../../.venv
-source ../../.venv/bin/activate  # Windows: ..\..\\.venv\Scripts\activate
+python3.11 -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
-
-# Fetch model artifacts (if not already present)
-bash ../../scripts/fetch_models.sh
+# Install locked dependencies
+pip install -r requirements-lock.txt
 
 # Start the development server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -300,7 +297,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```bash
 cd apps/web
 
-# Install dependencies
+# Install workspace dependencies from repo root or web directory
 npm install
 
 # Start the development server
@@ -320,11 +317,12 @@ Copy `.env.example` to `.env` and configure:
 ```env
 # Frontend
 VITE_API_URL=http://localhost:8000/api/v1
+VITE_API_BASE_URL=http://localhost:8000/api/v1
 
 # Backend
-MODEL_ASSETS_DIR=apps/api/models/bonn
+MODEL_ASSETS_DIR=models/bonn
 CORS_ORIGINS=["http://localhost:5173"]
-MAX_UPLOAD_SIZE=52428800      # 50MB
+MAX_EEG_UPLOAD_BYTES=201326592 # 192 MiB; covers the local CHB-MIT maximum with margin
 
 # Auth (REQUIRED — generate with: openssl rand -hex 32)
 SECRET_KEY=<your-secret-key>
@@ -333,6 +331,13 @@ SECRET_KEY=<your-secret-key>
 DATABASE_URL=sqlite:///./neuroaegis.db                            # Dev
 # DATABASE_URL=postgresql://neuroaegis:password@localhost:5434/neuroaegis_db  # Prod
 ```
+
+`MAX_EEG_UPLOAD_BYTES` is the backend transport limit, not an EDF validity check or
+an in-memory signal limit. The 192 MiB default covers the locally observed CHB-MIT
+maximum of 177,285,376 bytes with 24,041,216 bytes of margin. Dataset size
+observations and structural EDF validation remain separate checks. The nginx API
+proxy allows a 200 MiB request envelope for multipart overhead; the backend still
+enforces `MAX_EEG_UPLOAD_BYTES` on the uploaded file itself.
 
 ---
 
@@ -365,9 +370,8 @@ DATABASE_URL=sqlite:///./neuroaegis.db                            # Dev
 ### Example — Predict Seizure from EEG File
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/predict \
-  -F "file=@sample_eeg_data/S001_seizure.txt" \
-  -F "sampling_rate=173.61"
+curl -X POST http://localhost:8000/api/v1/predict/ \
+  -F "file=@/path/to/recording.edf"
 ```
 
 <details>
@@ -412,24 +416,24 @@ For the complete API contract including Pydantic schemas and TypeScript type map
 
 ```
 NeuroAegis/
+├── app/
+│   └── backend/                    # FastAPI backend
+│       ├── app/
+│       │   ├── main.py             # Application entrypoint + lifespan
+│       │   ├── api/v1/             # v1 endpoints (predict, stream, data_deletion)
+│       │   ├── api/v2/             # v2 endpoints (doctor dashboard, async jobs)
+│       │   ├── core/               # Pydantic settings, event bus, registry
+│       │   ├── db/                 # SQLAlchemy ORM (Patient, PredictionJob, User)
+│       │   └── services/           # Detection, EDF validation, bounded visualization, prediction
+│       ├── models/                 # Serialized .pkl model artifacts
+│       │   ├── bonn/               # LightGBM, XGBoost, RF + metadata
+│       │   └── chbmit/             # CHB-MIT patient-wise models
+│       ├── tests/                  # Complete test suite (96 tests)
+│       ├── Dockerfile              # Python 3.11-slim container
+│       ├── requirements.txt
+│       └── requirements-lock.txt
 ├── apps/
-│   ├── api/                        # FastAPI backend
-│   │   ├── app/
-│   │   │   ├── main.py             # Application entrypoint + lifespan
-│   │   │   ├── api/v1/             # v1 endpoints (predict, stream, data_deletion)
-│   │   │   ├── api/v2/             # v2 endpoints (doctor dashboard)
-│   │   │   ├── core/config.py      # Pydantic settings manager
-│   │   │   ├── db/models.py        # SQLAlchemy ORM (Patient, PredictionJob, User)
-│   │   │   ├── services/
-│   │   │   │   ├── dataset_detection/  # Rule-based Bonn vs CHB-MIT detector
-│   │   │   │   └── prediction/         # Strategy pattern: BasePredictor → Bonn/CHBMIT
-│   │   │   └── middleware/         # Security headers (HSTS, XSS, CSP)
-│   │   ├── models/                 # Serialized .pkl model artifacts
-│   │   │   ├── bonn/              # LightGBM, XGBoost, RF + metadata
-│   │   │   └── chbmit/            # CHB-MIT-specific models
-│   │   └── requirements.txt
-│   │
-│   └── web/                        # React 18 + TypeScript frontend
+│   └── web/                        # React 19 + TypeScript frontend
 │       ├── src/
 │       │   ├── components/         # Reusable UI components
 │       │   ├── features/           # Feature-sliced modules
@@ -544,8 +548,7 @@ graph LR
 
 NeuroAegis enforces strict data handling practices:
 
-- **In-Memory Processing** — Raw EEG files are processed in memory and **never persisted** to disk after analysis
-- **Transient File Cleanup** — Any temporary `.edf` files are deleted immediately after reading
+- **Transient Upload Storage** — EDF uploads are stored under generated temporary names, read lazily for validation/model windows, and deleted after processing
 - **GDPR Article 17** — Dedicated `DELETE /api/v1/data/patient/{id}` endpoint for permanent erasure (admin-only)
 - **Informed Consent** — Patient consent tracking with timestamps and opt-in/opt-out fields
 - **Security Headers** — HSTS, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
@@ -562,25 +565,21 @@ For the complete privacy policy, see [`PRIVACY.md`](./PRIVACY.md).
 
 A GitHub Actions workflow (`.github/workflows/parity.yml`) runs on every push to `main`/`develop` and on all pull requests:
 
-```yaml
-# Validates that API feature extraction matches offline notebook calculations
-- Runs all test_parity*.py scripts
-- Prevents feature calculation regressions
-- Ensures floating-point precision parity between notebook and production code
-```
+- **Backend Test Suite:** Executes all 96 backend tests across unit tests, domain entities, configuration managers, registry hub, dataset detection rules, EDF structural validation, bounded EEG visualization, feature parity, and production hardening.
+- **Frontend Quality Checks:** Executes TypeScript typechecking (`tsc -b --noEmit`) and builds the production bundle via Vite.
 
 ### Running Tests Locally
 
 ```bash
-# Backend parity tests
+# Backend test suite (96 tests)
+cd app/backend
 source .venv/bin/activate
-python scripts/test_parity_bonn.py
-python scripts/test_parity_chbmit.py
+python -m pytest tests/ -v
 
-# Frontend tests
+# Frontend typechecking & production build
 cd apps/web
-npm run test          # Vitest unit tests
-npm run test:e2e      # Playwright E2E tests
+npx tsc -b --noEmit
+npm run build
 ```
 
 ---

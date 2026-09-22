@@ -1,5 +1,7 @@
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
-  ? import.meta.env.VITE_API_BASE_URL as string
+  ? (import.meta.env.VITE_API_BASE_URL as string)
+  : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
   : 'http://127.0.0.1:8000/api/v1';
 
 export interface PredictResponse {

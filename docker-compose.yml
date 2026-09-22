@@ -1,18 +1,17 @@
-version: '3.8'
-
 services:
   api:
     build: 
-      context: ./apps/api
+      context: ./app/backend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
-      - ./apps/api/models:/app/models
+      - ./app/backend/models:/app/models
       - ./scripts:/app/scripts
     command: ["bash", "-c", "bash /app/scripts/fetch_models.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       - MODEL_ASSETS_DIR=/app/models/bonn
+      - MAX_EEG_UPLOAD_BYTES=${MAX_EEG_UPLOAD_BYTES:-201326592}
       - LOG_LEVEL=info
       - DATABASE_URL=${DATABASE_URL:-postgresql://neuroaegis:password@db:5432/neuroaegis_db}
       - SECRET_KEY=${SECRET_KEY:-ff948120d6c9b84a43343111fb6c417098725c0603c22d40742cc7aa8037efa1}
@@ -37,6 +36,7 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
         VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
       - "5173:80"

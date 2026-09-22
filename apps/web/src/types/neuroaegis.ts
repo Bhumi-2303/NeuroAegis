@@ -14,6 +14,8 @@ export interface ShapFeatureContribution {
   readonly featureName: string;
   readonly value: number;
   readonly contribution: number; // positive increases seizure likelihood, negative decreases
+  readonly rawValue?: number;
+  readonly referenceRange?: readonly [number, number];
 }
 
 export interface ShapExplanation {

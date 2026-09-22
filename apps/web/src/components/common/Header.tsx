@@ -12,6 +12,8 @@ interface HeaderProps {
   readonly onTriggerManualSeizure: () => void;
   readonly isManualSeizureActive: boolean;
   readonly onOpenPatientModal: () => void;
+  readonly isRealAnalysis: boolean;
+  readonly patientIdentifier?: string | null;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -24,6 +26,8 @@ export const Header: React.FC<HeaderProps> = ({
   onTriggerManualSeizure,
   isManualSeizureActive,
   onOpenPatientModal,
+  isRealAnalysis,
+  patientIdentifier,
 }) => {
   return (
     <header className="bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 lg:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-md">
@@ -58,63 +62,61 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </span>
           <span className="text-slate-300 font-medium">
-            {isStreaming ? 'LIVE 256Hz' : 'PAUSED'}
+            {isRealAnalysis ? 'REAL EEG ANALYSIS' : isStreaming ? 'DEMO 256Hz' : 'DEMO PAUSED'}
           </span>
         </div>
       </div>
 
       {/* Patient Vital Stats Header Strip */}
-      <div className="hidden lg:flex items-center space-x-5 bg-slate-950/80 border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs">
-        <button
-          type="button"
-          onClick={onOpenPatientModal}
-          className="flex items-center space-x-2 text-left hover:text-indigo-300 transition group"
-        >
-          <User className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-400" />
+      {isRealAnalysis ? (
+        <div className="hidden lg:flex items-center gap-3 bg-emerald-950/30 border border-emerald-800/60 rounded-lg px-3.5 py-1.5 text-xs">
+          <span className="text-emerald-300 uppercase text-[9px] font-bold tracking-wider">Real EEG analysis</span>
+          <span className="h-5 w-px bg-emerald-900" />
+          <span className="text-slate-300 font-mono">{patientIdentifier ?? 'Patient ID unavailable'}</span>
+        </div>
+      ) : (
+        <div className="hidden lg:flex items-center space-x-5 bg-slate-950/80 border border-slate-800 rounded-lg px-3.5 py-1.5 text-xs">
+          <button
+            type="button"
+            onClick={onOpenPatientModal}
+            className="flex items-center space-x-2 text-left hover:text-indigo-300 transition group"
+          >
+            <User className="h-3.5 w-3.5 text-slate-400 group-hover:text-indigo-400" />
+            <div>
+              <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">Patient</span>
+              <span className="text-slate-200 font-mono font-medium group-hover:underline">{vitals.patientId}</span>
+            </div>
+          </button>
+          <div className="h-5 w-px bg-slate-800" />
           <div>
-            <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">
-              Patient
-            </span>
-            <span className="text-slate-200 font-mono font-medium group-hover:underline">
-              {vitals.patientId}
-            </span>
+            <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">Heart Rate</span>
+            <span className="text-emerald-400 font-mono font-semibold">{vitals.heartRateBpm} BPM</span>
           </div>
-        </button>
-        <div className="h-5 w-px bg-slate-800" />
-        <div>
-          <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">
-            Heart Rate
-          </span>
-          <span className="text-emerald-400 font-mono font-semibold">
-            {vitals.heartRateBpm} BPM
-          </span>
+          <div className="h-5 w-px bg-slate-800" />
+          <div>
+            <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">SpO2</span>
+            <span className="text-cyan-400 font-mono font-semibold">{vitals.spO2Percentage}%</span>
+          </div>
         </div>
-        <div className="h-5 w-px bg-slate-800" />
-        <div>
-          <span className="text-slate-500 uppercase text-[9px] block font-bold tracking-wider">
-            SpO2
-          </span>
-          <span className="text-cyan-400 font-mono font-semibold">
-            {vitals.spO2Percentage}%
-          </span>
-        </div>
-      </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center space-x-2">
-        <button
-          type="button"
-          onClick={onTriggerManualSeizure}
-          aria-label="Simulate Epileptic Seizure Pattern"
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors border ${
-            isManualSeizureActive
-              ? 'bg-rose-600 border-rose-500 text-white animate-pulse'
-              : 'bg-slate-800 border-slate-700 text-rose-300 hover:bg-rose-950/40 hover:border-rose-800'
-          }`}
-        >
-          <AlertCircle className="h-3.5 w-3.5" />
-          <span>{isManualSeizureActive ? 'Stop Seizure Sim' : 'Inject Seizure Sim'}</span>
-        </button>
+        {!isRealAnalysis && (
+          <button
+            type="button"
+            onClick={onTriggerManualSeizure}
+            aria-label="Simulate Epileptic Seizure Pattern"
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition-colors border ${
+              isManualSeizureActive
+                ? 'bg-rose-600 border-rose-500 text-white animate-pulse'
+                : 'bg-slate-800 border-slate-700 text-rose-300 hover:bg-rose-950/40 hover:border-rose-800'
+            }`}
+          >
+            <AlertCircle className="h-3.5 w-3.5" />
+            <span>{isManualSeizureActive ? 'Stop Seizure Sim' : 'Inject Seizure Sim'}</span>
+          </button>
+        )}
 
         <button
           type="button"

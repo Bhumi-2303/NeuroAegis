@@ -1,5 +1,5 @@
-# Required Python Version: >=3.6, <3.10 (Recommended: 3.9)
-# Note: Pinned for llvmlite/shap compatibility
+# Required Python Version: >=3.11, <3.12
+# Runtime constraints are kept compatible with the serialized model artifacts.
 fastapi==0.110.1
 uvicorn==0.29.0
 pydantic==2.6.4
@@ -22,6 +22,7 @@ sqlalchemy==2.0.51
 psycopg2-binary==2.9.12
 pyyaml==6.0.1
 scikit-learn==1.6.1
+pyarrow>=21.0.0
 # Training module (attention pooling) — not required for serving
 torch>=2.0.0
 matplotlib>=3.7.0

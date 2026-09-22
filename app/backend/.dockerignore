@@ -1,0 +1,17 @@
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+htmlcov
+neuroaegis.db
+*.db
+*.sqlite3
+.git
+.DS_Store
+._*
+**/._*
+**/.DS_Store
+scratch

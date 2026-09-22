@@ -1,9 +1,12 @@
 from __future__ import annotations
-import io
 import json
+import logging
+import re
+import tempfile
 import uuid
+from pathlib import Path
 
-import pandas as pd
+import mne
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -15,16 +18,33 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import Patient, PredictionJob, User
-from app.services.dataset_detection import dataset_detector
+from app.db.models import Patient, PredictionJob
+from app.services.edf_validation import (
+    EdfValidationResult,
+    UploadValidationError,
+    cleanup_temp_upload,
+    edf_validation_service,
+    sanitize_upload_filename,
+    save_upload_to_temp,
+    usable_eeg_channel_indices,
+)
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
 from app.services.prediction.prediction_router import prediction_router
-from app.core.auth import require_role
 
 router = APIRouter()
+logger = logging.getLogger("neuroaegis")
+
+
+def _validation_http_exception(result: EdfValidationResult, status_code: int) -> HTTPException:
+    return HTTPException(
+        status_code=status_code,
+        detail={
+            "message": "EDF validation failed",
+            "validation": result.response(),
+        },
+    )
 
 @router.post("/predict")
 async def create_prediction_job(
@@ -37,98 +57,109 @@ async def create_prediction_job(
     medical_history: str = Form(...), # JSON string
     vital_signs: str = Form(...), # JSON string
     file: UploadFile = File(...),
-    sampling_rate: float = Form(256.0),
+    sampling_rate: float | None = Form(None),
     channels: str | None = Form(None),
     db: Session = Depends(get_db)
 ):
+    try:
+        safe_filename = sanitize_upload_filename(file.filename)
+    except UploadValidationError as exc:
+        result = EdfValidationResult(
+            validationStatus="invalid",
+            fileName=file.filename or "",
+            fileSizeBytes=0,
+            errors=[str(exc)],
+        )
+        raise _validation_http_exception(result, 400) from exc
+
     if not ml_model_service.is_loaded:
         raise HTTPException(status_code=503, detail="Model is not loaded on the backend")
-        
-    if file.size > settings.MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=413, detail="File too large")
-        
-    import os
-    import re
-    safe_filename = os.path.basename(file.filename)
-    safe_filename = re.sub(r'[^a-zA-Z0-9_\-\.]', '', safe_filename)
-    
+
+    temp_path: Path | None = None
     try:
-        contents = await file.read()
-        if safe_filename.endswith(".csv"):
-            df = pd.read_csv(io.BytesIO(contents), on_bad_lines='skip')
-        elif safe_filename.endswith(".txt"):
+        with tempfile.TemporaryDirectory(prefix="neuroaegis_edf_v2_") as temp_dir:
+            temp_path, safe_filename, uploaded_size = await save_upload_to_temp(
+                file,
+                temp_root=temp_dir,
+                max_upload_size=edf_validation_service.max_upload_size,
+            )
+            validation = edf_validation_service.validate_file(
+                temp_path,
+                file_name=safe_filename,
+                file_size_bytes=uploaded_size,
+            )
+            if validation.validation_status == "invalid":
+                status_code = 413 if any("size limit" in error for error in validation.errors) else 400
+                raise _validation_http_exception(validation, status_code)
+            if validation.dataset == "unknown":
+                validation.validation_status = "invalid"
+                validation.errors.append("Unable to identify the EDF dataset with sufficient confidence")
+                raise _validation_http_exception(validation, 422)
+
+            detected_dataset = validation.dataset
             try:
-                df = pd.read_csv(io.BytesIO(contents), sep=r'\s+|,', engine='python', on_bad_lines='skip')
-            except Exception:
-                df = pd.read_csv(io.BytesIO(contents), sep=None, engine='python', on_bad_lines='skip')
-        else:
-            raise HTTPException(status_code=400, detail="Only .csv and .txt files are supported currently")
-            
-        # Check if headers are just numeric data (headerless file)
-        try:
-            [float(c) for c in df.columns]
-            # If we succeed, it means all columns are numeric -> no header was present
-            first_row = pd.DataFrame([df.columns], columns=df.columns)
-            df = pd.concat([first_row, df], ignore_index=True)
-            df = df.astype(float)
-            df.columns = [str(i) for i in range(len(df.columns))]
-        except ValueError:
-            # It has normal string headers
-            pass
+                prediction_router.get_predictor(detected_dataset)
+            except ValueError as exc:
+                validation.validation_status = "invalid"
+                validation.errors.append(f"No prediction model is configured for dataset '{detected_dataset}'")
+                raise _validation_http_exception(validation, 422) from exc
 
-        # Dataset Detection
-        provided_fs = sampling_rate or 0.0
-        det_ds, conf, rules = dataset_detector.detect(df, provided_fs)
-        if conf < 0.70:
-            raise HTTPException(status_code=400, detail="Unable to determine EEG dataset. Confidence is too low.")
-        detected_dataset = det_ds
-        
-        predictor_metadata = prediction_router.get_available_models().get(detected_dataset, {}).get("dataset_info", {})
-        final_sampling_rate = sampling_rate or predictor_metadata.get("sampling_rate", 256.0)
-        window_length = predictor_metadata.get("window_length", 15360)
-        if not isinstance(window_length, (int, float)):
-            window_length = 15360
-            
-        eeg_data = df.values.T 
-        channel_names = df.columns.tolist()
+            final_sampling_rate = float(validation.sampling_rate or 0.0)
+            if sampling_rate is not None and abs(sampling_rate - final_sampling_rate) > 0.5:
+                validation.validation_status = "invalid"
+                validation.errors.append("Provided sampling rate does not match the EDF header")
+                raise _validation_http_exception(validation, 422)
 
-        if eeg_data.shape[1] > window_length:
-            start_sample = 0
-            if detected_dataset == "chbmit":
-                file_match = re.search(r"(chb\d+)", safe_filename)
-                if file_match:
-                    patient_str = file_match.group(1)
-                    current_dir = os.path.abspath(os.path.dirname(__file__))
-                    while not os.path.exists(os.path.join(current_dir, "data", "chbmit_subset")):
-                        parent = os.path.dirname(current_dir)
-                        if parent == current_dir:
-                            break
-                        current_dir = parent
-                        
-                    summary_path = os.path.join(current_dir, "data", "chbmit_subset", patient_str, f"{patient_str}-summary.txt")
-                    if os.path.exists(summary_path):
-                        with open(summary_path, 'r') as f:
-                            content = f.read()
-                            base_name = os.path.splitext(safe_filename)[0]
-                            file_idx = content.find(base_name)
+            predictor_metadata = prediction_router.get_available_models().get(
+                detected_dataset, {}
+            ).get("dataset_info", {})
+            window_length = predictor_metadata.get("window_length", 15360)
+            if not isinstance(window_length, (int, float)) or window_length <= 0:
+                window_length = 15360
+            window_length = int(window_length)
+
+            raw = mne.io.read_raw_edf(temp_path, preload=False, verbose="ERROR")
+            try:
+                eeg_picks = usable_eeg_channel_indices(raw)
+                start_sample = 0
+                if raw.n_times > window_length and detected_dataset == "chbmit":
+                    file_match = re.search(r"(chb\d+)", safe_filename, flags=re.IGNORECASE)
+                    if file_match:
+                        patient_str = file_match.group(1).lower()
+                        current_dir = Path(__file__).resolve().parent
+                        summary_path = current_dir / "data" / "chbmit_subset" / patient_str / f"{patient_str}-summary.txt"
+                        if summary_path.exists():
+                            content = summary_path.read_text(encoding="utf-8")
+                            file_idx = content.find(Path(safe_filename).stem)
                             if file_idx != -1:
                                 next_file_idx = content.find("File Name:", file_idx + 1)
                                 section = content[file_idx:next_file_idx if next_file_idx != -1 else len(content)]
                                 start_match = re.search(r"Seizure\s+(?:\d+\s+)?Start Time:\s*(\d+)", section)
                                 if start_match:
-                                    start_sec = int(start_match.group(1))
-                                    start_sample = int(start_sec * final_sampling_rate) - (window_length // 2)
-                                    start_sample = max(0, start_sample)
-                                    if start_sample + window_length > eeg_data.shape[1]:
-                                        start_sample = eeg_data.shape[1] - window_length
-            eeg_data = eeg_data[:, start_sample:start_sample + window_length]
-            
-        if channels and channels.strip():
-            channel_names_input = [c.strip() for c in channels.split(",") if c.strip()]
-            if len(channel_names_input) > 0:
-                if len(channel_names_input) != len(df.columns):
-                    raise HTTPException(status_code=400, detail=f"Number of provided channels ({len(channel_names_input)}) does not match CSV columns ({len(df.columns)})")
-                channel_names = channel_names_input
+                                    start_sample = max(
+                                        0,
+                                        int(int(start_match.group(1)) * final_sampling_rate) - window_length // 2,
+                                    )
+                                    start_sample = min(start_sample, raw.n_times - window_length)
+                eeg_data = raw.get_data(
+                    picks=eeg_picks,
+                    start=start_sample,
+                    stop=min(raw.n_times, start_sample + window_length),
+                )
+                channel_names = [raw.ch_names[index] for index in eeg_picks]
+            finally:
+                raw.close()
+
+            if channels and channels.strip():
+                channel_names_input = [item.strip() for item in channels.split(",") if item.strip()]
+                if channel_names_input != channel_names:
+                    validation.validation_status = "invalid"
+                    validation.errors.append("Provided channels do not match the EDF header")
+                    raise _validation_http_exception(validation, 422)
+
+            cleanup_temp_upload(temp_path)
+            temp_path = None
+
         # Parse JSON fields
         try:
             parsed_medical_history = json.loads(medical_history)
@@ -166,10 +197,22 @@ async def create_prediction_job(
         
         return {"job_id": job_id, "patient_id": patient_id}
         
-    except Exception as e:
-        import logging
-        logging.getLogger("neuroaegis").error(f"Failed to start prediction job: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except UploadValidationError as exc:
+        result = EdfValidationResult(
+            validationStatus="invalid",
+            fileName=safe_filename,
+            fileSizeBytes=exc.file_size_bytes,
+            errors=[str(exc)],
+        )
+        raise _validation_http_exception(result, 413 if exc.file_size_bytes else 400) from exc
+    except Exception:
+        logger.exception("Failed to start EDF prediction job")
+        raise HTTPException(status_code=500, detail="EDF prediction job could not be started")
+    finally:
+        if temp_path is not None:
+            cleanup_temp_upload(temp_path)
 
 @router.get("/predict/status/{job_id}")
 async def get_job_status(job_id: str, db: Session = Depends(get_db)):
