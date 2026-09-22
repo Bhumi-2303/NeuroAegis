@@ -1,22 +1,23 @@
-import sys
 from unittest.mock import MagicMock, patch
 
-import pandas as pd
 from fastapi.testclient import TestClient
 
-# Bypass the config module naming conflict
-mock_settings = MagicMock()
-mock_settings.PROJECT_NAME = "NeuroAegis"
-mock_settings.API_V1_STR = "/api/v1"
-mock_settings.API_V2_STR = "/api/v2"
-mock_settings.CORS_ORIGINS = []
-mock_settings.MAX_UPLOAD_SIZE = 50 * 1024 * 1024
-mock_settings.DATABASE_URL = "sqlite:///:memory:"
-mock_config = MagicMock()
-mock_config.settings = mock_settings
-sys.modules['app.core.config'] = mock_config
+from app.core.config import settings
+from tests.edf_fixture import write_synthetic_edf
 
-with patch("app.services.prediction.prediction_router.prediction_router") as mock_router:
+
+# Use the real settings module while keeping this import-time database isolated.
+settings_overrides = {
+    "PROJECT_NAME": "NeuroAegis",
+    "API_V1_STR": "/api/v1",
+    "API_V2_STR": "/api/v2",
+    "CORS_ORIGINS": [],
+    "MAX_EEG_UPLOAD_BYTES": 50 * 1024 * 1024,
+    "DATABASE_URL": "sqlite:///:memory:",
+}
+
+with patch.multiple(settings, **settings_overrides), \
+     patch("app.services.prediction.prediction_router.prediction_router") as mock_router:
     mock_router.is_loaded = True
     mock_router.get_available_models.return_value = {
         "chbmit": {"dataset_info": {"sampling_rate": 256.0, "window_length": 15360}},
@@ -25,13 +26,15 @@ with patch("app.services.prediction.prediction_router.prediction_router") as moc
     from app.db.database import Base, engine, get_db
     from app.main import app
     Base.metadata.create_all(bind=engine)
-    
+
 client = TestClient(app)
 
-def test_predict_endpoint_response_shape():
-    # Create a dummy CSV file that looks like EEG data
-    df = pd.DataFrame({"Fp1": [0.1, 0.2, 0.3], "Fp2": [0.2, 0.3, 0.4]})
-    file_content = df.to_csv(index=False).encode('utf-8')
+def test_predict_endpoint_response_shape(tmp_path):
+    fixture_path = write_synthetic_edf(
+        tmp_path / "chb01_01.edf",
+        channel_names=[f"Ch{i}" for i in range(23)],
+    )
+    file_content = fixture_path.read_bytes()
     
     with patch("app.services.dataset_detection.detector.dataset_detector") as mock_detector, \
          patch("app.api.v1.predict.process_and_save_prediction"):
@@ -39,20 +42,44 @@ def test_predict_endpoint_response_shape():
         # Mock database session to prevent actual DB writes during test
         mock_db = MagicMock()
         app.dependency_overrides[get_db] = lambda: mock_db
-        
-        mock_detector.detect.return_value = ("chbmit", 1.0, ["chbmit_channels"])
-        
-        response = client.post(
-            "/api/v1/predict/",
-            files={"file": ("dummy.csv", file_content, "text/csv")},
-            data={"sampling_rate": 256.0, "dataset": "chbmit", "model": "lightgbm"}
-        )
-        
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        
-        data = response.json()
-        assert "job_id" in data
-        assert data["detected_dataset"] == "chbmit"
-        assert data["confidence"] == 1.0
-        assert data["matched_rules"] == [] or data["matched_rules"] == ["chbmit_channels"]
-        assert data["selected_model"] == "lightgbm"
+        try:
+            mock_detector.detect.return_value = ("chbmit", 1.0, ["chbmit_channels"])
+
+            response = client.post(
+                "/api/v1/predict/",
+                files={"file": ("chb01_01.edf", file_content, "application/edf")},
+                data={"sampling_rate": 256.0, "dataset": "chbmit", "model": "lightgbm"}
+            )
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+
+            data = response.json()
+            assert "job_id" in data
+            assert data["detected_dataset"] == "chbmit"
+            assert data["confidence"] == 1.0
+            assert data["matched_rules"]
+            assert any("Sampling rate matches" in rule for rule in data["matched_rules"])
+            assert data["selected_model"] == "lightgbm"
+            assert data["validation"]["validationStatus"] == "valid"
+            assert data["validation"]["dataset"] == "chbmit"
+        finally:
+            app.dependency_overrides.clear()
+
+
+def test_legacy_v2_endpoint_rejects_non_edf_uploads():
+    response = client.post(
+        "/api/v2/predict",
+        data={
+            "name": "Test Patient",
+            "age": 30,
+            "gender": "unknown",
+            "weight": 70,
+            "height": 170,
+            "medical_history": "{}",
+            "vital_signs": "{}",
+        },
+        files={"file": ("record.csv", b"x,y\n1,2\n", "text/csv")},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["validation"]["errors"] == ["Only .edf files are supported"]

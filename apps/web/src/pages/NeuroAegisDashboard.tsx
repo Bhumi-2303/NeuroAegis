@@ -23,7 +23,38 @@ import { ShapExplanationView } from '../components/analytics/ShapExplanationView
 import { AlertDrawer } from '../components/alerts/AlertDrawer';
 import { ThresholdControlPanel } from '../components/controls/ThresholdControlPanel';
 import { PatientDetailModal } from '../components/patient/PatientDetailModal';
-import { uploadEeg, waitForJob } from '../services/api';
+import { RealEegMetadata } from '../components/eeg/RealEegMetadata';
+import { SignalDerivedChannelActivity } from '../components/eeg/SignalDerivedChannelActivity';
+import {
+  ApiRequestError,
+  EdfValidationResult,
+  EegVisualization,
+  uploadEeg,
+  waitForJob,
+} from '../services/api';
+
+function formatUploadError(error: unknown): string {
+  if (error instanceof ApiRequestError) {
+    if (error.validation?.errors.length) return error.validation.errors.join('; ');
+    return error.message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return 'EEG analysis failed. Select the EDF again to retry.';
+}
+
+function formatJobStatus(status: string): string {
+  const labels: Record<string, string> = {
+    Validating: 'Validating EDF and detecting dataset...',
+    Processing: 'Processing EEG...',
+    'Validating Patient Data': 'Validating patient data...',
+    'Feature Extraction & Signal Processing': 'Extracting EEG features...',
+    'Brain Graph Construction': 'Constructing brain graph...',
+    'Graph Neural Network Inference': 'Running model inference...',
+    'Explainable AI (SHAP)': 'Generating feature explanation...',
+    'Confidence Calculation': 'Finalizing prediction...',
+  };
+  return labels[status] ?? 'Processing EEG...';
+}
 
 export const NeuroAegisDashboard: React.FC = () => {
   // Lifecycle State Discriminated Union
@@ -39,7 +70,12 @@ export const NeuroAegisDashboard: React.FC = () => {
   const [isPatientModalOpen, setIsPatientModalOpen] = useState<boolean>(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<string>("No EEG file selected");
+  const [uploadValidation, setUploadValidation] = useState<EdfValidationResult | null>(null);
   const [isRealAnalysis, setIsRealAnalysis] = useState<boolean>(false);
+  const [realVisualization, setRealVisualization] = useState<EegVisualization | null>(null);
+  const [predictionAvailable, setPredictionAvailable] = useState<boolean>(true);
+  const [isUploadInFlight, setIsUploadInFlight] = useState<boolean>(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Configuration State
   const [config, setConfig] = useState<ModelThresholdConfig>({
@@ -62,6 +98,8 @@ export const NeuroAegisDashboard: React.FC = () => {
 
   // Interval reference
   const timerRef = useRef<number | null>(null);
+  const uploadInFlightRef = useRef<boolean>(false);
+  const uploadAbortRef = useRef<AbortController | null>(null);
 
   // Live Telemetry Loop (250ms polling tick simulating live 256Hz WebSocket stream)
   useEffect(() => {
@@ -115,6 +153,13 @@ export const NeuroAegisDashboard: React.FC = () => {
     config.temporalWindowSeconds,
   ]);
 
+  // Abort in-flight upload requests on unmount
+  useEffect(() => {
+    return () => {
+      uploadAbortRef.current?.abort();
+    };
+  }, []);
+
   // Handlers
   const handleToggleStream = useCallback(() => {
     setIsStreaming((prev) => !prev);
@@ -125,14 +170,47 @@ export const NeuroAegisDashboard: React.FC = () => {
   }, []);
 
   const handleUploadEeg = useCallback(async (file: File) => {
+    if (uploadInFlightRef.current) return;
+
+    // Abort any previously abandoned request
+    uploadAbortRef.current?.abort();
+    const abortController = new AbortController();
+    uploadAbortRef.current = abortController;
+
+    uploadInFlightRef.current = true;
+    setIsUploadInFlight(true);
     setIsRealAnalysis(true);
+    setRealVisualization(null);
+    setPredictionAvailable(false);
+    setPrediction(generatePrediction(false, config.sensitivityThreshold));
+    setChannels([]);
+    setAlerts([]);
+    setIsManualSeizureActive(false);
     setUploadedFileName(file.name);
-    setUploadStatus("Uploading EEG...");
+    setUploadValidation(null);
+    setUploadError(null);
+    setUploadStatus('Uploading EEG...');
+
+    if (!file.name.toLowerCase().endsWith('.edf')) {
+      const message = 'Only .edf files are supported';
+      setUploadError(message);
+      setUploadStatus(message);
+      uploadInFlightRef.current = false;
+      setIsUploadInFlight(false);
+      return;
+    }
+
     try {
-      setUploadStatus("Analyzing EEG...");
-      const submitted = await uploadEeg(file);
-      setUploadStatus("Waiting for model prediction...");
-      const completed = await waitForJob(submitted.job_id);
+      const submitted = await uploadEeg(file, { signal: abortController.signal });
+      setUploadValidation(submitted.validation);
+      setUploadStatus('Validating EDF and detecting dataset...');
+      const completed = await waitForJob(
+        submitted.job_id,
+        (job) => setUploadStatus(formatJobStatus(job.status)),
+        500,
+        5 * 60 * 1000,
+        abortController.signal,
+      );
 
       if (!completed.result) {
         throw new Error("Backend completed without a prediction result");
@@ -152,6 +230,7 @@ export const NeuroAegisDashboard: React.FC = () => {
       }));
 
       setChannels(realChannels);
+      setRealVisualization(visualization);
 
       const seizureProbability = completed.result.probability_seizure;
       const confidenceValue = Math.max(seizureProbability, 1 - seizureProbability);
@@ -180,36 +259,55 @@ export const NeuroAegisDashboard: React.FC = () => {
             featureName: feature.featureName,
             value: feature.value,
             contribution: feature.value,
+            rawValue: feature.rawValue,
+            referenceRange: feature.referenceRange,
           })),
         },
         generatedAt: new Date().toISOString(),
       };
 
       setPrediction(realPrediction);
-      setUploadStatus("Analysis complete");
-
-      if (realPrediction.probabilities.seizure >= config.sensitivityThreshold) {
-        setAlerts((prevAlerts) => {
-          const newAlert: SeizureAlert = {
-            id: `real-${Date.now()}`,
-            timestamp: new Date().toLocaleTimeString(),
-            severity: "critical",
-            probability: realPrediction.probabilities.seizure,
-            primaryChannel: "EEG",
-            durationSeconds: config.temporalWindowSeconds,
-            acknowledged: false,
-          };
-
-          return [newAlert, ...prevAlerts.slice(0, 19)];
-        });
-      }
+      setPredictionAvailable(true);
+      setUploadError(null);
+      setUploadStatus('Analysis complete');
 
       console.log("NeuroAegis real EEG prediction:", realPrediction);
     } catch (error) {
-      setUploadStatus("Analysis failed");
+      // Silently ignore abort errors — they are expected on unmount or new upload
+      if ((error instanceof DOMException && error.name === 'AbortError') || (error as Error)?.name === 'AbortError') return;
+
+      const message = formatUploadError(error);
+      if (error instanceof ApiRequestError && error.validation) {
+        setUploadValidation(error.validation);
+      }
+      setRealVisualization(null);
+      setPredictionAvailable(false);
+      setChannels([]);
+      setAlerts([]);
+      setUploadError(message);
+      setUploadStatus(`Analysis failed: ${message}`);
       console.error("NeuroAegis EEG analysis failed:", error);
+    } finally {
+      uploadInFlightRef.current = false;
+      setIsUploadInFlight(false);
     }
-  }, [config.sensitivityThreshold, config.temporalWindowSeconds]);
+  }, [config.gainMultiplier, config.sensitivityThreshold]);
+
+  const handleResetToDemo = useCallback(() => {
+    uploadAbortRef.current?.abort();
+    setIsUploadInFlight(false);
+    setIsRealAnalysis(false);
+    setRealVisualization(null);
+    setPredictionAvailable(true);
+    setUploadedFileName(null);
+    setUploadStatus("No EEG file selected");
+    setUploadValidation(null);
+    setUploadError(null);
+    setChannels(generateEegBuffer(128, 0, false, config.gainMultiplier));
+    setPrediction(generatePrediction(false, config.sensitivityThreshold));
+    setAlerts(createInitialAlerts());
+    setIsManualSeizureActive(false);
+  }, [config.gainMultiplier, config.sensitivityThreshold]);
 
   const handleTriggerManualSeizure = useCallback(() => {
     setIsManualSeizureActive((prev) => !prev);
@@ -235,8 +333,10 @@ export const NeuroAegisDashboard: React.FC = () => {
       if (format === 'json') {
         dataContent = JSON.stringify(
           {
-            patient: patientVitals,
-            prediction,
+            patient: isRealAnalysis
+              ? { patientId: realVisualization?.patientIdentifier ?? null }
+              : patientVitals,
+            prediction: predictionAvailable ? prediction : null,
             alerts,
             channels: channels.map((c) => ({
               channel: c.name,
@@ -249,16 +349,16 @@ export const NeuroAegisDashboard: React.FC = () => {
         mimeType = 'application/json';
         filename = `neuroaegis_session_${timestamp}.json`;
       } else {
-        const rows = [
-          ['Timestamp', 'Model', 'Label', 'SeizureProbability', 'ConfidenceBand'],
-          [
+        const rows = [['Timestamp', 'Model', 'Label', 'SeizureProbability', 'ConfidenceBand']];
+        if (predictionAvailable) {
+          rows.push([
             prediction.generatedAt,
             prediction.modelName,
             prediction.label,
             prediction.probabilities.seizure.toString(),
             prediction.confidence.band,
-          ],
-        ];
+          ]);
+        }
         dataContent = rows.map((r) => r.join(',')).join('\n');
         mimeType = 'text/csv';
         filename = `neuroaegis_prediction_${timestamp}.csv`;
@@ -274,8 +374,15 @@ export const NeuroAegisDashboard: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     },
-    [patientVitals, prediction, alerts, channels]
+    [isRealAnalysis, patientVitals, prediction, predictionAvailable, realVisualization, alerts, channels]
   );
+
+  const referenceChannels: EegChannelData[] = realVisualization?.reference?.channels.map((channel) => ({
+    id: channel.id,
+    name: channel.name,
+    voltageMicrovolts: channel.samples,
+    baselineOffset: 0,
+  })) ?? [];
 
 
 
@@ -321,6 +428,8 @@ export const NeuroAegisDashboard: React.FC = () => {
         onTriggerManualSeizure={handleTriggerManualSeizure}
         isManualSeizureActive={isManualSeizureActive}
         onOpenPatientModal={() => setIsPatientModalOpen(true)}
+        isRealAnalysis={isRealAnalysis}
+        patientIdentifier={realVisualization?.patientIdentifier}
       />
 
       {/* Main Clinical Monitoring Grid */}
@@ -367,23 +476,56 @@ export const NeuroAegisDashboard: React.FC = () => {
 
         <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 px-4 py-3 rounded-xl">
           <div>
-            <div className="text-sm font-medium text-slate-200">Real EEG Analysis</div>
-            <div className="text-xs text-slate-500">{uploadedFileName ? uploadedFileName + " • " + uploadStatus : uploadStatus}</div>
+            <div className={`text-sm font-medium ${uploadError ? 'text-rose-300' : isRealAnalysis ? 'text-emerald-300' : 'text-slate-200'}`}>
+              {uploadError ? 'EEG ANALYSIS ERROR' : isRealAnalysis ? 'REAL EEG ANALYSIS' : 'DEMO / SIMULATION MODE'}
+            </div>
+            <div className="text-xs text-slate-500" aria-live="polite">
+              {uploadedFileName ? uploadedFileName + " • " + uploadStatus : uploadStatus}
+            </div>
+            {uploadError && (
+              <div role="alert" className="mt-2 text-xs text-rose-300">
+                {uploadError} Select another EDF or retry the upload.
+              </div>
+            )}
+            {uploadValidation && (
+              <div className="mt-2 text-[11px] text-slate-400">
+                Dataset: {uploadValidation.dataset} · Size: {(uploadValidation.fileSizeBytes / 1_000_000).toFixed(2)} MB ·
+                Sampling: {uploadValidation.samplingRate ?? "-"} Hz · Channels: {uploadValidation.eegChannels}/{uploadValidation.totalChannels} ·
+                Duration: {uploadValidation.durationSeconds == null ? "-" : `${uploadValidation.durationSeconds.toFixed(1)} s`}
+              </div>
+            )}
           </div>
-          <label className="cursor-pointer px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition">
-            Upload EEG
-            <input
-              type="file"
-              accept=".csv,.txt,.edf"
-              className="hidden"
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) void handleUploadEeg(file);
-                event.target.value = "";
-              }}
-            />
-          </label>
+          <div className="flex items-center gap-2">
+            {isRealAnalysis && (
+              <button
+                type="button"
+                onClick={handleResetToDemo}
+                disabled={isUploadInFlight}
+                className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Reset to Demo
+              </button>
+            )}
+            <label className={`px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium transition ${isUploadInFlight ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-indigo-500'}`}>
+              {isUploadInFlight ? 'Analyzing EEG...' : 'Upload EEG'}
+              <input
+                type="file"
+                accept=".edf"
+                className="hidden"
+                disabled={isUploadInFlight}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleUploadEeg(file);
+                  event.target.value = "";
+                }}
+              />
+            </label>
+          </div>
         </div>
+
+        {isRealAnalysis && realVisualization && (
+          <RealEegMetadata visualization={realVisualization} />
+        )}
 
         {/* Real-time Waveform Canvas + Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -391,12 +533,40 @@ export const NeuroAegisDashboard: React.FC = () => {
           <div className="lg:col-span-8 space-y-6 flex flex-col">
             <EegWaveformCanvas
               channels={channels}
-              isSeizureActive={
+              isSeizureActive={!isRealAnalysis && (
                 isManualSeizureActive ||
                 prediction.probabilities.seizure >= config.sensitivityThreshold
-              }
+              )}
               gain={config.gainMultiplier}
+              samplingRate={realVisualization?.samplingRate}
+              durationSeconds={realVisualization?.durationSeconds}
+              timeStartSeconds={realVisualization?.timeStartSeconds}
+              timeEndSeconds={realVisualization?.timeEndSeconds}
+              seizures={realVisualization?.seizures}
+              title={isRealAnalysis ? 'PATIENT EEG - SEIZURE ANALYSIS' : 'DEMO EEG - SIMULATION'}
+              emptyMessage={isRealAnalysis ? uploadStatus : 'No waveform available'}
             />
+
+            {isRealAnalysis && realVisualization && (
+              <section className="space-y-3">
+                <div>
+                  <h2 className="text-xs uppercase font-bold tracking-wider text-slate-300">NORMAL / REFERENCE EEG</h2>
+                  <p className="text-[11px] text-slate-500 mt-1">A genuine non-seizure segment selected from this recording using dataset annotations.</p>
+                </div>
+                {realVisualization.referenceAvailable && realVisualization.reference ? (
+                  <EegWaveformCanvas
+                    channels={referenceChannels}
+                    gain={config.gainMultiplier}
+                    samplingRate={realVisualization.samplingRate}
+                    durationSeconds={realVisualization.reference.durationSeconds}
+                    title="NORMAL / REFERENCE EEG"
+                    emptyMessage="No reference waveform available"
+                  />
+                ) : (
+                  <p className="text-xs text-slate-500 py-4">No reference EEG segment is available for this recording.</p>
+                )}
+              </section>
+            )}
 
             {/* Inference & DSP Tuning Panel */}
             <ThresholdControlPanel config={config} onChange={setConfig} />
@@ -405,30 +575,53 @@ export const NeuroAegisDashboard: React.FC = () => {
           {/* Right Column: AI Analytics & Alarm Queues (4 cols) */}
           <div className="lg:col-span-4 space-y-6 flex flex-col">
             {/* Real-time Probability Gauge */}
-            <RiskGauge
-              prediction={prediction}
-              sensitivityThreshold={config.sensitivityThreshold}
-            />
+            {predictionAvailable ? (
+              <RiskGauge
+                prediction={prediction}
+                sensitivityThreshold={config.sensitivityThreshold}
+              />
+            ) : (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-sm text-slate-500 shadow-lg">
+                Model prediction unavailable until the EDF analysis completes.
+              </div>
+            )}
 
             {/* SHAP Feature Contribution (XAI) */}
-            <ShapExplanationView explanation={prediction.explanation} />
+            <ShapExplanationView explanation={predictionAvailable ? prediction.explanation : null} />
+
+            {isRealAnalysis && realVisualization && (
+              <SignalDerivedChannelActivity
+                activity={realVisualization.channelActivity}
+                available={realVisualization.channelActivityAvailable}
+                note={realVisualization.channelActivityNote}
+              />
+            )}
 
             {/* Clinical Alarm List */}
-            <AlertDrawer
-              alerts={alerts}
-              onAcknowledgeAlert={handleAcknowledgeAlert}
-              onClearAll={handleClearAllAlerts}
-            />
+            {!isRealAnalysis && (
+              <AlertDrawer
+                alerts={alerts}
+                onAcknowledgeAlert={handleAcknowledgeAlert}
+                onClearAll={handleClearAllAlerts}
+              />
+            )}
+            {isRealAnalysis && (
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 text-xs text-slate-500 shadow-lg">
+                Dataset seizure annotations are shown on the patient EEG. The model prediction remains a window-level result.
+              </div>
+            )}
           </div>
         </div>
       </main>
 
       {/* Patient Profile Modal */}
-      <PatientDetailModal
-        isOpen={isPatientModalOpen}
-        vitals={patientVitals}
-        onClose={() => setIsPatientModalOpen(false)}
-      />
+      {!isRealAnalysis && (
+        <PatientDetailModal
+          isOpen={isPatientModalOpen}
+          vitals={patientVitals}
+          onClose={() => setIsPatientModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

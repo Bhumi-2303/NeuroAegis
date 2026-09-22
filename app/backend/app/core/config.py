@@ -6,6 +6,11 @@ import yaml
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# The largest locally observed CHB-MIT EDF is 177,285,376 bytes. The 192 MiB
+# default leaves 24,041,216 bytes of margin for legitimate dataset variation.
+DEFAULT_MAX_EEG_UPLOAD_BYTES = 192 * 1024 * 1024
+
+
 class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     API_V2_STR: str = "/api/v2"
@@ -24,7 +29,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:3000"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
     
     # Model Configuration
     # Uses absolute path calculation based on project root if running locally
@@ -32,8 +42,8 @@ class Settings(BaseSettings):
     # Kept for backwards compatibility temporarily
     MODEL_ASSETS_DIR: str = os.path.join(BASE_DIR, "models", "bonn")
     
-    # Upload limits
-    MAX_UPLOAD_SIZE: int = 104857600  # 100 MB
+    # Transport limit only; EDF validity and signal-memory limits are separate.
+    MAX_EEG_UPLOAD_BYTES: int = DEFAULT_MAX_EEG_UPLOAD_BYTES
     
     model_config = SettingsConfigDict(
         env_file=".env",
