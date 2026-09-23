@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import math
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -45,9 +46,26 @@ class AnnotationResult:
     available: bool
 
 
-def _project_root() -> Path:
-    # settings.BASE_DIR is app/backend in the supported local layout.
-    return Path(settings.BASE_DIR).resolve().parents[1]
+def _project_root(base_dir: str | Path | None = None) -> Path:
+    explicit = getattr(settings, "PROJECT_ROOT", None) or os.getenv("PROJECT_ROOT")
+    if explicit:
+        return Path(explicit).resolve()
+
+    base = Path(base_dir if base_dir is not None else settings.BASE_DIR).resolve()
+    # Standard local monorepo layout: <repo>/app/backend -> repo root is parents[1]
+    if len(base.parents) >= 2 and base.name == "backend" and base.parent.name == "app":
+        candidate = base.parents[1]
+        if candidate != Path(candidate.root):
+            return candidate
+
+    # Look for dataset/annotation root markers in base or any ancestor
+    for candidate in [base, *base.parents]:
+        if candidate == Path(candidate.root):
+            continue
+        if (candidate / "CHB-MIT Dataset").exists() or (candidate / "data" / "chbmit_subset").exists():
+            return candidate
+
+    return base
 
 
 def _finite_interval(start: float, end: float, duration_seconds: float | None = None) -> SeizureInterval | None:

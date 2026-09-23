@@ -201,3 +201,54 @@ def test_reference_is_unavailable_when_seizure_covers_recording(tmp_path: Path, 
 
     assert result["referenceAvailable"] is False
     assert result["channelActivityAvailable"] is False
+
+
+def test_project_root_handles_container_and_monorepo_layouts(tmp_path: Path, monkeypatch):
+    """Regression test for Prompt 5.1: prevent IndexError: 1 when BASE_DIR has shallow ancestry."""
+    # 1. Container layout where BASE_DIR has only 1 parent (e.g. /app -> parent /)
+    container_base = Path("/app")
+    resolved_container = visualization._project_root(container_base)
+    assert resolved_container == container_base
+
+    # Test via settings.BASE_DIR monkeypatch
+    monkeypatch.setattr(visualization.settings, "BASE_DIR", str(container_base))
+    assert visualization._project_root() == container_base
+
+    # Annotation resolution must not raise IndexError when in container layout
+    res = visualization.resolve_dataset_annotations("chbmit", "chb01_01.edf")
+    assert res.available is False
+
+    # 2. Local monorepo layout: <repo>/app/backend -> must resolve to <repo>
+    mock_repo = tmp_path / "neuroaegis_repo"
+    mock_backend = mock_repo / "app" / "backend"
+    mock_backend.mkdir(parents=True)
+    resolved_local = visualization._project_root(mock_backend)
+    assert resolved_local == mock_repo
+
+    monkeypatch.setattr(visualization.settings, "BASE_DIR", str(mock_backend))
+    assert visualization._project_root() == mock_repo
+
+    # 3. Explicit PROJECT_ROOT override
+    custom_root = tmp_path / "custom_data_root"
+    custom_root.mkdir()
+    monkeypatch.setenv("PROJECT_ROOT", str(custom_root))
+    assert visualization._project_root() == custom_root
+
+
+def test_build_eeg_visualization_succeeds_in_container_environment(tmp_path: Path, monkeypatch):
+    """Verify build_eeg_visualization_from_raw runs cleanly when BASE_DIR is /app."""
+    monkeypatch.setattr(visualization.settings, "BASE_DIR", "/app")
+    path, raw = _open_fixture(tmp_path, ["Fp1", "F3"], duration=2)
+    try:
+        result = build_eeg_visualization_from_raw(
+            raw,
+            file_name="chb01_01.edf",
+            file_size_bytes=path.stat().st_size,
+            dataset="chbmit",
+        )
+    finally:
+        raw.close()
+
+    assert result["dataset"] == "chbmit"
+    assert result["eegChannelCount"] == 2
+    assert result["annotationStatus"] == "unavailable"

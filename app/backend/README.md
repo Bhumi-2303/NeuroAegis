@@ -14,7 +14,7 @@ Production-ready FastAPI backend for the NeuroAegis explainable AI EEG seizure d
 1. **Inference Only:** The production backend strictly runs pre-trained models. Model weights are never modified during request processing.
 2. **One-Time Startup:** Model artifacts, reference ranges, and feature configurations are loaded and cached in memory during the application lifespan startup.
 3. **EDF-Only Ingestion:** Only valid European Data Format (`.edf`) files are accepted. Non-EDF uploads are immediately rejected with HTTP 400 and corrective guidance before heavy processing.
-4. **Bounded EEG Visualization:** Waveform rendering extracts a bounded window (up to 23 channels, 30 seconds at 256 Hz = 7,680 points per channel) with strict memory bounds and physical unit conversion (µV/mV).
+4. **Bounded EEG Visualization:** Waveform rendering extracts dynamic channels based on usable EEG channels across the available recording duration. Backend waveform sampling is bounded by `MAX_VISUALIZATION_POINTS = 2000`, with frontend rendering capped by `MAX_RENDERED_POINTS = 3000`. Downsampling uses sparse reads and sampled indices rather than loading the full recording into RAM, with physical unit conversion (µV).
 5. **Explainability by Design:** Every seizure prediction includes SHAP feature-level attributions, baseline values, and physiological reference ranges.
 
 ## Directory Structure
@@ -46,8 +46,8 @@ app/backend/
 ## Endpoints
 
 ### API v1 (Core Inference)
-- `GET /health` / `GET /api/v1/health`: Health check confirming model availability.
-- `GET /model/info` / `GET /api/v1/model/info`: Active model metadata and feature definitions.
+- `GET /api/v1/health`: Health check confirming model availability.
+- `GET /api/v1/model/info`: Active model metadata and feature definitions.
 - `POST /api/v1/predict`: Single-file synchronous EDF seizure prediction with dataset detection, feature extraction, and SHAP explanation.
 - `GET /api/v1/stream/eeg`: Server-Sent Events (SSE) EEG streaming endpoint.
 - `DELETE /api/v1/data/patient/{id}`: GDPR Article 17 permanent patient data erasure.
