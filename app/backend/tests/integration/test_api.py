@@ -16,13 +16,7 @@ settings_overrides = {
     "DATABASE_URL": "sqlite:///:memory:",
 }
 
-with patch.multiple(settings, **settings_overrides), \
-     patch("app.services.prediction.prediction_router.prediction_router") as mock_router:
-    mock_router.is_loaded = True
-    mock_router.get_available_models.return_value = {
-        "chbmit": {"dataset_info": {"sampling_rate": 256.0, "window_length": 15360}},
-        "bonn": {"dataset_info": {"sampling_rate": 173.61, "window_length": 4097}}
-    }
+with patch.multiple(settings, **settings_overrides):
     from app.db.database import Base, engine, get_db
     from app.main import app
     Base.metadata.create_all(bind=engine)
@@ -37,7 +31,13 @@ def test_predict_endpoint_response_shape(tmp_path):
     file_content = fixture_path.read_bytes()
     
     with patch("app.services.dataset_detection.detector.dataset_detector") as mock_detector, \
-         patch("app.api.v1.predict.process_and_save_prediction"):
+         patch("app.api.v1.predict.process_and_save_prediction"), \
+         patch("app.api.v1.predict.prediction_router") as mock_router:
+        mock_router.is_loaded = True
+        mock_router.get_available_models.return_value = {
+            "chbmit": {"dataset_info": {"sampling_rate": 256.0, "window_length": 15360}},
+            "bonn": {"dataset_info": {"sampling_rate": 173.61, "window_length": 4097}}
+        }
         
         # Mock database session to prevent actual DB writes during test
         mock_db = MagicMock()

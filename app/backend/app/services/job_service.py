@@ -9,9 +9,6 @@ from sqlalchemy.orm import Session
 
 from app.db.database import SessionLocal
 from app.db.models import PredictionJob
-from app.services.explainer import shap_service
-from app.services.features import extract_features as extract_all_features
-from app.services.features import preprocess_eeg, select_and_order_features
 from app.services.prediction.prediction_router import prediction_router
 
 logger = logging.getLogger("neuroaegis.job_service")
@@ -31,61 +28,29 @@ def update_job_status(job_id: str, status: str, progress: int):
 
 def _run_inference(eeg_data: np.ndarray, channel_names: list, fs: float, dataset_name: str) -> dict:
     """CPU-bound inference work — runs in a thread executor."""
-    denoised_data = preprocess_eeg(eeg_data)
-    all_features = extract_all_features(denoised_data, channel_names, fs)
-
     predictor = prediction_router.get_predictor(dataset_name)
-    feature_vector = select_and_order_features(all_features, predictor.selected_features)
-    if predictor.scaler:
-        feature_vector = predictor.scaler.transform(feature_vector)
-
-    model = predictor.models.get('lightgbm') or predictor.models.get(predictor.default_model)
-
-    if hasattr(model, "predict_proba"):
-        probs = model.predict_proba(feature_vector)
-        prob_seizure = float(probs[0][1]) if len(probs[0]) > 1 else float(probs[0][0])
-    else:
-        preds = model.predict(feature_vector)
-        val = preds[0]
-        if isinstance(val, (np.ndarray, list)):
-            prob_seizure = float(val[1]) if len(val) > 1 else float(val[0])
-        else:
-            prob_seizure = float(val)
-
-    prob_non_seizure = 1.0 - prob_seizure
-    is_seizure = prob_seizure > 0.5
-    label = "seizure" if is_seizure else "non_seizure"
-
-    confidence_val = max(prob_seizure, prob_non_seizure)
-    if confidence_val > 0.9:
-        band = "high"
-    elif confidence_val > 0.75:
-        band = "medium"
-    else:
-        band = "low"
-
-    explanation_dict = shap_service.explain_prediction(feature_vector, top_n=10)
-
-    for feat in explanation_dict.get("features", []):
-        name = feat["featureName"]
-        feat["rawValue"] = all_features.get(name)
-
-        if predictor.scaler and name in predictor.selected_features:
-            idx = predictor.selected_features.index(name)
-            if hasattr(predictor.scaler, 'mean_') and hasattr(predictor.scaler, 'scale_'):
-                mean = float(predictor.scaler.mean_[idx])
-                std = float(predictor.scaler.scale_[idx])
-                feat["referenceRange"] = [mean - std, mean + std]
-
+    prediction_result = predictor.get_prediction(
+        eeg_data=eeg_data,
+        channel_names=channel_names,
+        fs=fs,
+        model_name=predictor.default_model,
+    )
     return {
-        "label": label,
-        "prob_seizure": prob_seizure,
-        "band": band,
-        "explanation": explanation_dict,
+        "label": prediction_result["prediction"]["label"],
+        "prob_seizure": float(prediction_result["prediction"]["probabilities"]["seizure"]),
+        "band": prediction_result["confidence"]["band"],
+        "explanation": prediction_result["explanation"],
     }
 
 
-async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_names: list, fs: float, dataset_name: str = "bonn"):
+async def run_prediction_pipeline(
+    job_id: str,
+    eeg_data: np.ndarray,
+    channel_names: list,
+    fs: float,
+    dataset_name: str = "bonn",
+    eeg_visualization: dict | None = None,
+):
     try:
         # Stage 1: Validating
         update_job_status(job_id, "Validating Patient Data", 10)
@@ -108,6 +73,15 @@ async def run_prediction_pipeline(job_id: str, eeg_data: np.ndarray, channel_nam
                 job.probability_seizure = result["prob_seizure"]
                 job.confidence_band = result["band"]
                 job.shap_explanation = result["explanation"]
+                if eeg_visualization is not None:
+                    job.eeg_visualization = eeg_visualization
+                elif job.eeg_visualization is None:
+                    from app.services.eeg_visualization import build_window_visualization
+                    job.eeg_visualization = build_window_visualization(
+                        eeg_data=eeg_data,
+                        channel_names=channel_names,
+                        fs=fs,
+                    )
                 job.status = "Completed"
                 job.progress = 100
                 job.completed_at = datetime.datetime.utcnow()

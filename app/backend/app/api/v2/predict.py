@@ -29,6 +29,7 @@ from app.services.edf_validation import (
     save_upload_to_temp,
     usable_eeg_channel_indices,
 )
+from app.services.eeg_visualization import build_eeg_visualization_from_raw
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
 from app.services.prediction.prediction_router import prediction_router
@@ -47,6 +48,7 @@ def _validation_http_exception(result: EdfValidationResult, status_code: int) ->
     )
 
 @router.post("/predict")
+@router.post("/predict/")
 async def create_prediction_job(
     background_tasks: BackgroundTasks,
     name: str = Form(...),
@@ -147,6 +149,12 @@ async def create_prediction_job(
                     stop=min(raw.n_times, start_sample + window_length),
                 )
                 channel_names = [raw.ch_names[index] for index in eeg_picks]
+                eeg_visualization = build_eeg_visualization_from_raw(
+                    raw,
+                    file_name=safe_filename,
+                    file_size_bytes=uploaded_size,
+                    dataset=detected_dataset,
+                )
             finally:
                 raw.close()
 
@@ -176,7 +184,7 @@ async def create_prediction_job(
             gender=gender,
             weight=weight,
             height=height,
-            medical_history=parsed_medical_history,
+            medical_history=medical_history,
             vital_signs=parsed_vital_signs
         )
         db.add(patient)
@@ -187,15 +195,35 @@ async def create_prediction_job(
             id=job_id,
             patient_id=patient_id,
             status="Validating",
-            progress=0
+            progress=0,
+            detected_dataset=detected_dataset,
+            detection_confidence=validation.detection_confidence,
+            selected_model="lightgbm",
+            eeg_visualization=eeg_visualization,
         )
         db.add(job)
         db.commit()
         
         # Start background task
-        background_tasks.add_task(run_prediction_pipeline, job_id, eeg_data, channel_names, final_sampling_rate, detected_dataset)
+        background_tasks.add_task(
+            run_prediction_pipeline,
+            job_id,
+            eeg_data,
+            channel_names,
+            final_sampling_rate,
+            detected_dataset,
+            eeg_visualization=eeg_visualization,
+        )
         
-        return {"job_id": job_id, "patient_id": patient_id}
+        return {
+            "job_id": job_id,
+            "patient_id": patient_id,
+            "detected_dataset": detected_dataset,
+            "confidence": validation.detection_confidence,
+            "matched_rules": validation.matched_rules,
+            "selected_model": "lightgbm",
+            "validation": validation.response(),
+        }
         
     except HTTPException:
         raise
@@ -215,6 +243,7 @@ async def create_prediction_job(
             cleanup_temp_upload(temp_path)
 
 @router.get("/predict/status/{job_id}")
+@router.get("/jobs/{job_id}")
 async def get_job_status(job_id: str, db: Session = Depends(get_db)):
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:
@@ -223,7 +252,10 @@ async def get_job_status(job_id: str, db: Session = Depends(get_db)):
     response = {
         "job_id": job.id,
         "status": job.status,
-        "progress": job.progress
+        "progress": job.progress,
+        "datasetName": job.detected_dataset,
+        "detectionConfidence": job.detection_confidence,
+        "modelName": job.selected_model or "lightgbm",
     }
     
     if job.status == "Completed":
@@ -231,8 +263,23 @@ async def get_job_status(job_id: str, db: Session = Depends(get_db)):
             "prediction_label": job.prediction_label,
             "probability_seizure": job.probability_seizure,
             "confidence_band": job.confidence_band,
-            "shap_explanation": job.shap_explanation
+            "shap_explanation": job.shap_explanation,
+            "eeg_visualization": job.eeg_visualization,
         }
+        response["prediction"] = {
+            "label": job.prediction_label,
+            "probabilities": {
+                "seizure": job.probability_seizure,
+                "non_seizure": 1.0 - job.probability_seizure if job.probability_seizure is not None else 0.0,
+            },
+        }
+        response["confidence"] = {
+            "value": job.probability_seizure if job.probability_seizure is not None else 0.0,
+            "band": job.confidence_band,
+        }
+        response["explanation"] = job.shap_explanation
+    elif job.status == "Failed":
+        response["error"] = job.error or "Job failed during processing"
         
     return response
 
@@ -243,10 +290,10 @@ async def get_history(db: Session = Depends(get_db)):
     for job in jobs:
         results.append({
             "job_id": job.id,
-            "patient_name": job.patient.name,
+            "patient_name": job.patient.name if job.patient else None,
             "created_at": job.created_at,
             "status": job.status,
-            "prediction_label": job.prediction_label
+            "prediction_label": job.prediction_label,
         })
     return results
 
@@ -260,20 +307,26 @@ async def get_report(job_id: str, db: Session = Depends(get_db)):
         "job": {
             "id": job.id,
             "status": job.status,
+            "progress": job.progress,
             "prediction_label": job.prediction_label,
             "probability_seizure": job.probability_seizure,
             "confidence_band": job.confidence_band,
             "shap_explanation": job.shap_explanation,
+            "eeg_visualization": job.eeg_visualization,
+            "datasetName": job.detected_dataset,
+            "detectionConfidence": job.detection_confidence,
+            "modelName": job.selected_model or "lightgbm",
+            "error": job.error,
             "created_at": job.created_at,
-            "completed_at": job.completed_at
+            "completed_at": job.completed_at,
         },
         "patient": {
-            "name": job.patient.name,
-            "age": job.patient.age,
-            "gender": job.patient.gender,
-            "weight": job.patient.weight,
-            "height": job.patient.height,
-            "medical_history": job.patient.medical_history,
-            "vital_signs": job.patient.vital_signs
-        }
+            "name": job.patient.name if job.patient else None,
+            "age": job.patient.age if job.patient else None,
+            "gender": job.patient.gender if job.patient else None,
+            "weight": job.patient.weight if job.patient else None,
+            "height": job.patient.height if job.patient else None,
+            "medical_history": job.patient.medical_history if job.patient else None,
+            "vital_signs": job.patient.vital_signs if job.patient else None,
+        },
     }
