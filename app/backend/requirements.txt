@@ -26,3 +26,6 @@ pyarrow>=21.0.0
 # Training module (attention pooling) — not required for serving
 torch>=2.0.0
 matplotlib>=3.7.0
+# Queue / worker infrastructure (Prompt 7)
+redis>=5.0.0,<6.0.0
+arq>=0.25.0,<0.27.0

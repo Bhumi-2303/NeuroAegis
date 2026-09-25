@@ -1,5 +1,6 @@
 .venv
 __pycache__
+**/__pycache__
 *.pyc
 *.pyo
 *.pyd
@@ -13,5 +14,7 @@ neuroaegis.db
 .DS_Store
 ._*
 **/._*
+.__*
+**/.__*
 **/.DS_Store
 scratch

@@ -13,12 +13,23 @@ from app.services.prediction.prediction_router import prediction_router
 
 logger = logging.getLogger("neuroaegis.job_service")
 
-def update_job_status(job_id: str, status: str, progress: int):
+def update_job_status(job_id: str, status: str, progress: int, expected_worker_id: str | None = None):
     """Update job status using a short-lived DB session."""
     db = SessionLocal()
     try:
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
         if job:
+            if expected_worker_id is not None and job.worker_id != expected_worker_id:
+                logger.warning(
+                    f"Skipping status update for job {job_id}: worker ownership mismatch "
+                    f"(expected '{expected_worker_id}', current owner is '{job.worker_id}')"
+                )
+                return
+            if job.status in ("Completed", "Failed"):
+                logger.warning(
+                    f"Skipping status update for job {job_id}: job is already in terminal state '{job.status}'"
+                )
+                return
             job.status = status
             job.progress = progress
             db.commit()
@@ -50,13 +61,14 @@ async def run_prediction_pipeline(
     fs: float,
     dataset_name: str = "bonn",
     eeg_visualization: dict | None = None,
+    expected_worker_id: str | None = None,
 ):
     try:
         # Stage 1: Validating
-        update_job_status(job_id, "Validating Patient Data", 10)
+        update_job_status(job_id, "Validating Patient Data", 10, expected_worker_id=expected_worker_id)
 
         # Stage 2-5: Run CPU-bound ML inference in a thread executor
-        update_job_status(job_id, "Feature Extraction & Signal Processing", 25)
+        update_job_status(job_id, "Feature Extraction & Signal Processing", 25, expected_worker_id=expected_worker_id)
         loop = asyncio.get_running_loop()
         result = await loop.run_in_executor(
             None,
@@ -64,11 +76,22 @@ async def run_prediction_pipeline(
         )
 
         # Stage 6: Save final results
-        update_job_status(job_id, "Confidence Calculation", 95)
+        update_job_status(job_id, "Confidence Calculation", 95, expected_worker_id=expected_worker_id)
         db = SessionLocal()
         try:
             job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
             if job:
+                if expected_worker_id is not None and job.worker_id != expected_worker_id:
+                    logger.warning(
+                        f"Refusing to finalize job {job_id} as Completed: worker ownership mismatch "
+                        f"(expected '{expected_worker_id}', current owner is '{job.worker_id}')"
+                    )
+                    return
+                if job.status == "Failed":
+                    logger.warning(
+                        f"Refusing to finalize job {job_id} as Completed: job was reaped or marked Failed"
+                    )
+                    return
                 job.prediction_label = result["label"]
                 job.probability_seizure = result["prob_seizure"]
                 job.confidence_band = result["band"]
@@ -95,6 +118,12 @@ async def run_prediction_pipeline(
         try:
             job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
             if job:
+                if expected_worker_id is not None and job.worker_id != expected_worker_id:
+                    logger.warning(
+                        f"Skipping failure record for job {job_id}: worker ownership mismatch "
+                        f"(expected '{expected_worker_id}', current owner is '{job.worker_id}')"
+                    )
+                    return
                 job.status = "Failed"
                 job.progress = 0
                 job.error = str(e)

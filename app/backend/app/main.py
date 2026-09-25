@@ -38,9 +38,12 @@ async def lifespan(app: FastAPI):
     """
     Lifecycle manager for the FastAPI app.
     Loads the ML models and SHAP explainers exactly once during startup.
+    Ensures database schema compatibility and runs background stale job reaper.
     """
     logger.info("Application startup: Creating database tables...")
     Base.metadata.create_all(bind=engine)
+    from app.db.database import ensure_schema_compatibility
+    ensure_schema_compatibility(engine)
     
     logger.info("Application startup: Loading ML artifacts via Prediction Router...")
     from app.services.prediction.prediction_router import prediction_router
@@ -51,10 +54,43 @@ async def lifespan(app: FastAPI):
     else:
         prediction_router.last_load_time = None
         logger.warning("Failed to load some or all ML models. API will start in degraded mode.")
+
+    # Background reaper for stale jobs and orphaned payloads
+    import asyncio
+    reaper_stop = asyncio.Event()
+
+    async def _api_reaper_loop():
+        from app.services.job_recovery import cleanup_orphaned_staged_files, reap_stale_jobs
+        from app.db.database import SessionLocal
+        while not reaper_stop.is_set():
+            try:
+                await asyncio.wait_for(reaper_stop.wait(), timeout=settings.REAPER_INTERVAL_SECONDS)
+                break
+            except asyncio.TimeoutError:
+                pass
+            if reaper_stop.is_set():
+                break
+            try:
+                db = SessionLocal()
+                try:
+                    reap_stale_jobs(db)
+                    cleanup_orphaned_staged_files(db=db)
+                finally:
+                    db.close()
+            except Exception as exc:
+                logger.error(f"API background reaper notice: {exc}")
+
+    reaper_task = asyncio.create_task(_api_reaper_loop())
         
     yield
     
     logger.info("Application shutdown: Cleaning up resources...")
+    reaper_stop.set()
+    try:
+        await asyncio.wait_for(reaper_task, timeout=2.0)
+    except Exception:
+        pass
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

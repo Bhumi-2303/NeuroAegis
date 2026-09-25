@@ -6,17 +6,58 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./app/backend/models:/app/models
-      - ./scripts:/app/scripts
-    command: ["bash", "-c", "bash /app/scripts/fetch_models.sh && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+      - storage_data:/app/storage
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       - MODEL_ASSETS_DIR=/app/models/bonn
       - MAX_EEG_UPLOAD_BYTES=${MAX_EEG_UPLOAD_BYTES:-201326592}
       - LOG_LEVEL=info
-      - DATABASE_URL=${DATABASE_URL:-postgresql://neuroaegis:password@db:5432/neuroaegis_db}
+      - DATABASE_URL=${CONTAINER_DATABASE_URL:-postgresql://neuroaegis:password@db:5432/neuroaegis_db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - STORAGE_DIR=${STORAGE_DIR:-/app/storage}
+      - ENABLE_DISTRIBUTED_QUEUE=${ENABLE_DISTRIBUTED_QUEUE:-false}
+      - JOB_LEASE_TIMEOUT_SECONDS=${JOB_LEASE_TIMEOUT_SECONDS:-30}
+      - STORAGE_ORPHAN_GRACE_SECONDS=${STORAGE_ORPHAN_GRACE_SECONDS:-300}
+      - REAPER_INTERVAL_SECONDS=${REAPER_INTERVAL_SECONDS:-5}
       - SECRET_KEY=${SECRET_KEY:-ff948120d6c9b84a43343111fb6c417098725c0603c22d40742cc7aa8037efa1}
     depends_on:
       - db
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  worker:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile
+    volumes:
+      - storage_data:/app/storage
+    command: ["python", "-m", "arq", "app.services.worker.WorkerSettings"]
+    environment:
+      - MODEL_ASSETS_DIR=/app/models/bonn
+      - LOG_LEVEL=info
+      - DATABASE_URL=${CONTAINER_DATABASE_URL:-postgresql://neuroaegis:password@db:5432/neuroaegis_db}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
+      - STORAGE_DIR=${STORAGE_DIR:-/app/storage}
+      - WORKER_MAX_JOBS=${WORKER_MAX_JOBS:-2}
+      - JOB_LEASE_TIMEOUT_SECONDS=${JOB_LEASE_TIMEOUT_SECONDS:-30}
+      - WORKER_HEARTBEAT_INTERVAL_SECONDS=${WORKER_HEARTBEAT_INTERVAL_SECONDS:-5}
+      - STORAGE_ORPHAN_GRACE_SECONDS=${STORAGE_ORPHAN_GRACE_SECONDS:-300}
+      - REAPER_INTERVAL_SECONDS=${REAPER_INTERVAL_SECONDS:-5}
+    depends_on:
+      - db
+      - redis
     restart: unless-stopped
 
   db:
@@ -46,3 +87,5 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
+  storage_data:

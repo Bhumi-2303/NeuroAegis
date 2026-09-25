@@ -29,10 +29,13 @@ from app.services.edf_validation import (
     save_upload_to_temp,
     usable_eeg_channel_indices,
 )
+from app.core.config import settings
 from app.services.eeg_visualization import build_eeg_visualization_from_raw
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
 from app.services.prediction.prediction_router import prediction_router
+from app.services.queue import prediction_queue
+from app.services.storage import storage_backend
 
 router = APIRouter()
 logger = logging.getLogger("neuroaegis")
@@ -204,16 +207,56 @@ async def create_prediction_job(
         db.add(job)
         db.commit()
         
-        # Start background task
-        background_tasks.add_task(
-            run_prediction_pipeline,
-            job_id,
-            eeg_data,
-            channel_names,
-            final_sampling_rate,
-            detected_dataset,
-            eeg_visualization=eeg_visualization,
-        )
+        # Dispatch prediction job: Distributed Queue (Opt-in) vs In-Process (Default)
+        if settings.ENABLE_DISTRIBUTED_QUEUE:
+            staged_path = None
+            try:
+                # Stage inference window package to shared storage
+                staged_path = storage_backend.save_window(
+                    job_id=job_id,
+                    eeg_data=eeg_data,
+                    channel_names=channel_names,
+                    fs=final_sampling_rate,
+                    dataset_name=detected_dataset,
+                    eeg_visualization=eeg_visualization,
+                    metadata={"patient_id": patient_id},
+                )
+                # Enqueue job reference to Redis via ARQ (no raw signal arrays in broker)
+                await prediction_queue.enqueue_prediction_job(
+                    job_id=job_id,
+                    staged_path=staged_path,
+                    dataset_name=detected_dataset,
+                    medical_history=parsed_medical_history,
+                )
+            except Exception as queue_exc:
+                logger.error(
+                    f"Failed to stage or enqueue job {job_id} in distributed queue mode: {queue_exc}",
+                    exc_info=True,
+                )
+                if staged_path:
+                    try:
+                        storage_backend.delete_window(staged_path)
+                    except Exception:
+                        pass
+                job.status = "Failed"
+                job.error = f"Distributed queue dispatch failed: {queue_exc}"
+                db.commit()
+                # Strict Architectural Constraint: Never silently fall back to in-process execution!
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"Distributed queue dispatch failed: {queue_exc}",
+                ) from queue_exc
+        else:
+            # Default Prompt 6 path: in-process background execution
+            background_tasks.add_task(
+                run_prediction_pipeline,
+                job_id,
+                eeg_data,
+                channel_names,
+                final_sampling_rate,
+                detected_dataset,
+                eeg_visualization=eeg_visualization,
+            )
         
         return {
             "job_id": job_id,
@@ -248,6 +291,13 @@ async def get_job_status(job_id: str, db: Session = Depends(get_db)):
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    # If the job is active but its worker lease expired, reap it immediately
+    if job.status not in ("Completed", "Failed") and job.lease_expires_at is not None:
+        from app.services.job_recovery import reap_job_if_stale
+        if reap_job_if_stale(job_id, db):
+            db.refresh(job)
+
         
     response = {
         "job_id": job.id,

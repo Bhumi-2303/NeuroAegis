@@ -59,6 +59,11 @@ class PredictionJob(Base):
     
     created_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
+
+    # Worker Lifecycle & Leases (Prompt 7.4)
+    worker_id = Column(String, nullable=True, index=True)
+    heartbeat_at = Column(DateTime, nullable=True)
+    lease_expires_at = Column(DateTime, nullable=True, index=True)
     
     patient = relationship("Patient", back_populates="jobs")
 

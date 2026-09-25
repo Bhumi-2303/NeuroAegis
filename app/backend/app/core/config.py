@@ -1,5 +1,6 @@
 from __future__ import annotations
 import os
+import tempfile
 from typing import Any
 
 import yaml
@@ -23,6 +24,32 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = "sqlite:///./neuroaegis.db"
     
+    # Redis / Queue Infrastructure (Prompt 7 & 7.4)
+    REDIS_URL: str = "redis://redis:6379/0"
+    QUEUE_NAME: str = "neuroaegis:jobs"
+    WORKER_MAX_JOBS: int = 2
+    JOB_TIMEOUT_SECONDS: int = 120
+
+    @property
+    def WORKER_CONCURRENCY(self) -> int:
+        """Backward compatibility alias for canonical WORKER_MAX_JOBS."""
+        return self.WORKER_MAX_JOBS
+
+    # Worker Lifecycle & Leases (Prompt 7.4)
+    WORKER_HEARTBEAT_INTERVAL_SECONDS: int = 5
+    JOB_LEASE_TIMEOUT_SECONDS: int = 30
+    STORAGE_ORPHAN_GRACE_SECONDS: int = 300
+    REAPER_INTERVAL_SECONDS: int = 10
+
+    # Shared Staged Storage (Prompt 7)
+    STORAGE_DIR: str = os.environ.get(
+        "STORAGE_DIR",
+        "/app/storage" if os.path.exists("/app") else os.path.join(tempfile.gettempdir(), "neuroaegis_storage")
+    )
+
+    # Controlled Queue Dispatch (Prompt 7.3)
+    ENABLE_DISTRIBUTED_QUEUE: bool = False
+
     # Auth
     SECRET_KEY: str = "ff948120d6c9b84a43343111fb6c417098725c0603c22d40742cc7aa8037efa1"
     ALGORITHM: str = "HS256"

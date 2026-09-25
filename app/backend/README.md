@@ -29,15 +29,20 @@ app/backend/
 │   ├── core/                      # Configuration, settings, event bus, and registry
 │   ├── db/                        # SQLAlchemy database models, session management
 │   ├── schemas/                   # Pydantic schemas (1:1 with @neuroaegis/model-contracts)
-│   └── services/                  # Preprocessing, feature extraction, dataset detection, visualization
+│   └── services/                  # Preprocessing, feature extraction, dataset detection, queue, storage, worker
 │       ├── dataset_detection/     # Rule-based detector (CHB-MIT, Siena, Bonn, Unknown)
 │       ├── edf_validation.py      # Structural EDF validation and transport limits
-│       └── eeg_visualization.py   # Bounded waveform extraction and channel stats
+│       ├── eeg_visualization.py   # Bounded waveform extraction and channel stats
+│       ├── job_recovery.py        # Stale-job reaper and orphan storage cleanup
+│       ├── job_service.py         # Asynchronous prediction pipeline orchestrator
+│       ├── queue.py               # Redis/ARQ PredictionQueue abstraction and payload validator
+│       ├── storage.py             # LocalStorageBackend for atomic staged inference packages
+│       └── worker.py              # ARQ worker task entrypoint, leases, and heartbeats
 ├── config/                        # YAML configurations (models, dataset validation rules)
 ├── models/                        # Serialized model artifacts (.pkl, metadata.json, reference ranges)
 │   ├── bonn/                      # LightGBM full dataset model + SHAP explainer
 │   └── chbmit/                    # Patient-wise models + reference ranges
-├── tests/                         # Full test suite (96 tests: unit, integration, parity, hardening)
+├── tests/                         # Full test suite (143 tests across core, unit, integration, parity, storage, queue, worker lifecycle, and hardening)
 ├── Dockerfile                     # Production container specification (Python 3.11-slim)
 ├── requirements.txt               # Development dependencies
 └── requirements-lock.txt          # Multi-platform pinned dependencies with cryptographic hashes
@@ -53,8 +58,8 @@ app/backend/
 - `DELETE /api/v1/data/patient/{id}`: GDPR Article 17 permanent patient data erasure.
 
 ### API v2 (Asynchronous Job Processing & Doctor Dashboard)
-- `POST /api/v2/predict`: Initiates background EEG analysis job with optional patient demographics and clinical history.
-- `GET /api/v2/predict/status/{job_id}`: Polls asynchronous job status (`pending`, `processing`, `completed`, `failed`).
+- `POST /api/v2/predict` (and `/predict/`): Initiates background EEG analysis job with optional patient demographics and clinical history. Supports default in-process execution (Mode A) and opt-in distributed worker queue dispatch (Mode B).
+- `GET /api/v2/predict/status/{job_id}` (and `/jobs/{job_id}`): Polls asynchronous job status (`Pending`, `Running`, `Completed`, `Failed`). Triggers on-demand stale lease recovery if an active worker lease expired.
 - `GET /api/v2/history`: Returns historical prediction jobs for clinical auditing.
 - `GET /api/v2/report/{job_id}`: Comprehensive clinical report with prediction scores and feature importance.
 
@@ -68,14 +73,24 @@ app/backend/
 | `SECRET_KEY` | *(Required)* | Secret key for cryptographic signing |
 | `CORS_ORIGINS` | `["http://localhost:5173"]` | Allowlisted CORS origins (JSON array or comma-separated) |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
+| `ENABLE_DISTRIBUTED_QUEUE` | `False` | Distributed queue dispatch mode (opt-in; default is in-process Mode A) |
+| `REDIS_URL` | `redis://redis:6379/0` | Redis broker connection URI for ARQ job queue |
+| `STORAGE_DIR` | `/app/storage` | Local directory or shared Docker volume for atomic staged .npz payloads |
+| `WORKER_MAX_JOBS` | `2` | Canonical worker concurrency limit (ARQ max_jobs) |
+| `JOB_LEASE_TIMEOUT_SECONDS` | `30` | Duration before an un-heartbeated worker lease is reaped as Failed |
+| `WORKER_HEARTBEAT_INTERVAL_SECONDS` | `5` | Interval at which active worker extends job lease |
+| `STORAGE_ORPHAN_GRACE_SECONDS` | `300` | Minimum retention age before orphaned staged files are eligible for unlinking |
+| `REAPER_INTERVAL_SECONDS` | `10` | Interval for background stale-job and orphaned file cleanup |
+
+> **Note on Storage & Retries:** Shared staged storage utilizes a shared local filesystem or Docker named volume (not multi-host object storage). To preserve ML prediction determinism and prevent infinite processing loops on corrupted EEG signals, automatic retries are not performed.
 
 ## Running Tests
 
-Run the complete test suite (96 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, and production hardening):
+Run the complete test suite (143 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, and production hardening):
 
 ```bash
 # From app/backend directory with active virtual environment:
-python -m pytest tests/ -v
+python -m pytest tests/ -q
 ```
 
 ## Running the API Locally
