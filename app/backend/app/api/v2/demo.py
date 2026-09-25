@@ -1,4 +1,4 @@
-from __future__ import annotations
+import logging
 import os
 
 import numpy as np
@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from app.services.model_service import ml_model_service
 
 router = APIRouter()
+logger = logging.getLogger("neuroaegis.demo")
 
 class WindowData(BaseModel):
     window_idx: int
@@ -46,8 +47,11 @@ def get_live_monitor_data():
             ))
 
         return LiveMonitorResponse(record=record_name, windows=windows)
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Failed to load live monitor demo data: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to load demo live-monitor data")
 
 @router.post("/predict-features")
 def predict_features(request: PredictFeaturesRequest):

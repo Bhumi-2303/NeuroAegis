@@ -67,6 +67,14 @@ async def create_prediction_job(
     db: Session = Depends(get_db)
 ):
     try:
+        parsed_medical_history = json.loads(medical_history)
+        parsed_vital_signs = json.loads(vital_signs)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON in medical_history or vital_signs")
+    if not isinstance(parsed_medical_history, dict) or not isinstance(parsed_vital_signs, dict):
+        raise HTTPException(status_code=400, detail="medical_history and vital_signs must be JSON objects")
+
+    try:
         safe_filename = sanitize_upload_filename(file.filename)
     except UploadValidationError as exc:
         result = EdfValidationResult(
@@ -171,13 +179,6 @@ async def create_prediction_job(
             cleanup_temp_upload(temp_path)
             temp_path = None
 
-        # Parse JSON fields
-        try:
-            parsed_medical_history = json.loads(medical_history)
-            parsed_vital_signs = json.loads(vital_signs)
-        except json.JSONDecodeError:
-            raise HTTPException(status_code=400, detail="Invalid JSON in medical_history or vital_signs")
-            
         # Create Patient
         patient_id = str(uuid.uuid4())
         patient = Patient(
@@ -285,9 +286,19 @@ async def create_prediction_job(
         if temp_path is not None:
             cleanup_temp_upload(temp_path)
 
+SAFE_JOB_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+
+def validate_job_id(job_id: str) -> str:
+    if not job_id or len(job_id) > 64 or not SAFE_JOB_ID_REGEX.match(job_id):
+        raise HTTPException(status_code=400, detail="Invalid job ID format")
+    return job_id
+
+
 @router.get("/predict/status/{job_id}")
 @router.get("/jobs/{job_id}")
 async def get_job_status(job_id: str, db: Session = Depends(get_db)):
+    validate_job_id(job_id)
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -349,6 +360,7 @@ async def get_history(db: Session = Depends(get_db)):
 
 @router.get("/report/{job_id}")
 async def get_report(job_id: str, db: Session = Depends(get_db)):
+    validate_job_id(job_id)
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")

@@ -10,6 +10,11 @@ from app.db.models import Patient, PredictionJob, User
 router = APIRouter()
 
 
+import re
+
+SAFE_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+
 @router.delete("/patient/{patient_id}")
 def delete_patient_data(
     patient_id: str,
@@ -21,6 +26,8 @@ def delete_patient_data(
     This fulfills GDPR Article 17 (Right to Erasure / Right to be Forgotten).
     Only admins can perform data deletion.
     """
+    if not patient_id or len(patient_id) > 64 or not SAFE_ID_REGEX.match(patient_id):
+        raise HTTPException(status_code=400, detail="Invalid patient ID format")
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")

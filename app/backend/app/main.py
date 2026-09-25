@@ -26,8 +26,22 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "SAMEORIGIN"
-        response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+
+        # Content Security Policy (restrictive for API endpoints, permits Swagger CDN in dev)
+        if settings.ENVIRONMENT == "production":
+            response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'; object-src 'none'"
+        else:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; "
+                "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "img-src 'self' data: https://fastapi.tiangolo.com; "
+                "frame-ancestors 'none'; "
+                "object-src 'none'"
+            )
+
         if settings.ENVIRONMENT != "development":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
@@ -92,11 +106,15 @@ async def lifespan(app: FastAPI):
         pass
 
 
+openapi_url = f"{settings.API_V1_STR}/openapi.json" if settings.ENABLE_DOCS else None
+docs_url = "/docs" if settings.ENABLE_DOCS else None
+redoc_url = "/redoc" if settings.ENABLE_DOCS else None
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    openapi_url=openapi_url,
+    docs_url=docs_url,
+    redoc_url=redoc_url,
     lifespan=lifespan
 )
 
@@ -104,14 +122,71 @@ app = FastAPI(
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Set all CORS enabled origins
-if settings.CORS_ORIGINS:
+cors_origins = settings.CORS_ALLOWED_ORIGINS or settings.CORS_ORIGINS
+if cors_origins:
+    allow_creds = settings.CORS_ALLOW_CREDENTIALS and ("*" not in cors_origins)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.CORS_ORIGINS,
-        allow_credentials=True,
+        allow_origins=cors_origins,
+        allow_credentials=allow_creds,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+# Root operational probes
+@app.api_route("/healthz", methods=["GET", "HEAD"], tags=["health"])
+@app.api_route("/liveness", methods=["GET", "HEAD"], tags=["health"])
+async def root_liveness():
+    """Liveness probe for orchestrators and load balancers."""
+    return {"status": "alive"}
+
+
+@app.api_route("/readiness", methods=["GET", "HEAD"], tags=["health"])
+async def root_readiness():
+    """Readiness probe verifying DB connectivity and ML models."""
+    from app.services.prediction.prediction_router import prediction_router
+    from app.services.model_service import ml_model_service
+    from sqlalchemy import text
+    from fastapi.responses import JSONResponse
+
+    db_healthy = False
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            db_healthy = True
+    except Exception as exc:
+        logger.error(f"Readiness check DB error: {exc}")
+
+    models_ready = bool(ml_model_service.is_loaded or prediction_router.is_loaded)
+
+    redis_healthy = True
+    if settings.ENABLE_DISTRIBUTED_QUEUE:
+        try:
+            from app.services.queue import prediction_queue
+            pool = await prediction_queue.get_pool()
+            await pool.ping()
+        except Exception as exc:
+            logger.error(f"Readiness check Redis error: {exc}")
+            redis_healthy = False
+
+    if not db_healthy or not redis_healthy:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "database": "healthy" if db_healthy else "unhealthy",
+                "redis": "healthy" if redis_healthy else "unhealthy" if settings.ENABLE_DISTRIBUTED_QUEUE else "disabled",
+                "models": "loaded" if models_ready else "unloaded",
+            },
+        )
+
+    return {
+        "status": "ready",
+        "database": "healthy",
+        "redis": "healthy" if settings.ENABLE_DISTRIBUTED_QUEUE else "disabled",
+        "models": "loaded" if models_ready else "degraded",
+    }
+
 
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 

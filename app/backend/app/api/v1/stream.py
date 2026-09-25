@@ -77,6 +77,6 @@ async def stream_eeg(
                 
         except Exception as e:
             logger.error(f"Error streaming EEG data: {e}", exc_info=True)
-            yield f"event: error\ndata: {json.dumps({'detail': str(e)})}\n\n"
+            yield f"event: error\ndata: {json.dumps({'detail': 'Streaming error occurred'})}\n\n"
             
     return StreamingResponse(event_generator(), media_type="text/event-stream")

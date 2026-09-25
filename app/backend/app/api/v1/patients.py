@@ -34,8 +34,15 @@ def get_patients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db))
     patients = db.query(Patient).offset(skip).limit(limit).all()
     return patients
 
+import re
+
+SAFE_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+
 @router.get("/{patient_id}", response_model=PatientResponse)
 def get_patient(patient_id: str, db: Session = Depends(get_db)):
+    if not patient_id or len(patient_id) > 64 or not SAFE_ID_REGEX.match(patient_id):
+        raise HTTPException(status_code=400, detail="Invalid patient ID format")
     patient = db.query(Patient).filter(Patient.id == patient_id).first()
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")

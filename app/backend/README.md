@@ -42,7 +42,7 @@ app/backend/
 ├── models/                        # Serialized model artifacts (.pkl, metadata.json, reference ranges)
 │   ├── bonn/                      # LightGBM full dataset model + SHAP explainer
 │   └── chbmit/                    # Patient-wise models + reference ranges
-├── tests/                         # Full test suite (143 tests across core, unit, integration, parity, storage, queue, worker lifecycle, and hardening)
+├── tests/                         # Full test suite (155 tests across core, unit, integration, parity, storage, queue, worker lifecycle, and security hardening)
 ├── Dockerfile                     # Production container specification (Python 3.11-slim)
 ├── requirements.txt               # Development dependencies
 └── requirements-lock.txt          # Multi-platform pinned dependencies with cryptographic hashes
@@ -50,8 +50,14 @@ app/backend/
 
 ## Endpoints
 
+### Operational Probes
+- `GET /healthz` (and `/liveness`): Process liveness probe for orchestrators and load balancers.
+- `GET /readiness`: Readiness probe verifying database connectivity, Redis connection (if distributed queue enabled), and ML model loaded status.
+
 ### API v1 (Core Inference)
 - `GET /api/v1/health`: Health check confirming model availability.
+- `GET /api/v1/liveness`: Lightweight v1 liveness probe.
+- `GET /api/v1/readiness`: Operational v1 readiness probe.
 - `GET /api/v1/model/info`: Active model metadata and feature definitions.
 - `POST /api/v1/predict`: Single-file synchronous EDF seizure prediction with dataset detection, feature extraction, and SHAP explanation.
 - `GET /api/v1/stream/eeg`: Server-Sent Events (SSE) EEG streaming endpoint.
@@ -70,8 +76,9 @@ app/backend/
 | `MODEL_ASSETS_DIR` | `models/bonn` | Directory containing serialized model artifacts |
 | `MAX_EEG_UPLOAD_BYTES` | `201326592` (192 MiB) | Maximum allowed EDF file upload size |
 | `DATABASE_URL` | `sqlite:///./neuroaegis.db` | Database connection string (PostgreSQL in production) |
-| `SECRET_KEY` | *(Required)* | Secret key for cryptographic signing |
-| `CORS_ORIGINS` | `["http://localhost:5173"]` | Allowlisted CORS origins (JSON array or comma-separated) |
+| `SECRET_KEY` | *(Required in Prod)* | Cryptographic secret (must be set via environment in production) |
+| `CORS_ALLOWED_ORIGINS` | `["http://localhost:5173", ...]` | Allowlisted CORS origins (JSON array or comma-separated) |
+| `ENABLE_DOCS` | `True` (dev) / `False` (prod) | Toggle interactive Swagger UI (`/docs`, `/redoc`) |
 | `LOG_LEVEL` | `INFO` | Logging verbosity |
 | `ENABLE_DISTRIBUTED_QUEUE` | `False` | Distributed queue dispatch mode (opt-in; default is in-process Mode A) |
 | `REDIS_URL` | `redis://redis:6379/0` | Redis broker connection URI for ARQ job queue |
@@ -83,10 +90,12 @@ app/backend/
 | `REAPER_INTERVAL_SECONDS` | `10` | Interval for background stale-job and orphaned file cleanup |
 
 > **Note on Storage & Retries:** Shared staged storage utilizes a shared local filesystem or Docker named volume (not multi-host object storage). To preserve ML prediction determinism and prevent infinite processing loops on corrupted EEG signals, automatic retries are not performed.
+>
+> **Access Boundary Notice:** Prediction job endpoints (`/api/v1/jobs/{job_id}`, `/api/v2/jobs/{job_id}`, `/api/v2/report/{job_id}`) use 128-bit unguessable UUIDs and strict regex format validation. Full multi-tenant authorization / RBAC is not yet implemented; job possession is currently the access boundary.
 
 ## Running Tests
 
-Run the complete test suite (143 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, and production hardening):
+Run the complete test suite (155 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, production hardening, and security hardening):
 
 ```bash
 # From app/backend directory with active virtual environment:

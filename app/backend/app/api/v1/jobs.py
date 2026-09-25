@@ -52,8 +52,20 @@ def get_latest_job(db: Session = Depends(get_db)):
         
     return response
 
+import re
+
+SAFE_JOB_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+
+
+def validate_job_id(job_id: str) -> str:
+    if not job_id or len(job_id) > 64 or not SAFE_JOB_ID_REGEX.match(job_id):
+        raise HTTPException(status_code=400, detail="Invalid job ID format")
+    return job_id
+
+
 @router.get("/{job_id}", response_model=dict[str, Any])
 def get_job(job_id: str, db: Session = Depends(get_db)):
+    validate_job_id(job_id)
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")

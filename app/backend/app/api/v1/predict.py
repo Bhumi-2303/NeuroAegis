@@ -328,4 +328,4 @@ async def predict_eeg(
         raise
     except Exception as e:
         logger.error(f"Prediction failed: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="An error occurred during prediction processing.")

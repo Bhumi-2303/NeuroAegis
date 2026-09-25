@@ -551,9 +551,9 @@ NeuroAegis enforces strict data handling practices:
 - **Transient Upload Storage** — EDF uploads are stored under generated temporary names, read lazily for validation/model windows, and deleted after processing
 - **GDPR Article 17** — Dedicated `DELETE /api/v1/data/patient/{id}` endpoint for permanent erasure (admin-only)
 - **Informed Consent** — Patient consent tracking with timestamps and opt-in/opt-out fields
-- **Security Headers** — HSTS, X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, Referrer-Policy
-- **CORS Enforcement** — Strict origin allowlisting
-- **Role-Based Access** — Admin, Clinician, and Researcher roles
+- **Security Headers** — HSTS, X-Content-Type-Options, X-Frame-Options, Content-Security-Policy (CSP), Permissions-Policy, Referrer-Policy
+- **CORS Enforcement** — Strict origin allowlisting (`CORS_ALLOWED_ORIGINS`)
+- **Access Boundary Notice** — Prediction job retrieval (`/api/v1/jobs/{id}`, `/api/v2/jobs/{id}`, `/api/v2/report/{id}`) currently utilizes 128-bit unguessable UUID possession as the access boundary; full multi-tenant authorization / RBAC remains required prior to public, unsegmented deployment.
 
 For the complete privacy policy, see [`PRIVACY.md`](./PRIVACY.md).
 
