@@ -109,7 +109,7 @@ Prompt 9.1 establishes the foundational database models and tenancy boundaries:
 
 ## Running Tests
 
-Run the complete test suite (170 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, security hardening, and database tenancy):
+Run the complete test suite (176 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, security hardening, and database tenancy):
 
 ```bash
 # From repository root with active virtual environment:

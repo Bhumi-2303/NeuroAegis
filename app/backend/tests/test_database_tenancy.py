@@ -22,13 +22,21 @@ from app.db.database import ensure_schema_compatibility
 
 @pytest.fixture
 def db_engine():
-    """Isolated in-memory SQLite engine for tenancy testing."""
+    """Isolated in-memory SQLite engine for tenancy testing with FK enforcement."""
+    from sqlalchemy import event
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_conn, record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
     Base.metadata.create_all(bind=engine)
+    ensure_schema_compatibility(engine)
     return engine
 
 
@@ -500,4 +508,181 @@ def test_existing_prediction_job_lifecycle_fields_preserved(db_session):
     assert job.worker_id == "worker-node-1:5000"
     assert job.shap_explanation == {"base_value": 0.5, "features": []}
     assert job.eeg_visualization == {"dataset": "chbmit", "channels": []}
+
+
+def test_tenant_deletion_safety_blocks_cascading(db_session, db_engine):
+    """Test 16 (Scenario A): Tenant deletion is safely blocked and NEVER silently deletes clinical records."""
+    tenant_id = str(uuid.uuid4())
+    tenant = Tenant(id=tenant_id, name="Hospital Block Delete", slug="hosp-block-del")
+    user = User(id=str(uuid.uuid4()), username="doc_block", hashed_password="pw", role="clinician", tenant=tenant)
+    patient = Patient(id=str(uuid.uuid4()), name="Protected Patient", age=45, tenant=tenant, created_by=user)
+    job = PredictionJob(id=str(uuid.uuid4()), status="Completed", tenant=tenant, patient=patient, created_by=user)
+    db_session.add_all([tenant, user, patient, job])
+    db_session.commit()
+
+    # 1. ORM deletion attempt fails safely without cascading
+    with pytest.raises((ValueError, IntegrityError)):
+        db_session.delete(tenant)
+        db_session.commit()
+    db_session.rollback()
+
+    # 2. Raw SQL deletion attempt is strictly blocked by Foreign Key RESTRICT
+    with db_engine.begin() as conn:
+        with pytest.raises(IntegrityError):
+            conn.execute(text("DELETE FROM tenants WHERE id = :tid"), {"tid": tenant_id})
+
+    # Verify that zero clinical records or users disappeared
+    p_check = db_session.query(Patient).filter_by(id=patient.id).first()
+    j_check = db_session.query(PredictionJob).filter_by(id=job.id).first()
+    u_check = db_session.query(User).filter_by(id=user.id).first()
+    t_check = db_session.query(Tenant).filter_by(id=tenant_id).first()
+
+    assert t_check is not None
+    assert p_check is not None
+    assert j_check is not None
+    assert u_check is not None
+    assert j_check.patient_id == patient.id
+
+
+def test_patient_deletion_preserves_prediction_history(db_session):
+    """Test 17 (Scenario B): Hard deletion of a patient does not unexpectedly destroy prediction history."""
+    tenant = Tenant(id=str(uuid.uuid4()), name="Clinical Preservation Clinic", slug="preserv-clinic")
+    patient = Patient(id=str(uuid.uuid4()), name="Preserved Patient", age=50, tenant=tenant)
+    job = PredictionJob(
+        id=str(uuid.uuid4()),
+        status="Completed",
+        tenant=tenant,
+        patient=patient,
+        shap_explanation={"base_value": 0.4},
+        eeg_visualization={"dataset": "chbmit"},
+    )
+    db_session.add_all([tenant, patient, job])
+    db_session.commit()
+
+    # Deleting patient disassociates the job (patient_id becomes NULL) rather than deleting it
+    db_session.delete(patient)
+    db_session.commit()
+
+    j_after = db_session.query(PredictionJob).filter_by(id=job.id).first()
+    assert j_after is not None
+    assert j_after.patient_id is None
+    assert j_after.shap_explanation == {"base_value": 0.4}
+    assert j_after.eeg_visualization == {"dataset": "chbmit"}
+
+
+def test_user_deletion_preserves_patient_and_job(db_session):
+    """Test 18 (Scenario C): Deleting a creator user nullifies created_by_user_id and preserves records."""
+    tenant = Tenant(id=str(uuid.uuid4()), name="Staff Department", slug="staff-dept")
+    clinician = User(id=str(uuid.uuid4()), username="dr_leaving", hashed_password="pw", role="clinician", tenant=tenant)
+    patient = Patient(id=str(uuid.uuid4()), name="Active Patient", age=32, tenant=tenant, created_by=clinician)
+    job = PredictionJob(id=str(uuid.uuid4()), status="Completed", tenant=tenant, created_by=clinician, patient=patient)
+    db_session.add_all([tenant, clinician, patient, job])
+    db_session.commit()
+
+    # Delete clinician user
+    db_session.delete(clinician)
+    db_session.commit()
+
+    # Clinical records remain intact with creator set to NULL
+    p_after = db_session.query(Patient).filter_by(id=patient.id).first()
+    j_after = db_session.query(PredictionJob).filter_by(id=job.id).first()
+    t_after = db_session.query(Tenant).filter_by(id=tenant.id).first()
+
+    assert p_after is not None
+    assert p_after.created_by_user_id is None
+    assert j_after is not None
+    assert j_after.created_by_user_id is None
+    assert t_after is not None
+
+
+def test_tenant_deactivation_preserves_all_records(db_session):
+    """Test 19 (Scenario D): Deactivating a tenant preserves all users, patients, jobs, and ML payloads."""
+    tenant = Tenant(id=str(uuid.uuid4()), name="Deactivating Hospital", slug="deactivating-hosp", is_active=True)
+    user = User(id=str(uuid.uuid4()), username="active_user", hashed_password="pw", role="clinician", tenant=tenant)
+    patient = Patient(id=str(uuid.uuid4()), name="Patient Record", age=62, tenant=tenant, created_by=user)
+    now = datetime.now(timezone.utc)
+    job = PredictionJob(
+        id=str(uuid.uuid4()),
+        status="Completed",
+        tenant=tenant,
+        patient=patient,
+        created_by=user,
+        worker_id="worker-01",
+        heartbeat_at=now,
+        lease_expires_at=now,
+        shap_explanation={"importance": [0.1, 0.2]},
+        eeg_visualization={"channels": ["C3-P3"]},
+    )
+    db_session.add_all([tenant, user, patient, job])
+    db_session.commit()
+
+    # Deactivate tenant
+    tenant.is_active = False
+    db_session.commit()
+
+    # Verify everything remains intact
+    t_check = db_session.query(Tenant).filter_by(id=tenant.id).first()
+    u_check = db_session.query(User).filter_by(id=user.id).first()
+    p_check = db_session.query(Patient).filter_by(id=patient.id).first()
+    j_check = db_session.query(PredictionJob).filter_by(id=job.id).first()
+
+    assert t_check.is_active is False
+    assert u_check is not None
+    assert p_check is not None
+    assert j_check is not None
+    assert j_check.worker_id == "worker-01"
+    assert j_check.shap_explanation == {"importance": [0.1, 0.2]}
+    assert j_check.eeg_visualization == {"channels": ["C3-P3"]}
+
+
+def test_sqlite_foreign_key_enforcement_active(db_engine, db_session):
+    """Test 20 (Phase 3): PRAGMA foreign_keys is active and rejects orphaned/invalid foreign keys."""
+    with db_engine.connect() as conn:
+        pragma_val = conn.execute(text("PRAGMA foreign_keys")).scalar()
+        assert pragma_val == 1
+
+    # Attempt inserting patient referencing non-existent tenant
+    with pytest.raises(IntegrityError):
+        invalid_patient = Patient(
+            id=str(uuid.uuid4()),
+            name="Invalid Tenant Patient",
+            age=30,
+            tenant_id="00000000-0000-0000-0000-999999999999",
+        )
+        db_session.add(invalid_patient)
+        db_session.commit()
+    db_session.rollback()
+
+
+def test_migration_failure_safety_disposable_db():
+    """Test 21 (Phase 6): Migration repeated runs are idempotent and failure modes do not corrupt data."""
+    disposable_engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    with disposable_engine.begin() as conn:
+        conn.execute(
+            text("CREATE TABLE patients (id VARCHAR PRIMARY KEY, name VARCHAR, age INTEGER)")
+        )
+        conn.execute(
+            text("INSERT INTO patients (id, name, age) VALUES ('p-disp-1', 'Disposable Patient', 45)")
+        )
+
+    # 1. First run creates tables & backfills
+    ensure_schema_compatibility(disposable_engine)
+    with disposable_engine.begin() as conn:
+        assert conn.execute(text("SELECT tenant_id FROM patients WHERE id = 'p-disp-1'")).scalar() == DEFAULT_TENANT_ID
+
+    # 2. Second run is strictly idempotent
+    ensure_schema_compatibility(disposable_engine)
+    with disposable_engine.begin() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM tenants")).scalar() == 1
+        assert conn.execute(text("SELECT COUNT(*) FROM patients")).scalar() == 1
+
+    # 3. Third run produces identical invariant state
+    ensure_schema_compatibility(disposable_engine)
+    with disposable_engine.begin() as conn:
+        assert conn.execute(text("SELECT COUNT(*) FROM tenants")).scalar() == 1
+        assert conn.execute(text("SELECT tenant_id FROM patients WHERE id = 'p-disp-1'")).scalar() == DEFAULT_TENANT_ID
 
