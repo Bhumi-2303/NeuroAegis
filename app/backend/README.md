@@ -91,15 +91,29 @@ app/backend/
 
 > **Note on Storage & Retries:** Shared staged storage utilizes a shared local filesystem or Docker named volume (not multi-host object storage). To preserve ML prediction determinism and prevent infinite processing loops on corrupted EEG signals, automatic retries are not performed.
 >
-> **Access Boundary Notice:** Prediction job endpoints (`/api/v1/jobs/{job_id}`, `/api/v2/jobs/{job_id}`, `/api/v2/report/{job_id}`) use 128-bit unguessable UUIDs and strict regex format validation. Full multi-tenant authorization / RBAC is not yet implemented; job possession is currently the access boundary.
+> **Access Boundary Notice:** Prediction job endpoints (`/api/v1/jobs/{job_id}`, `/api/v2/jobs/{job_id}`, `/api/v2/report/{job_id}`) use 128-bit unguessable UUIDs and strict regex format validation. The multi-tenant database and resource ownership foundation is established in Prompt 9.1 (`Tenant`, `User`, `Patient`, `PredictionJob`), with historical data assigned to `DEFAULT_TENANT_ID` (`00000000-0000-0000-0000-000000000001`). Route-level authorization guards and authentication sessions are deferred to subsequent implementation phases.
+
+## Multi-Tenancy & Data Ownership
+
+Prompt 9.1 establishes the foundational database models and tenancy boundaries:
+- **`Tenant`**: Top-level organization boundary (`id`, `name`, `slug` [unique], `is_active`, `created_at`).
+- **Resource Ownership**:
+  - `User`: Belongs to `Tenant` (`tenant_id`, `is_active`, `token_version`).
+  - `Patient`: Belongs to `Tenant` (`tenant_id`), optional creator (`created_by_user_id`), soft-deletion flag (`is_deleted`).
+  - `PredictionJob`: Belongs to `Tenant` (`tenant_id`), optional creator (`created_by_user_id`), soft-deletion flag (`is_deleted`), associated `Patient` (`patient_id`).
+- **Tenancy Invariants**:
+  - `PredictionJob.tenant_id == Patient.tenant_id`
+  - `Patient.tenant_id == CreatorUser.tenant_id` (when creator assigned)
+  - `PredictionJob.tenant_id == CreatorUser.tenant_id` (when creator assigned)
+- **Automatic Compatibility & Migration**: `ensure_schema_compatibility()` idempotently creates the `tenants` table, seeds the default tenant, adds missing columns to existing SQLite/PostgreSQL databases, and backfills legacy unassigned records to `DEFAULT_TENANT_ID` without dropping or rewriting tables.
 
 ## Running Tests
 
-Run the complete test suite (155 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, production hardening, and security hardening):
+Run the complete test suite (170 tests across core, unit, integration, dataset detection, EDF validation, visualization, parity, storage, queue, worker lifecycle, security hardening, and database tenancy):
 
 ```bash
-# From app/backend directory with active virtual environment:
-python -m pytest tests/ -q
+# From repository root with active virtual environment:
+PYTHONPATH=app/backend python -m pytest app/backend/tests/ -q
 ```
 
 ## Running the API Locally
