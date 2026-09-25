@@ -17,9 +17,10 @@ settings_overrides = {
 }
 
 with patch.multiple(settings, **settings_overrides):
-    from app.db.database import Base, engine, get_db
+    from app.db.database import Base, engine, get_db, ensure_schema_compatibility
     from app.main import app
     Base.metadata.create_all(bind=engine)
+    ensure_schema_compatibility(engine)
 
 client = TestClient(app)
 

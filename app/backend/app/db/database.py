@@ -14,6 +14,13 @@ if settings.DATABASE_URL.startswith("sqlite"):
 
 engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
 
+if settings.DATABASE_URL.startswith("sqlite"):
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -173,7 +180,30 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                     except Exception as idx_exc:
                         logger.debug(f"Index creation notice ({idx_name}): {idx_exc}")
 
-            # 7. Tenancy integrity verification
+            # 7. PostgreSQL foreign key constraints (idempotent)
+            if conn.dialect.name == "postgresql":
+                fk_constraints = [
+                    ("fk_users_tenant", "users", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
+                    ("fk_patients_tenant", "patients", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
+                    ("fk_patients_created_by", "patients", "FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL"),
+                    ("fk_prediction_jobs_tenant", "prediction_jobs", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
+                    ("fk_prediction_jobs_created_by", "prediction_jobs", "FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL"),
+                ]
+                for fk_name, tbl_name, fk_clause in fk_constraints:
+                    if tbl_name in tables:
+                        try:
+                            exists = conn.execute(
+                                text("SELECT 1 FROM pg_constraint WHERE conname = :cname"),
+                                {"cname": fk_name},
+                            ).scalar()
+                            if not exists:
+                                conn.execute(
+                                    text(f"ALTER TABLE {tbl_name} ADD CONSTRAINT {fk_name} {fk_clause}")
+                                )
+                        except Exception as fk_exc:
+                            logger.debug(f"FK constraint notice ({fk_name}): {fk_exc}")
+
+            # 8. Tenancy integrity verification
             if "prediction_jobs" in tables and "patients" in tables:
                 inconsistent = conn.execute(
                     text(

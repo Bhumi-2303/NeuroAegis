@@ -74,8 +74,8 @@ class Patient(Base):
     last_visit = Column(DateTime, default=datetime.utcnow)
 
     # Tenancy & Ownership (Prompt 9.1)
-    tenant_id = Column(String, ForeignKey("tenants.id"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
-    created_by_user_id = Column(String, ForeignKey("users.id"), index=True, nullable=True)
+    tenant_id = Column(String, ForeignKey("tenants.id", ondelete="RESTRICT"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
+    created_by_user_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False)
 
     tenant = relationship("Tenant", back_populates="patients", foreign_keys=[tenant_id])
@@ -130,8 +130,8 @@ class PredictionJob(Base):
     lease_expires_at = Column(DateTime, nullable=True, index=True)
 
     # Tenancy & Ownership (Prompt 9.1)
-    tenant_id = Column(String, ForeignKey("tenants.id"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
-    created_by_user_id = Column(String, ForeignKey("users.id"), index=True, nullable=True)
+    tenant_id = Column(String, ForeignKey("tenants.id", ondelete="RESTRICT"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
+    created_by_user_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)
     is_deleted = Column(Boolean, default=False, nullable=False)
 
     tenant = relationship("Tenant", back_populates="prediction_jobs", foreign_keys=[tenant_id])
@@ -172,7 +172,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(String, default="clinician", nullable=False)  # admin, clinician, researcher
-    tenant_id = Column(String, ForeignKey("tenants.id"), index=True, nullable=True, default=DEFAULT_TENANT_ID)
+    tenant_id = Column(String, ForeignKey("tenants.id", ondelete="RESTRICT"), index=True, nullable=True, default=DEFAULT_TENANT_ID)
     is_active = Column(Boolean, default=True, nullable=False)
     token_version = Column(Integer, default=1, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
