@@ -160,7 +160,13 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 conn.execute(text("UPDATE prediction_jobs SET is_deleted = FALSE WHERE is_deleted IS NULL"))
                 # Note: created_by_user_id remains NULL for historical jobs where creator is unknown
 
-            # 6. Ensure indexes exist
+            # 6. Ensure 'refresh_tokens' table exists (Prompt 9.2)
+            if "refresh_tokens" not in tables:
+                logger.info("Migrating schema: creating 'refresh_tokens' table")
+                Base.metadata.tables["refresh_tokens"].create(bind=conn, checkfirst=True)
+                tables.add("refresh_tokens")
+
+            # 7. Ensure indexes exist
             indexes = [
                 ("ix_tenants_slug", "tenants", ["slug"]),
                 ("ix_users_tenant_id", "users", ["tenant_id"]),
@@ -171,6 +177,10 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 ("ix_prediction_jobs_created_by_user_id", "prediction_jobs", ["created_by_user_id"]),
                 ("ix_prediction_jobs_patient_id", "prediction_jobs", ["patient_id"]),
                 ("ix_prediction_jobs_tenant_patient", "prediction_jobs", ["tenant_id", "patient_id"]),
+                ("ix_refresh_tokens_token_hash", "refresh_tokens", ["token_hash"]),
+                ("ix_refresh_tokens_user_id", "refresh_tokens", ["user_id"]),
+                ("ix_refresh_tokens_tenant_id", "refresh_tokens", ["tenant_id"]),
+                ("ix_refresh_tokens_expires_at", "refresh_tokens", ["expires_at"]),
             ]
             for idx_name, table_name, cols in indexes:
                 if table_name in tables:
@@ -180,7 +190,7 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                     except Exception as idx_exc:
                         logger.debug(f"Index creation notice ({idx_name}): {idx_exc}")
 
-            # 7. PostgreSQL foreign key constraints (idempotent)
+            # 8. PostgreSQL foreign key constraints (idempotent)
             if conn.dialect.name == "postgresql":
                 fk_constraints = [
                     ("fk_users_tenant", "users", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
@@ -188,6 +198,8 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                     ("fk_patients_created_by", "patients", "FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL"),
                     ("fk_prediction_jobs_tenant", "prediction_jobs", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
                     ("fk_prediction_jobs_created_by", "prediction_jobs", "FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL"),
+                    ("fk_refresh_tokens_user", "refresh_tokens", "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"),
+                    ("fk_refresh_tokens_tenant", "refresh_tokens", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
                 ]
                 for fk_name, tbl_name, fk_clause in fk_constraints:
                     if tbl_name in tables:
@@ -203,7 +215,7 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                         except Exception as fk_exc:
                             logger.debug(f"FK constraint notice ({fk_name}): {fk_exc}")
 
-            # 8. Tenancy integrity verification
+            # 9. Tenancy integrity verification
             if "prediction_jobs" in tables and "patients" in tables:
                 inconsistent = conn.execute(
                     text(

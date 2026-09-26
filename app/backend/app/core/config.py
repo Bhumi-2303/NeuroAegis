@@ -53,10 +53,19 @@ class Settings(BaseSettings):
     # Controlled Queue Dispatch (Prompt 7.3)
     ENABLE_DISTRIBUTED_QUEUE: bool = False
 
-    # Auth
+    # Auth & Sessions (Prompt 9.2)
     SECRET_KEY: str = DEFAULT_DEV_SECRET_KEY
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_COOKIE_NAME: str = "neuroaegis_access_token"
+    REFRESH_COOKIE_NAME: str = "neuroaegis_refresh_token"
+    CSRF_COOKIE_NAME: str = "neuroaegis_csrf_token"
+    CSRF_HEADER_NAME: str = "X-CSRF-Token"
+    COOKIE_SECURE: bool = False
+    COOKIE_SAMESITE: str = "strict"
+    COOKIE_DOMAIN: str | None = None
+    REFRESH_COOKIE_PATH: str = "/api/v1/auth"
     
     # CORS
     CORS_ALLOWED_ORIGINS: list[str] = [
@@ -138,6 +147,11 @@ class Settings(BaseSettings):
             if "*" in self.CORS_ALLOWED_ORIGINS and self.CORS_ALLOW_CREDENTIALS:
                 raise ValueError(
                     "Production configuration error: Wildcard '*' in CORS allowed origins cannot be combined with CORS_ALLOW_CREDENTIALS."
+                )
+            self.COOKIE_SECURE = True
+            if self.COOKIE_SAMESITE.lower() not in ("strict", "lax"):
+                raise ValueError(
+                    "Production configuration error: COOKIE_SAMESITE must be 'strict' or 'lax'."
                 )
 
         return self

@@ -33,6 +33,7 @@ class Tenant(Base):
     users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
     patients = relationship("Patient", back_populates="tenant", foreign_keys="Patient.tenant_id")
     prediction_jobs = relationship("PredictionJob", back_populates="tenant", foreign_keys="PredictionJob.tenant_id")
+    refresh_tokens = relationship("RefreshToken", back_populates="tenant", foreign_keys="RefreshToken.tenant_id")
 
     @validates("slug")
     def validate_slug(self, key, slug):
@@ -180,6 +181,7 @@ class User(Base):
     tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])
     created_patients = relationship("Patient", back_populates="created_by", foreign_keys="Patient.created_by_user_id")
     created_prediction_jobs = relationship("PredictionJob", back_populates="created_by", foreign_keys="PredictionJob.created_by_user_id")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan", foreign_keys="RefreshToken.user_id")
 
     @validates("role")
     def validate_role(self, key, role):
@@ -187,6 +189,23 @@ class User(Base):
         if role not in valid_roles:
             raise ValueError(f"Invalid user role: {role}. Must be one of {valid_roles}")
         return role
+
+
+class RefreshToken(Base):
+    __tablename__ = "refresh_tokens"
+
+    id = Column(String, primary_key=True, index=True)  # UUID string
+    token_hash = Column(String, unique=True, index=True, nullable=False)
+    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    tenant_id = Column(String, ForeignKey("tenants.id", ondelete="RESTRICT"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
+    expires_at = Column(DateTime, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    revoked_at = Column(DateTime, nullable=True, default=None)
+    replaced_by = Column(String, nullable=True, default=None)
+
+    user = relationship("User", back_populates="refresh_tokens", foreign_keys=[user_id])
+    tenant = relationship("Tenant", back_populates="refresh_tokens", foreign_keys=[tenant_id])
+
 
 
 @event.listens_for(Session, "before_flush")

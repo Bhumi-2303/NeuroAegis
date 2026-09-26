@@ -47,6 +47,35 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class CSRFMiddleware(BaseHTTPMiddleware):
+    """
+    Enforces double-submit CSRF token validation on state-changing requests
+    when authentication cookies are present. Safe methods and non-cookie requests
+    (such as initial login or token-less requests) bypass CSRF.
+    """
+    async def dispatch(self, request: Request, call_next):
+        if request.method not in ("GET", "HEAD", "OPTIONS"):
+            has_access_cookie = settings.ACCESS_COOKIE_NAME in request.cookies
+            has_refresh_cookie = settings.REFRESH_COOKIE_NAME in request.cookies
+
+            # If cookie authentication is active and not the initial login endpoint
+            if (has_access_cookie or has_refresh_cookie) and not request.url.path.endswith("/auth/login"):
+                csrf_cookie = request.cookies.get(settings.CSRF_COOKIE_NAME)
+                csrf_header = (
+                    request.headers.get("x-csrf-token")
+                    or request.headers.get("X-CSRF-Token")
+                    or request.headers.get("x-csrftoken")
+                )
+                import hmac
+                from fastapi.responses import JSONResponse
+                if not csrf_cookie or not csrf_header or not hmac.compare_digest(csrf_cookie, csrf_header):
+                    return JSONResponse(
+                        status_code=403,
+                        content={"detail": "CSRF token missing or invalid"},
+                    )
+        return await call_next(request)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -120,6 +149,7 @@ app = FastAPI(
 
 # Security middleware
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CSRFMiddleware)
 
 # Set all CORS enabled origins
 cors_origins = settings.CORS_ALLOWED_ORIGINS or settings.CORS_ORIGINS
