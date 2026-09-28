@@ -19,7 +19,8 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.db.models import Patient, PredictionJob
+from app.db.models import Patient, PredictionJob, User
+from app.core.auth import get_tenant_job, get_tenant_patient, require_roles
 from app.services.edf_validation import (
     EdfValidationResult,
     UploadValidationError,
@@ -62,9 +63,11 @@ async def create_prediction_job(
     medical_history: str = Form(...), # JSON string
     vital_signs: str = Form(...), # JSON string
     file: UploadFile = File(...),
+    patient_id: str | None = Form(None),
     sampling_rate: float | None = Form(None),
     channels: str | None = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     try:
         parsed_medical_history = json.loads(medical_history)
@@ -73,6 +76,10 @@ async def create_prediction_job(
         raise HTTPException(status_code=400, detail="Invalid JSON in medical_history or vital_signs")
     if not isinstance(parsed_medical_history, dict) or not isinstance(parsed_vital_signs, dict):
         raise HTTPException(status_code=400, detail="medical_history and vital_signs must be JSON objects")
+
+    existing_patient = None
+    if patient_id:
+        existing_patient = get_tenant_patient(patient_id, db, current_user.tenant_id)
 
     try:
         safe_filename = sanitize_upload_filename(file.filename)
@@ -179,25 +186,32 @@ async def create_prediction_job(
             cleanup_temp_upload(temp_path)
             temp_path = None
 
-        # Create Patient
-        patient_id = str(uuid.uuid4())
-        patient = Patient(
-            id=patient_id,
-            name=name,
-            age=age,
-            gender=gender,
-            weight=weight,
-            height=height,
-            medical_history=medical_history,
-            vital_signs=parsed_vital_signs
-        )
-        db.add(patient)
+        # Resolve or create Patient
+        if existing_patient:
+            target_patient_id = existing_patient.id
+        else:
+            target_patient_id = str(uuid.uuid4())
+            patient = Patient(
+                id=target_patient_id,
+                tenant_id=current_user.tenant_id,
+                created_by_user_id=current_user.id,
+                name=name,
+                age=age,
+                gender=gender,
+                weight=weight,
+                height=height,
+                medical_history=medical_history,
+                vital_signs=parsed_vital_signs,
+            )
+            db.add(patient)
         
         # Create Job
         job_id = str(uuid.uuid4())
         job = PredictionJob(
             id=job_id,
-            patient_id=patient_id,
+            tenant_id=current_user.tenant_id,
+            created_by_user_id=current_user.id,
+            patient_id=target_patient_id,
             status="Validating",
             progress=0,
             detected_dataset=detected_dataset,
@@ -220,7 +234,7 @@ async def create_prediction_job(
                     fs=final_sampling_rate,
                     dataset_name=detected_dataset,
                     eeg_visualization=eeg_visualization,
-                    metadata={"patient_id": patient_id},
+                    metadata={"patient_id": target_patient_id, "tenant_id": current_user.tenant_id},
                 )
                 # Enqueue job reference to Redis via ARQ (no raw signal arrays in broker)
                 await prediction_queue.enqueue_prediction_job(
@@ -261,7 +275,7 @@ async def create_prediction_job(
         
         return {
             "job_id": job_id,
-            "patient_id": patient_id,
+            "patient_id": target_patient_id,
             "detected_dataset": detected_dataset,
             "confidence": validation.detection_confidence,
             "matched_rules": validation.matched_rules,
@@ -297,11 +311,13 @@ def validate_job_id(job_id: str) -> str:
 
 @router.get("/predict/status/{job_id}")
 @router.get("/jobs/{job_id}")
-async def get_job_status(job_id: str, db: Session = Depends(get_db)):
+async def get_job_status(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
     validate_job_id(job_id)
-    job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = get_tenant_job(job_id, db, current_user.tenant_id)
 
     # If the job is active but its worker lease expired, reap it immediately
     if job.status not in ("Completed", "Failed") and job.lease_expires_at is not None:
@@ -345,13 +361,24 @@ async def get_job_status(job_id: str, db: Session = Depends(get_db)):
     return response
 
 @router.get("/history")
-async def get_history(db: Session = Depends(get_db)):
-    jobs = db.query(PredictionJob).order_by(PredictionJob.created_at.desc()).all()
+async def get_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
+    jobs = (
+        db.query(PredictionJob)
+        .filter(
+            PredictionJob.tenant_id == current_user.tenant_id,
+            PredictionJob.is_deleted == False,
+        )
+        .order_by(PredictionJob.created_at.desc())
+        .all()
+    )
     results = []
     for job in jobs:
         results.append({
             "job_id": job.id,
-            "patient_name": job.patient.name if job.patient else None,
+            "patient_name": job.patient.name if job.patient and not job.patient.is_deleted else None,
             "created_at": job.created_at,
             "status": job.status,
             "prediction_label": job.prediction_label,
@@ -359,12 +386,15 @@ async def get_history(db: Session = Depends(get_db)):
     return results
 
 @router.get("/report/{job_id}")
-async def get_report(job_id: str, db: Session = Depends(get_db)):
+async def get_report(
+    job_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
     validate_job_id(job_id)
-    job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
-    if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
+    job = get_tenant_job(job_id, db, current_user.tenant_id)
     
+    patient = job.patient if (job.patient and not job.patient.is_deleted) else None
     return {
         "job": {
             "id": job.id,
@@ -383,12 +413,12 @@ async def get_report(job_id: str, db: Session = Depends(get_db)):
             "completed_at": job.completed_at,
         },
         "patient": {
-            "name": job.patient.name if job.patient else None,
-            "age": job.patient.age if job.patient else None,
-            "gender": job.patient.gender if job.patient else None,
-            "weight": job.patient.weight if job.patient else None,
-            "height": job.patient.height if job.patient else None,
-            "medical_history": job.patient.medical_history if job.patient else None,
-            "vital_signs": job.patient.vital_signs if job.patient else None,
+            "name": patient.name if patient else None,
+            "age": patient.age if patient else None,
+            "gender": patient.gender if patient else None,
+            "weight": patient.weight if patient else None,
+            "height": patient.height if patient else None,
+            "medical_history": patient.medical_history if patient else None,
+            "vital_signs": patient.vital_signs if patient else None,
         },
     }
