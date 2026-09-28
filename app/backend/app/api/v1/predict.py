@@ -22,7 +22,7 @@ from app.core.config import settings
 from app.db.database import SessionLocal, get_db
 from app.db.models import Patient, PredictionJob, User
 from app.services.prediction.prediction_router import prediction_router
-from app.core.auth import require_role
+from app.core.auth import get_tenant_patient, require_roles
 from app.services.edf_validation import (
     EdfValidationResult,
     UploadValidationError,
@@ -128,7 +128,8 @@ async def predict_eeg(
     patient_id: str | None = Form(None),
     dataset: str | None = Form(None),
     model: str | None = Form(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     """Validate an EDF upload, then queue the existing prediction pipeline."""
     try:
@@ -276,25 +277,22 @@ async def predict_eeg(
                 cleanup_temp_upload(temp_path)
         
     try:
-        # Verify patient exists if provided
+        # Verify patient exists and belongs to current user's tenant if provided
         if patient_id:
-            patient = db.query(Patient).filter(Patient.id == patient_id).first()
-            if not patient:
-                raise HTTPException(status_code=404, detail="Patient not found")
-                
-        # Create Job
+            get_tenant_patient(patient_id, db, current_user.tenant_id)
+
+        # Create Job inheriting authenticated tenant and creator
         job_id = str(uuid.uuid4())
         job = PredictionJob(
             id=job_id,
             patient_id=patient_id,
+            tenant_id=current_user.tenant_id,
+            created_by_user_id=current_user.id,
             status="Validating",
             progress=0,
-            # We assume the schema is updated to support these if possible, 
-            # or we store in a JSON column if supported.
-            # If the columns don't exist yet, we will add them.
             detected_dataset=detected_dataset,
             detection_confidence=confidence,
-            selected_model=selected_model
+            selected_model=selected_model,
         )
         db.add(job)
         db.commit()

@@ -5,14 +5,20 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.auth import get_tenant_patient, require_roles
 from app.db.database import get_db
-from app.db.models import Patient
+from app.db.models import Patient, User
 from app.schemas.patient import PatientCreate, PatientResponse
 
 router = APIRouter()
 
+
 @router.post("/", response_model=PatientResponse, status_code=201)
-def create_patient(patient_in: PatientCreate, db: Session = Depends(get_db)):
+def create_patient(
+    patient_in: PatientCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
     db_patient = Patient(
         id=str(uuid.uuid4()),
         name=patient_in.name,
@@ -22,28 +28,42 @@ def create_patient(patient_in: PatientCreate, db: Session = Depends(get_db)):
         height=patient_in.height,
         medical_history=patient_in.medical_history,
         vital_signs=patient_in.vital_signs,
-        created_at=datetime.utcnow()
+        tenant_id=current_user.tenant_id,
+        created_by_user_id=current_user.id,
+        created_at=datetime.utcnow(),
     )
     db.add(db_patient)
     db.commit()
     db.refresh(db_patient)
     return db_patient
 
+
 @router.get("/", response_model=list[PatientResponse])
-def get_patients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    patients = db.query(Patient).offset(skip).limit(limit).all()
+def get_patients(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
+    patients = (
+        db.query(Patient)
+        .filter(
+            Patient.tenant_id == current_user.tenant_id,
+            Patient.is_deleted == False,
+        )
+        .order_by(Patient.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return patients
-
-import re
-
-SAFE_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)
-def get_patient(patient_id: str, db: Session = Depends(get_db)):
-    if not patient_id or len(patient_id) > 64 or not SAFE_ID_REGEX.match(patient_id):
-        raise HTTPException(status_code=400, detail="Invalid patient ID format")
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
-    if not patient:
-        raise HTTPException(status_code=404, detail="Patient not found")
-    return patient
+def get_patient(
+    patient_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles("clinician", "admin")),
+):
+    return get_tenant_patient(patient_id, db, current_user.tenant_id)
+

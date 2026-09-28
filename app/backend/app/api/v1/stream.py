@@ -2,10 +2,15 @@ import asyncio
 import json
 import logging
 from typing import AsyncGenerator
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import StreamingResponse
 import pandas as pd
 import numpy as np
+from sqlalchemy.orm import Session
+
+from app.core.auth import get_current_user, get_tenant_job
+from app.db.database import get_db
+from app.db.models import User
 
 router = APIRouter()
 logger = logging.getLogger("neuroaegis.stream")
@@ -13,10 +18,15 @@ logger = logging.getLogger("neuroaegis.stream")
 @router.get("/eeg")
 async def stream_eeg(
     request: Request,
+    job_id: str | None = Query(None, description="Optional job ID to stream"),
     channels: str = Query("FP1-F7,F7-T7", description="Comma-separated channel names"),
     ms_per_window: int = Query(100, description="Milliseconds per window emitted"),
-    sampling_rate: int = Query(256, description="Sampling rate of the data in Hz")
+    sampling_rate: int = Query(256, description="Sampling rate of the data in Hz"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    if job_id:
+        get_tenant_job(job_id, db, current_user.tenant_id)
     """
     Streams EEG data using Server-Sent Events (SSE).
     Reads from chbmit_subset.parquet.

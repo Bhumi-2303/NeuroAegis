@@ -2,6 +2,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import logging
+import re
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -15,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import RefreshToken, User
+from app.db.models import Patient, PredictionJob, RefreshToken, User
 
 logger = logging.getLogger("neuroaegis.auth")
 MAX_PASSWORD_BYTES = 72
@@ -368,16 +369,82 @@ def verify_csrf_token(request: Request) -> None:
         )
 
 
-def require_role(required_role: str):
-    def role_checker(current_user: User = Depends(get_current_user)):
-        roles = ["clinician", "researcher", "admin"]
-        if current_user.role not in roles:
-            raise HTTPException(status_code=403, detail="Invalid role assigned to user")
+SAFE_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
+SAFE_JOB_ID_REGEX = re.compile(r"^[a-zA-Z0-9_\-]+$")
 
-        if required_role == "admin" and current_user.role != "admin":
-            raise HTTPException(status_code=403, detail="Admin access required")
-        if required_role == "researcher" and current_user.role not in ["researcher", "admin"]:
-            raise HTTPException(status_code=403, detail="Researcher access required")
 
+def require_roles(*allowed_roles: str):
+    """
+    Centralized role authorization dependency (Prompt 9.3).
+    Ensures the caller has one of the allowed roles.
+    """
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        valid_roles = {"clinician", "researcher", "admin"}
+        if current_user.role not in valid_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid role assigned to user",
+            )
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions for this resource",
+            )
         return current_user
+
     return role_checker
+
+
+def require_role(required_role: str):
+    """Backward-compatible role checker."""
+    if required_role == "admin":
+        return require_roles("admin")
+    elif required_role == "researcher":
+        return require_roles("researcher", "admin")
+    elif required_role == "clinician":
+        return require_roles("clinician", "admin")
+    return require_roles(required_role)
+
+
+def get_tenant_patient(patient_id: str, db: Session, tenant_id: str) -> Patient:
+    """
+    Authoritative tenant-scoped patient retrieval (Prompt 9.3 Phase 5 & 13).
+    Returns 400 on malformed ID, 404 if not found or belongs to another tenant.
+    Never leaks cross-tenant existence.
+    """
+    if not patient_id or len(patient_id) > 64 or not SAFE_ID_REGEX.match(patient_id):
+        raise HTTPException(status_code=400, detail="Invalid patient ID format")
+    patient = (
+        db.query(Patient)
+        .filter(
+            Patient.id == patient_id,
+            Patient.tenant_id == tenant_id,
+            Patient.is_deleted == False,
+        )
+        .first()
+    )
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    return patient
+
+
+def get_tenant_job(job_id: str, db: Session, tenant_id: str) -> PredictionJob:
+    """
+    Authoritative tenant-scoped job retrieval (Prompt 9.3 Phase 7 & 13).
+    Returns 400 on malformed ID, 404 if not found or belongs to another tenant.
+    Never leaks cross-tenant existence.
+    """
+    if not job_id or len(job_id) > 64 or not SAFE_JOB_ID_REGEX.match(job_id):
+        raise HTTPException(status_code=400, detail="Invalid job ID format")
+    job = (
+        db.query(PredictionJob)
+        .filter(
+            PredictionJob.id == job_id,
+            PredictionJob.tenant_id == tenant_id,
+            PredictionJob.is_deleted == False,
+        )
+        .first()
+    )
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
