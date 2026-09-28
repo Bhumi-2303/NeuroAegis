@@ -6,8 +6,10 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
+from sqlalchemy import text
+from app.core.auth import get_current_user
 from app.db.database import Base, SessionLocal, engine
-from app.db.models import Patient, PredictionJob
+from app.db.models import DEFAULT_TENANT_ID, Patient, PredictionJob, User
 from app.main import app
 from tests.edf_fixture import write_synthetic_edf
 
@@ -16,6 +18,25 @@ from tests.edf_fixture import write_synthetic_edf
 def client():
     app.dependency_overrides.clear()
     Base.metadata.create_all(bind=engine)
+    user_id = str(uuid.uuid4())
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO users (id, username, hashed_password, role, tenant_id, is_active, token_version, created_at) "
+                "VALUES (:id, :u, :h, :r, :t, 1, 1, CURRENT_TIMESTAMP)"
+            ),
+            {"id": user_id, "u": f"user_{user_id[:8]}", "h": "hash", "r": "clinician", "t": DEFAULT_TENANT_ID},
+        )
+    def _get_mock_user():
+        return User(
+            id=user_id,
+            username=f"clinician_{user_id[:8]}",
+            role="clinician",
+            tenant_id=DEFAULT_TENANT_ID,
+            is_active=True,
+            token_version=1,
+        )
+    app.dependency_overrides[get_current_user] = _get_mock_user
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()

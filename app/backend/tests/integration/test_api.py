@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+import pytest
 
 from fastapi.testclient import TestClient
 
@@ -19,10 +20,38 @@ settings_overrides = {
 with patch.multiple(settings, **settings_overrides):
     from app.db.database import Base, engine, get_db, ensure_schema_compatibility
     from app.main import app
+    from app.core.auth import get_current_user
+    from app.db.models import User, DEFAULT_TENANT_ID
+    from sqlalchemy import text
     Base.metadata.create_all(bind=engine)
     ensure_schema_compatibility(engine)
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def override_test_api_auth():
+    user_id = "test-user-id"
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT OR IGNORE INTO users (id, username, hashed_password, role, tenant_id, is_active, token_version, created_at) "
+                "VALUES (:id, :u, :h, :r, :t, 1, 1, CURRENT_TIMESTAMP)"
+            ),
+            {"id": user_id, "u": "test_clinician", "h": "hash", "r": "clinician", "t": DEFAULT_TENANT_ID},
+        )
+    def _get_mock_user():
+        return User(
+            id=user_id,
+            username="test_clinician",
+            role="clinician",
+            tenant_id=DEFAULT_TENANT_ID,
+            is_active=True,
+            token_version=1,
+        )
+    app.dependency_overrides[get_current_user] = _get_mock_user
+    yield
+    app.dependency_overrides.pop(get_current_user, None)
 
 def test_predict_endpoint_response_shape(tmp_path):
     fixture_path = write_synthetic_edf(
@@ -64,7 +93,7 @@ def test_predict_endpoint_response_shape(tmp_path):
             assert data["validation"]["validationStatus"] == "valid"
             assert data["validation"]["dataset"] == "chbmit"
         finally:
-            app.dependency_overrides.clear()
+            app.dependency_overrides.pop(get_db, None)
 
 
 def test_legacy_v2_endpoint_rejects_non_edf_uploads():

@@ -1,14 +1,40 @@
 import io
+import uuid
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.auth import get_current_user
 from app.core.config import DEFAULT_DEV_SECRET_KEY, Settings
+from sqlalchemy import text
+from app.db.database import engine
+from app.db.models import DEFAULT_TENANT_ID, User
 from app.main import app
 
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    user_id = str(uuid.uuid4())
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO users (id, username, hashed_password, role, tenant_id, is_active, token_version, created_at) "
+                "VALUES (:id, :u, :h, :r, :t, 1, 1, CURRENT_TIMESTAMP)"
+            ),
+            {"id": user_id, "u": f"user_{user_id[:8]}", "h": "hash", "r": "clinician", "t": DEFAULT_TENANT_ID},
+        )
+    def _get_mock_user():
+        return User(
+            id=user_id,
+            username=f"user_{user_id[:8]}",
+            role="clinician",
+            tenant_id=DEFAULT_TENANT_ID,
+            is_active=True,
+            token_version=1,
+        )
+    app.dependency_overrides[get_current_user] = _get_mock_user
+    with TestClient(app) as test_client:
+        yield test_client
+    app.dependency_overrides.pop(get_current_user, None)
 
 
 def test_settings_security_production_rejection():
