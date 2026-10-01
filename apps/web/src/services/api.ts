@@ -1,11 +1,25 @@
-const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
+export const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL)
   ? (import.meta.env.VITE_API_BASE_URL as string)
   : (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL)
   ? `${import.meta.env.VITE_API_URL}/api/v1`
   : 'http://127.0.0.1:8000/api/v1';
 
+export interface AuthUser {
+  id: string;
+  username: string;
+  tenant_id: string;
+  role: 'admin' | 'clinician' | 'researcher';
+  is_active: boolean;
+}
+
+export interface LoginResponse {
+  csrf_token: string;
+  user: AuthUser;
+}
+
 export interface PredictResponse {
   job_id: string;
+  patient_id?: string;
   detected_dataset: string;
   confidence: number;
   matched_rules: string[];
@@ -90,13 +104,18 @@ export interface EegVisualization {
 }
 
 export class ApiRequestError extends Error {
+  readonly status: number;
+  readonly validation?: EdfValidationResult;
+
   constructor(
     message: string,
-    readonly status: number,
-    readonly validation?: EdfValidationResult,
+    status: number,
+    validation?: EdfValidationResult,
   ) {
     super(message);
     this.name = 'ApiRequestError';
+    this.status = status;
+    this.validation = validation;
   }
 }
 
@@ -180,6 +199,204 @@ function errorDetails(payload: unknown, status: number): { message: string; vali
   return { message: `EEG upload failed (${status})` };
 }
 
+// ==============================================================================
+// CSRF & Session Management
+// ==============================================================================
+
+let inMemoryCsrfToken: string | null = null;
+
+export function setCsrfToken(token: string | null): void {
+  inMemoryCsrfToken = token;
+}
+
+export function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)neuroaegis_csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+export function getCsrfToken(): string | null {
+  return getCsrfTokenFromCookie() || inMemoryCsrfToken;
+}
+
+type SessionExpiredHandler = () => void;
+const sessionExpiredListeners: Set<SessionExpiredHandler> = new Set();
+
+export function onSessionExpired(handler: SessionExpiredHandler): () => void {
+  sessionExpiredListeners.add(handler);
+  return () => {
+    sessionExpiredListeners.delete(handler);
+  };
+}
+
+function notifySessionExpired(): void {
+  for (const listener of sessionExpiredListeners) {
+    try {
+      listener();
+    } catch {}
+  }
+}
+
+let refreshPromise: Promise<boolean> | null = null;
+
+export async function refreshAuthSession(): Promise<boolean> {
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    try {
+      const csrf = getCsrfToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (csrf) {
+        headers['X-CSRF-Token'] = csrf;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const payload = await response.json().catch(() => null);
+        if (payload?.csrf_token) {
+          setCsrfToken(payload.csrf_token);
+        }
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+// ==============================================================================
+// Centralized API Client (apiFetch)
+// ==============================================================================
+
+export async function apiFetch(
+  endpoint: string,
+  options: RequestInit & { _retry?: boolean } = {}
+): Promise<Response> {
+  const url = endpoint.startsWith('http')
+    ? endpoint
+    : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const method = (options.method || 'GET').toUpperCase();
+  const isStateChanging = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+
+  const headers = new Headers(options.headers || {});
+
+  // Add CSRF token for state-changing requests when not the initial login endpoint
+  if (isStateChanging && !url.endsWith('/auth/login')) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken && !headers.has('X-CSRF-Token') && !headers.has('x-csrf-token')) {
+      headers.set('X-CSRF-Token', csrfToken);
+    }
+  }
+
+  const requestOptions: RequestInit = {
+    ...options,
+    headers,
+    credentials: 'include',
+  };
+
+  let response: Response;
+  try {
+    response = await fetch(url, requestOptions);
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') throw err;
+    throw new ApiRequestError(`Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`, 0);
+  }
+
+  // Centrally handle 401 Unauthorized for protected endpoints
+  if (response.status === 401 && !url.includes('/auth/login') && !url.includes('/auth/refresh')) {
+    if (!options._retry && Boolean(getCsrfToken())) {
+      const refreshed = await refreshAuthSession();
+      if (refreshed) {
+        // Retry original request once
+        return apiFetch(endpoint, { ...options, _retry: true });
+      }
+    }
+    notifySessionExpired();
+    throw new ApiRequestError('Session expired. Please log in again.', 401);
+  }
+
+  return response;
+}
+
+// ==============================================================================
+// Authentication API Endpoints
+// ==============================================================================
+
+export async function loginUser(username: string, password: string): Promise<AuthUser> {
+  const response = await apiFetch('/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    const detail = isRecord(payload) && typeof payload.detail === 'string'
+      ? payload.detail
+      : 'Authentication failed';
+    throw new ApiRequestError(detail, response.status);
+  }
+
+  const payload = await response.json().catch(() => null);
+  if (isRecord(payload) && typeof payload.csrf_token === 'string') {
+    setCsrfToken(payload.csrf_token);
+  }
+  if (isRecord(payload) && isRecord(payload.user)) {
+    return payload.user as unknown as AuthUser;
+  }
+  return getMe();
+}
+
+export async function getMe(): Promise<AuthUser> {
+  const response = await apiFetch('/auth/me');
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    const detail = isRecord(payload) && typeof payload.detail === 'string'
+      ? payload.detail
+      : 'Failed to retrieve current user session';
+    throw new ApiRequestError(detail, response.status);
+  }
+  const payload = await response.json().catch(() => null);
+  if (!isRecord(payload) || typeof payload.id !== 'string') {
+    throw new ApiRequestError('Invalid user profile response', 502);
+  }
+  return payload as unknown as AuthUser;
+}
+
+export async function logoutUser(): Promise<void> {
+  try {
+    await apiFetch('/auth/logout', { method: 'POST' });
+  } finally {
+    setCsrfToken(null);
+    notifySessionExpired();
+  }
+}
+
+export async function logoutAllSessions(): Promise<void> {
+  try {
+    await apiFetch('/auth/logout-all', { method: 'POST' });
+  } finally {
+    setCsrfToken(null);
+    notifySessionExpired();
+  }
+}
+
+// ==============================================================================
+// Clinical Pipeline (EDF Upload & Job Telemetry)
+// ==============================================================================
+
 export async function uploadEeg(
   file: File,
   options: {
@@ -196,7 +413,6 @@ export async function uploadEeg(
   }
 
   const formData = new FormData();
-
   formData.append('file', file);
 
   if (options.samplingRate !== undefined) {
@@ -221,13 +437,83 @@ export async function uploadEeg(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/predict/`, {
+    response = await apiFetch('/predict/', {
       method: 'POST',
       body: formData,
       signal: options.signal,
     });
   } catch (err) {
     if ((err as Error)?.name === 'AbortError') throw err;
+    if (err instanceof ApiRequestError) throw err;
+    throw new ApiRequestError(`Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`, 0);
+  }
+
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null);
+    const details = errorDetails(payload, response.status);
+    throw new ApiRequestError(details.message, response.status, details.validation);
+  }
+
+  const payload: unknown = await response.json().catch(() => null);
+  if (!isPredictResponse(payload)) {
+    throw new ApiRequestError('Backend returned an invalid upload response (502)', 502);
+  }
+  return payload;
+}
+
+export async function uploadEegV2(
+  file: File,
+  patientData: {
+    name: string;
+    age: number;
+    gender: string;
+    weight: number;
+    height: number;
+    medicalHistory?: Record<string, unknown>;
+    vitalSigns?: Record<string, unknown>;
+  },
+  options: {
+    patientId?: string;
+    samplingRate?: number;
+    channels?: string;
+    signal?: AbortSignal;
+  } = {}
+): Promise<PredictResponse> {
+  if (!file.name.toLowerCase().endsWith('.edf')) {
+    throw new ApiRequestError('Only .edf files are supported', 400);
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', patientData.name);
+  formData.append('age', String(patientData.age));
+  formData.append('gender', patientData.gender);
+  formData.append('weight', String(patientData.weight));
+  formData.append('height', String(patientData.height));
+  formData.append('medical_history', JSON.stringify(patientData.medicalHistory || {}));
+  formData.append('vital_signs', JSON.stringify(patientData.vitalSigns || {}));
+
+  if (options.patientId) {
+    formData.append('patient_id', options.patientId);
+  }
+  if (options.samplingRate !== undefined) {
+    formData.append('sampling_rate', String(options.samplingRate));
+  }
+  if (options.channels) {
+    formData.append('channels', options.channels);
+  }
+
+  const v2BaseUrl = API_BASE_URL.replace(/\/api\/v1\/?$/, '/api/v2');
+  let response: Response;
+  try {
+    response = await apiFetch(`${v2BaseUrl}/predict`, {
+      method: 'POST',
+      body: formData,
+      signal: options.signal,
+    });
+  } catch (err) {
+    if ((err as Error)?.name === 'AbortError') throw err;
+    if (err instanceof ApiRequestError) throw err;
     throw new ApiRequestError(`Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`, 0);
   }
 
@@ -247,9 +533,10 @@ export async function uploadEeg(
 export async function getJob(jobId: string, signal?: AbortSignal): Promise<JobResponse> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, { signal });
+    response = await apiFetch(`/jobs/${jobId}`, { signal });
   } catch (err) {
     if ((err as Error)?.name === 'AbortError') throw err;
+    if (err instanceof ApiRequestError) throw err;
     throw new ApiRequestError(`Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`, 0);
   }
 

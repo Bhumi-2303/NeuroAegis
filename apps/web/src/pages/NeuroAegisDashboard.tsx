@@ -270,8 +270,6 @@ export const NeuroAegisDashboard: React.FC = () => {
       setPredictionAvailable(true);
       setUploadError(null);
       setUploadStatus('Analysis complete');
-
-      console.log("NeuroAegis real EEG prediction:", realPrediction);
     } catch (error) {
       // Silently ignore abort errors — they are expected on unmount or new upload
       if ((error instanceof DOMException && error.name === 'AbortError') || (error as Error)?.name === 'AbortError') return;

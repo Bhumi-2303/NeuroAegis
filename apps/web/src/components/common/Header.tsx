@@ -1,6 +1,7 @@
 import React from 'react';
-import { Activity, Download, AlertCircle, RefreshCw, Volume2, VolumeX, User } from 'lucide-react';
+import { Activity, Download, AlertCircle, RefreshCw, Volume2, VolumeX, User, LogOut } from 'lucide-react';
 import { PatientVitals } from '../../types/neuroaegis';
+import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps {
   readonly vitals: PatientVitals;
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   isRealAnalysis,
   patientIdentifier,
 }) => {
+  const { user, logout, isAdmin, isClinician } = useAuth();
   return (
     <header className="bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 lg:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 shadow-md">
       {/* Brand & Status */}
@@ -100,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       )}
 
-      {/* Action Buttons */}
+      {/* Action Buttons & Session Controls */}
       <div className="flex items-center space-x-2">
         {!isRealAnalysis && (
           <button
@@ -171,6 +173,47 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
         </div>
+
+        {/* User Session & Role Profile */}
+        {user && (
+          <div className="flex items-center space-x-2 pl-2 border-l border-slate-800">
+            {isAdmin && (
+              <span className="hidden xl:inline text-[10px] text-purple-300 font-semibold px-2 py-0.5 rounded bg-purple-950/60 border border-purple-800/60">
+                Admin Controls
+              </span>
+            )}
+            <div className="flex items-center space-x-1.5 bg-slate-950/80 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs">
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  isAdmin ? 'bg-purple-400' : isClinician ? 'bg-indigo-400' : 'bg-cyan-400'
+                }`}
+              />
+              <span className="font-semibold text-slate-200">{user.username}</span>
+              <span
+                className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ${
+                  isAdmin
+                    ? 'bg-purple-950 text-purple-300 border-purple-800'
+                    : isClinician
+                    ? 'bg-indigo-950 text-indigo-300 border-indigo-800'
+                    : 'bg-cyan-950 text-cyan-300 border-cyan-800'
+                }`}
+              >
+                {user.role}
+              </span>
+              <span className="text-[10px] font-mono text-slate-500">[{user.tenant_id}]</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => logout()}
+              aria-label="Sign out of clinical session"
+              className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 hover:text-rose-300 hover:border-rose-900/50 hover:bg-rose-950/30 transition"
+              title="Sign Out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
