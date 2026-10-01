@@ -1,9 +1,11 @@
 import json
+import logging
 import os
 from typing import Any
 from fastapi import APIRouter, HTTPException
 from app.core.config import settings
 
+logger = logging.getLogger("neuroaegis.metrics")
 router = APIRouter()
 
 @router.get("", response_model=dict[str, Any])
@@ -17,4 +19,5 @@ async def get_metrics():
         with open(metrics_path, "r") as f:
             return json.load(f)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Error loading metrics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to load metrics")

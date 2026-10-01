@@ -146,6 +146,10 @@ async def predict_eeg(
     if not prediction_router.is_loaded:
         raise HTTPException(status_code=503, detail="Model is not loaded on the backend")
 
+    # Authoritative early check: verify patient ownership before expensive file parsing and staging
+    if patient_id:
+        get_tenant_patient(patient_id, db, current_user.tenant_id)
+
     logger.info("Received EDF upload. Size limit=%s bytes", settings.MAX_EEG_UPLOAD_BYTES)
     validation: EdfValidationResult
     detected_dataset: str

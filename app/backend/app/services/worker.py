@@ -46,6 +46,10 @@ def claim_job(job_id: str, worker_id: str, lease_duration_seconds: int) -> bool:
             logger.error(f"Cannot claim job {job_id}: not found in database")
             return False
 
+        if job.is_deleted:
+            logger.warning(f"Cannot claim job {job_id}: job is soft-deleted")
+            return False
+
         if job.status in ("Completed", "Failed"):
             logger.warning(f"Cannot claim job {job_id}: already in terminal state '{job.status}'")
             return False
@@ -247,6 +251,10 @@ async def run_prediction_task(
         if not job:
             err = f"Job {job_id} not found in database"
             logger.error(err)
+            return {"status": "failed", "job_id": job_id, "error": err}
+        if job.is_deleted:
+            err = f"Job {job_id} has been soft-deleted"
+            logger.warning(err)
             return {"status": "failed", "job_id": job_id, "error": err}
     finally:
         db.close()

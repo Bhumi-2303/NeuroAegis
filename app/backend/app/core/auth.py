@@ -312,8 +312,9 @@ async def get_current_user(
     tenant_id: Optional[str] = payload.get("tenant_id")
     role: Optional[str] = payload.get("role")
     token_version: Optional[int] = payload.get("token_version")
+    token_type: Optional[str] = payload.get("typ")
 
-    if not user_id or not tenant_id or not role or token_version is None:
+    if not user_id or not tenant_id or not role or token_version is None or token_type != "access":
         raise credentials_exception
 
     user = db.query(User).filter(User.id == user_id).first()

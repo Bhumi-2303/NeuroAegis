@@ -25,9 +25,9 @@ def update_job_status(job_id: str, status: str, progress: int, expected_worker_i
                     f"(expected '{expected_worker_id}', current owner is '{job.worker_id}')"
                 )
                 return
-            if job.status in ("Completed", "Failed"):
+            if getattr(job, "is_deleted", False) or job.status in ("Completed", "Failed"):
                 logger.warning(
-                    f"Skipping status update for job {job_id}: job is already in terminal state '{job.status}'"
+                    f"Skipping status update for job {job_id}: job is deleted or already in terminal state '{job.status}'"
                 )
                 return
             job.status = status
@@ -85,6 +85,11 @@ async def run_prediction_pipeline(
                     logger.warning(
                         f"Refusing to finalize job {job_id} as Completed: worker ownership mismatch "
                         f"(expected '{expected_worker_id}', current owner is '{job.worker_id}')"
+                    )
+                    return
+                if getattr(job, "is_deleted", False):
+                    logger.warning(
+                        f"Refusing to finalize job {job_id} as Completed: job was soft-deleted"
                     )
                     return
                 if job.status == "Failed":

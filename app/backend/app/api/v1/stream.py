@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 from sqlalchemy.orm import Session
 
-from app.core.auth import get_current_user, get_tenant_job
+from app.core.auth import get_tenant_job, require_roles
 from app.db.database import get_db
 from app.db.models import User
 
@@ -23,7 +23,7 @@ async def stream_eeg(
     ms_per_window: int = Query(100, description="Milliseconds per window emitted"),
     sampling_rate: int = Query(256, description="Sampling rate of the data in Hz"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     if job_id:
         get_tenant_job(job_id, db, current_user.tenant_id)
