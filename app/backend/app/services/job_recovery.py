@@ -10,6 +10,8 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.errors import SAFE_ERROR_LEASE_EXPIRED
+from app.core.telemetry import JOBS_FAILED_TOTAL, JOBS_REAPED_TOTAL, safe_telemetry_op
 from app.db.database import SessionLocal
 from app.db.models import PredictionJob
 from app.services.storage import SAFE_JOB_ID_REGEX, StorageSecurityError, storage_backend
@@ -57,6 +59,18 @@ def recover_job_as_failed(job: PredictionJob, error_message: str = STALE_JOB_ERR
     logger.warning(
         f"Reaped stale job: job_id={job.id}, worker_id={job.worker_id}, "
         f"lease_expired_at={job.lease_expires_at}, reaped_at={transition_time.isoformat()}"
+    )
+    safe_telemetry_op(JOBS_REAPED_TOTAL.inc)
+    safe_dataset = getattr(job, "detected_dataset", None) or "unknown"
+    if safe_dataset not in ("bonn", "chbmit"):
+        safe_dataset = "unknown"
+    safe_telemetry_op(
+        JOBS_FAILED_TOTAL.inc,
+        labels={
+            "dataset": safe_dataset,
+            "execution_mode": "distributed",
+            "error_category": SAFE_ERROR_LEASE_EXPIRED,
+        },
     )
 
 

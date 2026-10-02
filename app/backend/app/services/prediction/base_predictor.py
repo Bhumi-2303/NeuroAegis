@@ -4,6 +4,8 @@ from typing import Any
 
 import numpy as np
 
+from app.core.telemetry import track_stage_latency
+
 
 class BasePredictor(ABC):
     def __init__(self, model_dir: str, default_model: str):
@@ -41,11 +43,21 @@ class BasePredictor(ABC):
         """Runs the full pipeline."""
         if not self.is_loaded:
             raise RuntimeError("Model is not loaded.")
-            
-        denoised_data = self.preprocess(eeg_data)
-        feature_vector, raw_features = self.extract_features(denoised_data, channel_names, fs)
-        prediction_res = self.predict(feature_vector, model_name)
-        explanation = self.generate_explanation(feature_vector, raw_features, model_name)
+
+        dataset = getattr(self, "dataset_name", None) or (
+            "bonn" if "bonn" in self.__class__.__name__.lower() else "chbmit" if "chbmit" in self.__class__.__name__.lower() else "unknown"
+        )
+        if dataset not in ("bonn", "chbmit"):
+            dataset = "unknown"
+
+        with track_stage_latency("preprocessing", dataset=dataset):
+            denoised_data = self.preprocess(eeg_data)
+        with track_stage_latency("feature_extraction", dataset=dataset):
+            feature_vector, raw_features = self.extract_features(denoised_data, channel_names, fs)
+        with track_stage_latency("model_inference", dataset=dataset):
+            prediction_res = self.predict(feature_vector, model_name)
+        with track_stage_latency("explanation", dataset=dataset):
+            explanation = self.generate_explanation(feature_vector, raw_features, model_name)
         
         confidence_val = max(prediction_res['probabilities'].values())
         band = "high" if confidence_val > 0.9 else "medium" if confidence_val > 0.75 else "low"

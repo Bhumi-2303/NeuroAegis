@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import tempfile
+import time
 import uuid
 from pathlib import Path
 
@@ -38,6 +39,13 @@ from app.core.errors import (
     sanitize_job_error,
 )
 from app.core.logging import get_request_id
+from app.core.telemetry import (
+    JOBS_CREATED_TOTAL,
+    JOBS_FAILED_TOTAL,
+    QUEUE_DISPATCH_FAILURES_TOTAL,
+    safe_telemetry_op,
+    track_stage_latency,
+)
 from app.services.eeg_visualization import build_eeg_visualization_from_raw
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
@@ -230,31 +238,53 @@ async def create_prediction_job(
         )
         db.add(job)
         db.commit()
+
+        # Telemetry: Record job creation (Step 8)
+        exec_mode = "distributed" if settings.ENABLE_DISTRIBUTED_QUEUE else "in_process"
+        safe_telemetry_op(
+            JOBS_CREATED_TOTAL.inc,
+            labels={"dataset": detected_dataset if detected_dataset in ("bonn", "chbmit") else "unknown", "execution_mode": exec_mode},
+        )
         
         # Dispatch prediction job: Distributed Queue (Opt-in) vs In-Process (Default)
         if settings.ENABLE_DISTRIBUTED_QUEUE:
             staged_path = None
             try:
-                # Stage inference window package to shared storage
-                staged_path = storage_backend.save_window(
-                    job_id=job_id,
-                    eeg_data=eeg_data,
-                    channel_names=channel_names,
-                    fs=final_sampling_rate,
-                    dataset_name=detected_dataset,
-                    eeg_visualization=eeg_visualization,
-                    metadata={"patient_id": target_patient_id, "tenant_id": current_user.tenant_id},
-                )
-                # Enqueue job reference to Redis via ARQ (no raw signal arrays in broker)
+                # Stage inference window package to shared storage (Step 9)
+                with track_stage_latency("staging_save", dataset=detected_dataset if detected_dataset in ("bonn", "chbmit") else "unknown"):
+                    staged_path = storage_backend.save_window(
+                        job_id=job_id,
+                        eeg_data=eeg_data,
+                        channel_names=channel_names,
+                        fs=final_sampling_rate,
+                        dataset_name=detected_dataset,
+                        eeg_visualization=eeg_visualization,
+                        metadata={"patient_id": target_patient_id, "tenant_id": current_user.tenant_id},
+                    )
+                # Enqueue job reference to Redis via ARQ with enqueue timestamp (Step 10, 11)
+                enqueued_at = time.time()
                 await prediction_queue.enqueue_prediction_job(
                     job_id=job_id,
                     staged_path=staged_path,
                     dataset_name=detected_dataset,
                     medical_history=parsed_medical_history,
                     request_id=req_id,
+                    enqueued_at=enqueued_at,
                 )
             except Exception as queue_exc:
+                safe_telemetry_op(
+                    QUEUE_DISPATCH_FAILURES_TOTAL.inc,
+                    labels={"dataset": detected_dataset if detected_dataset in ("bonn", "chbmit") else "unknown"},
+                )
                 safe_error = categorize_exception(queue_exc)
+                safe_telemetry_op(
+                    JOBS_FAILED_TOTAL.inc,
+                    labels={
+                        "dataset": detected_dataset if detected_dataset in ("bonn", "chbmit") else "unknown",
+                        "execution_mode": "distributed",
+                        "error_category": safe_error,
+                    },
+                )
                 logger.error(
                     f"Failed to stage or enqueue job {job_id} in distributed queue mode: {sanitize_for_log(str(queue_exc))}"
                 )

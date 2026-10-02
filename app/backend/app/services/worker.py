@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import socket
+import time
 import uuid
 from typing import Any
 
@@ -18,6 +19,13 @@ from app.core.logging import (
     reset_logging_context,
     set_logging_context,
     setup_logging,
+)
+from app.core.telemetry import (
+    PIPELINE_STAGE_SECONDS,
+    QUEUE_WAIT_SECONDS,
+    WORKER_CLAIM_FAILURES_TOTAL,
+    safe_telemetry_op,
+    track_stage_latency,
 )
 from app.db.database import SessionLocal, engine
 from app.db.models import PredictionJob
@@ -280,12 +288,42 @@ async def run_prediction_task(
             f"staged_path={staged_path}, dataset={dataset_name}"
         )
 
-        # Step 1: Claim job ownership with initial lease
-        claimed = claim_job(job_id, worker_id, settings.JOB_LEASE_TIMEOUT_SECONDS)
-        if not claimed:
-            err = f"Worker {worker_id} could not claim job {job_id} (already owned or terminal)"
-            logger.warning(err)
-            return {"status": "failed", "job_id": job_id, "error": err}
+        # Telemetry: Record queue wait duration if enqueue timestamp was provided (Step 11)
+        enqueued_at = kwargs.get("enqueued_at")
+        if enqueued_at is not None and isinstance(enqueued_at, (int, float)):
+            wait_seconds = max(0.0, time.time() - float(enqueued_at))
+            safe_telemetry_op(
+                QUEUE_WAIT_SECONDS.observe,
+                wait_seconds,
+                labels={"dataset": dataset_name if dataset_name in ("bonn", "chbmit") else "unknown"},
+            )
+
+        # Step 1: Claim job ownership with initial lease and claim timing (Step 12)
+        claim_start = time.perf_counter()
+        claim_status = "success"
+        try:
+            claimed = claim_job(job_id, worker_id, settings.JOB_LEASE_TIMEOUT_SECONDS)
+            if not claimed:
+                claim_status = "failed"
+                safe_telemetry_op(WORKER_CLAIM_FAILURES_TOTAL.inc)
+                err = f"Worker {worker_id} could not claim job {job_id} (already owned or terminal)"
+                logger.warning(err)
+                return {"status": "failed", "job_id": job_id, "error": err}
+        except Exception:
+            claim_status = "failed"
+            safe_telemetry_op(WORKER_CLAIM_FAILURES_TOTAL.inc)
+            raise
+        finally:
+            claim_duration = max(0.0, time.perf_counter() - claim_start)
+            safe_telemetry_op(
+                PIPELINE_STAGE_SECONDS.observe,
+                claim_duration,
+                labels={
+                    "stage": "worker_claim",
+                    "dataset": dataset_name if dataset_name in ("bonn", "chbmit") else "unknown",
+                    "status": claim_status,
+                },
+            )
 
         # Step 2: Launch heartbeat task concurrently with prediction execution
         stop_heartbeat = asyncio.Event()
@@ -301,7 +339,9 @@ async def run_prediction_task(
 
         try:
             try:
-                eeg_data, channel_names, fs, eeg_vis = load_staged_payload(staged_path, dataset_name)
+                # Telemetry: Track staging payload load latency (Step 13)
+                with track_stage_latency("staging_load", dataset=dataset_name if dataset_name in ("bonn", "chbmit") else "unknown"):
+                    eeg_data, channel_names, fs, eeg_vis = load_staged_payload(staged_path, dataset_name)
             except Exception as exc:
                 clean_exc = sanitize_error_text(exc, default="Failed to load staged recording payload")
                 err = f"Failed to load staged payload: {clean_exc}"
@@ -338,9 +378,10 @@ async def run_prediction_task(
             except Exception:
                 pass
 
-            # Step 4: Clean up staged storage package after completion or failure
+            # Step 4: Clean up staged storage package after completion or failure (Step 18)
             try:
-                cleaned = storage_backend.delete_window(staged_path)
+                with track_stage_latency("cleanup", dataset=dataset_name if dataset_name in ("bonn", "chbmit") else "unknown"):
+                    cleaned = storage_backend.delete_window(staged_path)
                 if cleaned:
                     logger.info(f"Cleaned up staged window package: {staged_path}")
             except Exception as clean_exc:

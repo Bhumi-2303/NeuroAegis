@@ -209,6 +209,23 @@ async def root_liveness():
     return {"status": "alive"}
 
 
+@app.get("/metrics", tags=["observability"])
+async def prometheus_metrics():
+    """
+    Exposes process-local operational telemetry in Prometheus text exposition format.
+    Contains zero tenant, patient, request, or clinical signal data.
+    """
+    from fastapi.responses import Response
+    from app.core.telemetry import get_telemetry_registry
+
+    registry = get_telemetry_registry()
+    content = registry.generate_prometheus_text()
+    return Response(
+        content=content,
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
+
+
 @app.api_route("/readiness", methods=["GET", "HEAD"], tags=["health"])
 async def root_readiness():
     """Readiness probe verifying DB connectivity and ML models."""
