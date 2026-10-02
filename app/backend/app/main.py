@@ -10,6 +10,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.router import api_router as api_v1_router
 from app.core.config import settings
+from app.core.logging import (
+    request_id_ctx,
+    setup_logging,
+    validate_or_generate_request_id,
+)
 
 try:
     from app.api.v2.router import api_router as api_v2_router
@@ -18,6 +23,35 @@ except ImportError:
 from app.db.database import Base, engine
 
 logger = logging.getLogger("neuroaegis")
+
+
+class RequestCorrelationMiddleware(BaseHTTPMiddleware):
+    """
+    Establishes request correlation for every HTTP request.
+    Validates incoming X-Request-ID or generates a UUIDv4.
+    Sets ContextVar for downstream logging and attaches effective X-Request-ID to all responses.
+    Guarantees ContextVar is reset in a finally block.
+    """
+    async def dispatch(self, request: Request, call_next):
+        raw_id = request.headers.get("x-request-id") or request.headers.get("X-Request-ID")
+        effective_id = validate_or_generate_request_id(raw_id)
+
+        token = request_id_ctx.set(effective_id)
+        try:
+            response = await call_next(request)
+            response.headers["X-Request-ID"] = effective_id
+            return response
+        except Exception as exc:
+            from fastapi.responses import JSONResponse
+            from app.core.errors import sanitize_for_log
+            logger.error(f"Unhandled server error in request {effective_id}: {sanitize_for_log(str(exc))}")
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Internal server error"},
+                headers={"X-Request-ID": effective_id},
+            )
+        finally:
+            request_id_ctx.reset(token)
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -83,6 +117,7 @@ async def lifespan(app: FastAPI):
     Loads the ML models and SHAP explainers exactly once during startup.
     Ensures database schema compatibility and runs background stale job reaper.
     """
+    setup_logging()
     logger.info("Application startup: Creating database tables...")
     Base.metadata.create_all(bind=engine)
     from app.db.database import ensure_schema_compatibility
@@ -147,9 +182,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Security middleware
+# Security and correlation middleware (outermost added last executes first)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(CSRFMiddleware)
+app.add_middleware(RequestCorrelationMiddleware)
 
 # Set all CORS enabled origins
 cors_origins = settings.CORS_ALLOWED_ORIGINS or settings.CORS_ORIGINS
@@ -161,9 +197,11 @@ if cors_origins:
         allow_credentials=allow_creds,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID"],
     )
 
 # Root operational probes
+@app.api_route("/health", methods=["GET", "HEAD"], tags=["health"])
 @app.api_route("/healthz", methods=["GET", "HEAD"], tags=["health"])
 @app.api_route("/liveness", methods=["GET", "HEAD"], tags=["health"])
 async def root_liveness():

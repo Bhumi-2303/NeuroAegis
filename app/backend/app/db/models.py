@@ -130,6 +130,9 @@ class PredictionJob(Base):
     heartbeat_at = Column(DateTime, nullable=True)
     lease_expires_at = Column(DateTime, nullable=True, index=True)
 
+    # Request Correlation (Prompt 10.2)
+    request_id = Column(String(64), nullable=True, index=True)
+
     # Tenancy & Ownership (Prompt 9.1)
     tenant_id = Column(String, ForeignKey("tenants.id", ondelete="RESTRICT"), index=True, nullable=False, default=DEFAULT_TENANT_ID)
     created_by_user_id = Column(String, ForeignKey("users.id", ondelete="SET NULL"), index=True, nullable=True)

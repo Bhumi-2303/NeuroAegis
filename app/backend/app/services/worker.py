@@ -13,6 +13,12 @@ from arq.connections import RedisSettings
 from sqlalchemy import text
 
 from app.core.config import settings
+from app.core.errors import sanitize_error_text, sanitize_job_error, sanitize_for_log
+from app.core.logging import (
+    reset_logging_context,
+    set_logging_context,
+    setup_logging,
+)
 from app.db.database import SessionLocal, engine
 from app.db.models import PredictionJob
 from app.services.job_service import run_prediction_pipeline
@@ -121,6 +127,7 @@ def update_heartbeat(job_id: str, worker_id: str, lease_duration_seconds: int) -
 
 def fail_job(job_id: str, error_message: str, expected_worker_id: str | None = None) -> None:
     """Safe helper to record failure status and error message on PredictionJob."""
+    safe_error = sanitize_error_text(error_message, default="Job failed during processing")
     try:
         db = SessionLocal()
         try:
@@ -134,10 +141,10 @@ def fail_job(job_id: str, error_message: str, expected_worker_id: str | None = N
                     return
                 job.status = "Failed"
                 job.progress = 0
-                job.error = error_message
+                job.error = safe_error
                 job.completed_at = datetime.datetime.utcnow()
                 db.commit()
-                logger.info(f"Recorded job failure: job_id={job_id}, error='{error_message}'")
+                logger.info(f"Recorded job failure: job_id={job_id}, error='{safe_error}'")
         finally:
             db.close()
     except Exception as exc:
@@ -150,7 +157,7 @@ def load_staged_payload(staged_path: str, dataset_name: str) -> tuple[np.ndarray
     Supports staged .npz packages and raw .edf recordings.
     """
     if not os.path.exists(staged_path):
-        raise FileNotFoundError(f"Staged payload file does not exist: {staged_path}")
+        raise FileNotFoundError("Staged payload file does not exist")
 
     _, ext = os.path.splitext(staged_path)
     ext = ext.lower()
@@ -219,6 +226,8 @@ async def run_prediction_task(
     staged_path: str,
     dataset_name: str = "bonn",
     medical_history: dict[str, Any] | None = None,
+    request_id: str | None = None,
+    **kwargs: Any,
 ) -> dict[str, Any]:
     """
     ARQ worker task entry point.
@@ -228,11 +237,6 @@ async def run_prediction_task(
     from app.services.storage import storage_backend
 
     worker_id = get_worker_id()
-    logger.info(
-        f"Worker received prediction task: worker_id={worker_id}, job_id={job_id}, "
-        f"staged_path={staged_path}, dataset={dataset_name}"
-    )
-
     if not job_id or not isinstance(job_id, str):
         err = "Invalid task arguments: job_id must be a non-empty string"
         logger.error(err)
@@ -244,8 +248,10 @@ async def run_prediction_task(
         fail_job(job_id, err)
         return {"status": "failed", "job_id": job_id, "error": err}
 
-    # Verify job existence in database
+    # Verify job existence in database and resolve correlation context
     db = SessionLocal()
+    effective_request_id = request_id
+    job_tenant_id = None
     try:
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
         if not job:
@@ -256,71 +262,91 @@ async def run_prediction_task(
             err = f"Job {job_id} has been soft-deleted"
             logger.warning(err)
             return {"status": "failed", "job_id": job_id, "error": err}
+        if not effective_request_id and getattr(job, "request_id", None):
+            effective_request_id = job.request_id
+        job_tenant_id = getattr(job, "tenant_id", None)
     finally:
         db.close()
 
-    # Step 1: Claim job ownership with initial lease
-    claimed = claim_job(job_id, worker_id, settings.JOB_LEASE_TIMEOUT_SECONDS)
-    if not claimed:
-        err = f"Worker {worker_id} could not claim job {job_id} (already owned or terminal)"
-        logger.warning(err)
-        return {"status": "failed", "job_id": job_id, "error": err}
-
-    # Step 2: Launch heartbeat task concurrently with prediction execution
-    stop_heartbeat = asyncio.Event()
-    heartbeat_task = asyncio.create_task(
-        _heartbeat_loop(
-            job_id=job_id,
-            worker_id=worker_id,
-            stop_event=stop_heartbeat,
-            interval_seconds=settings.WORKER_HEARTBEAT_INTERVAL_SECONDS,
-            lease_duration_seconds=settings.JOB_LEASE_TIMEOUT_SECONDS,
-        )
+    tokens = set_logging_context(
+        request_id=effective_request_id,
+        job_id=job_id,
+        tenant_id=job_tenant_id,
+        worker_id=worker_id,
     )
-
     try:
-        try:
-            eeg_data, channel_names, fs, eeg_vis = load_staged_payload(staged_path, dataset_name)
-        except Exception as exc:
-            err = f"Failed to load staged payload for job {job_id}: {exc}"
-            logger.error(err, exc_info=True)
-            fail_job(job_id, err, expected_worker_id=worker_id)
+        logger.info(
+            f"Worker received prediction task: worker_id={worker_id}, job_id={job_id}, "
+            f"staged_path={staged_path}, dataset={dataset_name}"
+        )
+
+        # Step 1: Claim job ownership with initial lease
+        claimed = claim_job(job_id, worker_id, settings.JOB_LEASE_TIMEOUT_SECONDS)
+        if not claimed:
+            err = f"Worker {worker_id} could not claim job {job_id} (already owned or terminal)"
+            logger.warning(err)
             return {"status": "failed", "job_id": job_id, "error": err}
 
-        try:
-            # Delegate directly to the existing tested prediction pipeline
-            await run_prediction_pipeline(
+        # Step 2: Launch heartbeat task concurrently with prediction execution
+        stop_heartbeat = asyncio.Event()
+        heartbeat_task = asyncio.create_task(
+            _heartbeat_loop(
                 job_id=job_id,
-                eeg_data=eeg_data,
-                channel_names=channel_names,
-                fs=fs,
-                dataset_name=dataset_name,
-                eeg_visualization=eeg_vis,
-                expected_worker_id=worker_id,
+                worker_id=worker_id,
+                stop_event=stop_heartbeat,
+                interval_seconds=settings.WORKER_HEARTBEAT_INTERVAL_SECONDS,
+                lease_duration_seconds=settings.JOB_LEASE_TIMEOUT_SECONDS,
             )
-            logger.info(f"Worker {worker_id} successfully processed prediction pipeline for job {job_id}")
-            return {"status": "completed", "job_id": job_id, "dataset_name": dataset_name}
-        except Exception as exc:
-            err = f"Execution error in prediction pipeline for job {job_id}: {exc}"
-            logger.error(err, exc_info=True)
-            fail_job(job_id, err, expected_worker_id=worker_id)
-            return {"status": "failed", "job_id": job_id, "error": err}
+        )
 
+        try:
+            try:
+                eeg_data, channel_names, fs, eeg_vis = load_staged_payload(staged_path, dataset_name)
+            except Exception as exc:
+                clean_exc = sanitize_error_text(exc, default="Failed to load staged recording payload")
+                err = f"Failed to load staged payload: {clean_exc}"
+                logger.error(f"Failed to load staged payload for job {job_id}: {clean_exc}", exc_info=True)
+                fail_job(job_id, err, expected_worker_id=worker_id)
+                return {"status": "failed", "job_id": job_id, "error": err}
+
+            try:
+                # Delegate directly to the existing tested prediction pipeline
+                await run_prediction_pipeline(
+                    job_id=job_id,
+                    eeg_data=eeg_data,
+                    channel_names=channel_names,
+                    fs=fs,
+                    dataset_name=dataset_name,
+                    eeg_visualization=eeg_vis,
+                    expected_worker_id=worker_id,
+                    request_id=effective_request_id,
+                )
+                logger.info(f"Worker {worker_id} successfully processed prediction pipeline for job {job_id}")
+                return {"status": "completed", "job_id": job_id, "dataset_name": dataset_name}
+            except Exception as exc:
+                clean_exc = sanitize_error_text(exc, default="Internal processing error")
+                err = f"Execution error in prediction pipeline: {clean_exc}"
+                logger.error(f"Execution error in prediction pipeline for job {job_id}: {clean_exc}", exc_info=True)
+                fail_job(job_id, err, expected_worker_id=worker_id)
+                return {"status": "failed", "job_id": job_id, "error": err}
+
+        finally:
+            # Step 3: Stop heartbeat cleanly
+            stop_heartbeat.set()
+            try:
+                await asyncio.wait_for(heartbeat_task, timeout=1.0)
+            except Exception:
+                pass
+
+            # Step 4: Clean up staged storage package after completion or failure
+            try:
+                cleaned = storage_backend.delete_window(staged_path)
+                if cleaned:
+                    logger.info(f"Cleaned up staged window package: {staged_path}")
+            except Exception as clean_exc:
+                logger.warning(f"Could not clean up staged path {staged_path}: {clean_exc}")
     finally:
-        # Step 3: Stop heartbeat cleanly
-        stop_heartbeat.set()
-        try:
-            await asyncio.wait_for(heartbeat_task, timeout=1.0)
-        except Exception:
-            pass
-
-        # Step 4: Clean up staged storage package after completion or failure
-        try:
-            cleaned = storage_backend.delete_window(staged_path)
-            if cleaned:
-                logger.info(f"Cleaned up staged window package: {staged_path}")
-        except Exception as clean_exc:
-            logger.warning(f"Could not clean up staged path {staged_path}: {clean_exc}")
+        reset_logging_context(tokens)
 
 
 async def _worker_reaper_loop(stop_event: asyncio.Event) -> None:
@@ -350,6 +376,7 @@ async def _worker_reaper_loop(stop_event: asyncio.Event) -> None:
 
 async def startup(ctx: dict[str, Any]) -> None:
     """Initialize worker dependencies, verify connectivity, and pre-load ML model artifacts."""
+    setup_logging()
     worker_id = get_worker_id()
     logger.info(f"Initializing ARQ Worker with identity: {worker_id}")
 

@@ -11,6 +11,7 @@ import {
   onSessionExpired,
   ApiRequestError,
   uploadEegV2,
+  generateRequestId,
 } from '../src/services/api.ts';
 
 // Setup Mock Environment
@@ -555,5 +556,134 @@ describe('Phase 9.4 Frontend Authentication & Session Boundary Suite', () => {
   test('AUTH-20: zero token persistence invariant verified across all storages', () => {
     assert.strictEqual(localStorage.length, 0);
     assert.strictEqual(sessionStorage.length, 0);
+  });
+});
+
+describe('Phase 10.2: Request Correlation & Contextual Tracing', () => {
+  test('CORR-01: outgoing apiFetch automatically generates and attaches X-Request-ID header', async () => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      fetchCalls.push({ url: String(input), options: init || {} });
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    };
+
+    await apiFetch('/health');
+
+    assert.strictEqual(fetchCalls.length, 1);
+    const headers = fetchCalls[0].options.headers as Headers;
+    const reqId = headers.get('X-Request-ID');
+    assert(reqId, 'X-Request-ID header must be present on outgoing request');
+    assert.match(reqId, /^[a-zA-Z0-9_\-]{8,64}$/, 'Request ID must be non-empty and bounded string');
+  });
+
+  test('CORR-02: distinct apiFetch calls receive distinct X-Request-ID values', async () => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      fetchCalls.push({ url: String(input), options: init || {} });
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    };
+
+    await apiFetch('/health');
+    await apiFetch('/health');
+
+    assert.strictEqual(fetchCalls.length, 2);
+    const reqId1 = (fetchCalls[0].options.headers as Headers).get('X-Request-ID');
+    const reqId2 = (fetchCalls[1].options.headers as Headers).get('X-Request-ID');
+    assert(reqId1 && reqId2);
+    assert.notStrictEqual(reqId1, reqId2, 'Independent requests must generate unique request IDs');
+  });
+
+  test('CORR-03: apiFetch honors explicitly provided X-Request-ID header and option', async () => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      fetchCalls.push({ url: String(input), options: init || {} });
+      return new Response(JSON.stringify({ status: 'ok' }), { status: 200 });
+    };
+
+    // Via headers
+    await apiFetch('/health', { headers: { 'X-Request-ID': 'custom-req-id-123' } });
+    const reqId1 = (fetchCalls[0].options.headers as Headers).get('X-Request-ID');
+    assert.strictEqual(reqId1, 'custom-req-id-123');
+
+    // Via option
+    await apiFetch('/health', { requestId: 'custom-req-id-456' });
+    const reqId2 = (fetchCalls[1].options.headers as Headers).get('X-Request-ID');
+    assert.strictEqual(reqId2, 'custom-req-id-456');
+  });
+
+  test('CORR-04: transparent 401 retry preserves identical X-Request-ID across attempts', async () => {
+    setCsrfToken('mock-csrf');
+    let callCount = 0;
+
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      fetchCalls.push({ url, options: init || {} });
+      callCount++;
+
+      if (url.includes('/auth/refresh')) {
+        return new Response(JSON.stringify({ csrf_token: 'new-csrf' }), { status: 200 });
+      }
+
+      if (callCount === 1) {
+        // First attempt fails with 401
+        return new Response(JSON.stringify({ detail: 'Token expired' }), {
+          status: 401,
+          headers: { 'X-Request-ID': 'preserved-req-id-789' },
+        });
+      }
+
+      // Retry attempt succeeds
+      return new Response(JSON.stringify({ data: 'success' }), {
+        status: 200,
+        headers: { 'X-Request-ID': 'preserved-req-id-789' },
+      });
+    };
+
+    const res = await apiFetch('/patients/data', { requestId: 'preserved-req-id-789' });
+    assert.strictEqual(res.status, 200);
+
+    // Call 1: initial /patients/data (401)
+    // Call 2: /auth/refresh
+    // Call 3: retry /patients/data (200)
+    assert.strictEqual(fetchCalls.length, 3);
+    const initialReqId = (fetchCalls[0].options.headers as Headers).get('X-Request-ID');
+    const retryReqId = (fetchCalls[2].options.headers as Headers).get('X-Request-ID');
+    assert.strictEqual(initialReqId, 'preserved-req-id-789');
+    assert.strictEqual(retryReqId, 'preserved-req-id-789', '401 retry must preserve the original request ID');
+  });
+
+  test('CORR-05: ApiRequestError surfaces backend X-Request-ID from response headers', async () => {
+    globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      fetchCalls.push({ url: String(input), options: init || {} });
+      return new Response(JSON.stringify({ detail: 'Invalid parameters' }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-ID': 'server-req-err-999',
+        },
+      });
+    };
+
+    try {
+      await loginUser('baduser', 'badpass');
+      assert.fail('loginUser should have thrown');
+    } catch (err) {
+      assert(err instanceof ApiRequestError);
+      assert.strictEqual(err.status, 400);
+      assert.strictEqual(err.requestId, 'server-req-err-999');
+    }
+  });
+
+  test('CORR-06: ApiRequestError on network failure surfaces client effectiveRequestId', async () => {
+    globalThis.fetch = async () => {
+      throw new Error('Connection refused');
+    };
+
+    try {
+      await apiFetch('/health', { requestId: 'client-offline-req-111' });
+      assert.fail('apiFetch should have thrown on network failure');
+    } catch (err) {
+      assert(err instanceof ApiRequestError);
+      assert.strictEqual(err.status, 0);
+      assert.strictEqual(err.requestId, 'client-offline-req-111');
+      assert(err.message.includes('Backend service unreachable'));
+    }
   });
 });

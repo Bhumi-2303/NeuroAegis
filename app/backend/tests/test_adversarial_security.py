@@ -599,3 +599,332 @@ def test_user_responses_never_leak_password_hashes(client: TestClient):
     for pat in pat_list:
         assert "password" not in pat
         assert "hashed_password" not in pat
+
+
+# ==============================================================================
+# PHASE 10.1: TELEMETRY PRIVACY & ERROR SANITIZATION ADVERSARIAL TESTS (P0)
+# ==============================================================================
+
+CHBMIT_TEST_CHANNELS = [
+    "FP1-F7", "F7-T7", "T7-P7", "P7-O1",
+    "FP1-F3", "F3-C3", "C3-P3", "P3-O1",
+    "FP2-F4", "F4-C4", "C4-P4", "P4-O2",
+    "FP2-F8", "F8-T8", "T8-P8", "P8-O2",
+    "FZ-CZ", "CZ-PZ",
+    "P7-T7", "T7-FT9", "FT9-FT10", "FT10-T8", "T8-P8-1"
+]
+
+def test_redis_credential_leakage_prevented_in_api_and_job_error(client: TestClient, monkeypatch):
+    """
+    TEL-01 Adversarial Test:
+    Simulate queue connection failure with a credential-bearing Redis DSN containing a canary secret.
+    Verify that:
+    1. Canary secret is absent from API response text and detail.
+    2. Canary secret is absent from persisted PredictionJob.error in the database.
+    3. Failure leaves the job in a consistent 'Failed' state.
+    4. Queue connection exception itself does not expose the password.
+    """
+    from app.services.queue import RedisPredictionQueue, QueueConnectionError
+    from app.core.config import settings
+
+    canary_secret = "CANARY_REDIS_SECRET_987654"
+    canary_dsn = f"redis://default:{canary_secret}@redis.internal:6379/0"
+
+    # Test A.1: Direct Queue Connection Exception Constructor sanitization
+    queue_instance = RedisPredictionQueue(redis_url=canary_dsn)
+    with pytest.raises(QueueConnectionError) as exc_info:
+        import asyncio
+        asyncio.run(queue_instance.get_pool())
+    assert canary_secret not in str(exc_info.value)
+    assert ":***@" in str(exc_info.value)
+
+    # Test A.2: API v2 Predict dispatch failure in distributed queue mode
+    monkeypatch.setattr(settings, "ENABLE_DISTRIBUTED_QUEUE", True)
+    from unittest.mock import AsyncMock
+    mock_queue = AsyncMock()
+    mock_queue.enqueue_prediction_job.side_effect = QueueConnectionError(f"Could not connect to {canary_dsn}")
+    monkeypatch.setattr("app.api.v2.predict.prediction_queue", mock_queue)
+
+    user_clin = User(id=USER_CLIN_ALPHA, username="adv_clin_alpha", tenant_id=TENANT_ALPHA, role="clinician", token_version=1)
+    token = create_access_token(user_clin)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with tempfile.NamedTemporaryFile(suffix=".edf", delete=False) as tmp_edf:
+        edf_path = Path(tmp_edf.name)
+    try:
+        write_synthetic_edf(edf_path, channel_names=CHBMIT_TEST_CHANNELS, sampling_rate=256, duration_seconds=1)
+        with open(edf_path, "rb") as f:
+            resp = client.post(
+                "/api/v2/predict/",
+                headers=headers,
+                data={
+                    "name": "Canary Patient",
+                    "age": 45,
+                    "gender": "male",
+                    "weight": 70.0,
+                    "height": 175.0,
+                    "medical_history": json.dumps({}),
+                    "vital_signs": json.dumps({}),
+                },
+                files={"file": ("canary.edf", f, "application/octet-stream")},
+            )
+
+        assert resp.status_code == 503
+        raw_response_text = resp.text
+        assert canary_secret not in raw_response_text
+        assert "redis.internal" not in raw_response_text
+
+        # Verify database record is in consistent Failed state without secret leakage
+        db = SessionLocal()
+        try:
+            failed_job = (
+                db.query(PredictionJob)
+                .filter(PredictionJob.tenant_id == TENANT_ALPHA)
+                .order_by(PredictionJob.created_at.desc())
+                .first()
+            )
+            assert failed_job is not None
+            assert failed_job.status == "Failed"
+            assert failed_job.progress == 0
+            assert canary_secret not in (failed_job.error or "")
+            assert failed_job.error == "Distributed queue dispatch failed"
+        finally:
+            db.close()
+    finally:
+        if edf_path.exists():
+            edf_path.unlink()
+
+
+def test_filesystem_path_leakage_prevented_in_api_and_job_error(client: TestClient, monkeypatch):
+    """
+    TEL-02 Adversarial Test:
+    Simulate pipeline / storage exception containing a private filesystem path canary.
+    Verify that:
+    1. Raw path is completely absent from all API responses (v1, v2).
+    2. Raw path is absent from client-visible job error fields.
+    3. The internal failure is correctly recorded as Failed (never falsely successful).
+    """
+    from app.services.storage import StorageError
+
+    canary_path = "/srv/neuroaegis/private-storage/CANARY_PRIVATE_PATH_12345.npz"
+
+    # Simulate storage error containing private path in distributed mode
+    monkeypatch.setattr(settings, "ENABLE_DISTRIBUTED_QUEUE", True)
+    mock_storage = MagicMock()
+    mock_storage.save_window.side_effect = StorageError(f"IOError: Unable to write to {canary_path}")
+    monkeypatch.setattr("app.api.v2.predict.storage_backend", mock_storage)
+
+    user_clin = User(id=USER_CLIN_ALPHA, username="adv_clin_alpha", tenant_id=TENANT_ALPHA, role="clinician", token_version=1)
+    token = create_access_token(user_clin)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    with tempfile.NamedTemporaryFile(suffix=".edf", delete=False) as tmp_edf:
+        edf_path = Path(tmp_edf.name)
+    try:
+        write_synthetic_edf(edf_path, channel_names=CHBMIT_TEST_CHANNELS, sampling_rate=256, duration_seconds=1)
+        with open(edf_path, "rb") as f:
+            resp = client.post(
+                "/api/v2/predict/",
+                headers=headers,
+                data={
+                    "name": "Storage Canary Patient",
+                    "age": 52,
+                    "gender": "female",
+                    "weight": 62.0,
+                    "height": 168.0,
+                    "medical_history": json.dumps({}),
+                    "vital_signs": json.dumps({}),
+                },
+                files={"file": ("storage_canary.edf", f, "application/octet-stream")},
+            )
+
+        assert resp.status_code == 503
+        raw_text = resp.text
+        assert "CANARY_PRIVATE_PATH" not in raw_text
+        assert "/srv/neuroaegis" not in raw_text
+
+        # Verify DB job state
+        db = SessionLocal()
+        try:
+            failed_job = (
+                db.query(PredictionJob)
+                .filter(PredictionJob.tenant_id == TENANT_ALPHA)
+                .order_by(PredictionJob.created_at.desc())
+                .first()
+            )
+            assert failed_job is not None
+            assert failed_job.status == "Failed"
+            assert "CANARY_PRIVATE_PATH" not in (failed_job.error or "")
+            assert failed_job.error == "Storage access failure"
+
+            # Query job status via v2 endpoint
+            status_resp = client.get(f"/api/v2/jobs/{failed_job.id}", headers=headers)
+            assert status_resp.status_code == 200
+            assert "CANARY_PRIVATE_PATH" not in status_resp.text
+            assert status_resp.json()["error"] == "Storage access failure"
+
+            # Query report via v2 endpoint
+            report_resp = client.get(f"/api/v2/report/{failed_job.id}", headers=headers)
+            assert report_resp.status_code == 200
+            assert "CANARY_PRIVATE_PATH" not in report_resp.text
+            assert report_resp.json()["job"]["error"] == "Storage access failure"
+        finally:
+            db.close()
+    finally:
+        if edf_path.exists():
+            edf_path.unlink()
+
+
+def test_legacy_persisted_errors_sanitized_at_response_time(client: TestClient):
+    """
+    TEL-02 Legacy Data Policy Test:
+    Construct database jobs containing legacy unsanitized error strings with canary secrets and paths.
+    Verify that:
+    1. GET /api/v1/jobs/{job_id} sanitizes the error response.
+    2. GET /api/v1/jobs/latest sanitizes the error response.
+    3. GET /api/v2/predict/status/{job_id} sanitizes the error response.
+    4. GET /api/v2/report/{job_id} sanitizes the error response.
+    5. No canary secret, server path, or stack trace leaks through any API.
+    """
+    canary_legacy_path = "/var/log/private_storage/CANARY_LEGACY_PATH_54321.npz"
+    canary_legacy_secret = "CANARY_LEGACY_SECRET_9999"
+    raw_legacy_error = f"FileNotFoundError: [Errno 2] No such file or directory: '{canary_legacy_path}' (token: {canary_legacy_secret})"
+
+    legacy_job_id = str(uuid.uuid4())
+    db = SessionLocal()
+    try:
+        legacy_job = PredictionJob(
+            id=legacy_job_id,
+            tenant_id=TENANT_ALPHA,
+            created_by_user_id=USER_CLIN_ALPHA,
+            status="Failed",
+            progress=0,
+            error=raw_legacy_error,
+            detected_dataset="bonn",
+            selected_model="lightgbm",
+        )
+        db.add(legacy_job)
+        db.commit()
+    finally:
+        db.close()
+
+    user_clin = User(id=USER_CLIN_ALPHA, username="adv_clin_alpha", tenant_id=TENANT_ALPHA, role="clinician", token_version=1)
+    token = create_access_token(user_clin)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    # 1. v1 job by ID
+    v1_resp = client.get(f"/api/v1/jobs/{legacy_job_id}", headers=headers)
+    assert v1_resp.status_code == 200
+    v1_body = v1_resp.text
+    assert canary_legacy_path not in v1_body
+    assert canary_legacy_secret not in v1_body
+    assert v1_resp.json()["error"] == "Storage access failure"
+
+    # 2. v1 latest job
+    v1_latest_resp = client.get("/api/v1/jobs/latest", headers=headers)
+    assert v1_latest_resp.status_code == 200
+    assert canary_legacy_path not in v1_latest_resp.text
+    assert canary_legacy_secret not in v1_latest_resp.text
+    assert v1_latest_resp.json()["error"] == "Storage access failure"
+
+    # 3. v2 job status
+    v2_status_resp = client.get(f"/api/v2/predict/status/{legacy_job_id}", headers=headers)
+    assert v2_status_resp.status_code == 200
+    assert canary_legacy_path not in v2_status_resp.text
+    assert canary_legacy_secret not in v2_status_resp.text
+    assert v2_status_resp.json()["error"] == "Storage access failure"
+
+    # 4. v2 report
+    v2_report_resp = client.get(f"/api/v2/report/{legacy_job_id}", headers=headers)
+    assert v2_report_resp.status_code == 200
+    assert canary_legacy_path not in v2_report_resp.text
+    assert canary_legacy_secret not in v2_report_resp.text
+    assert v2_report_resp.json()["job"]["error"] == "Storage access failure"
+
+
+def test_unexpected_exceptions_produce_safe_client_error(client: TestClient):
+    """
+    Verify that unexpected internal exceptions with sensitive context produce
+    safe categorized error messages without disclosing technical stack traces.
+    """
+    from app.services.worker import fail_job
+
+    unexpected_job_id = str(uuid.uuid4())
+    db = SessionLocal()
+    try:
+        job = PredictionJob(
+            id=unexpected_job_id,
+            tenant_id=TENANT_ALPHA,
+            created_by_user_id=USER_CLIN_ALPHA,
+            status="Running",
+            progress=50,
+        )
+        db.add(job)
+        db.commit()
+    finally:
+        db.close()
+
+    canary_internal_detail = "RuntimeError: Segfault in /usr/local/secret_module.py line 42 with CANARY_INTERNAL_CTX"
+    fail_job(unexpected_job_id, canary_internal_detail)
+
+    user_clin = User(id=USER_CLIN_ALPHA, username="adv_clin_alpha", tenant_id=TENANT_ALPHA, role="clinician", token_version=1)
+    token = create_access_token(user_clin)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    resp = client.get(f"/api/v2/jobs/{unexpected_job_id}", headers=headers)
+    assert resp.status_code == 200
+    assert "CANARY_INTERNAL_CTX" not in resp.text
+    assert "/usr/local" not in resp.text
+    assert resp.json()["error"] in ("Job failed during processing", "Internal processing error")
+
+
+def test_security_and_tenant_invariants_preserved_during_error_remediation(client: TestClient):
+    """
+    Verify that error sanitization does not weaken tenant isolation, authorization,
+    soft deletion, or normal successful job retrieval.
+    """
+    # 1. Cross-tenant access on failed job is rejected with 404
+    job_id = str(uuid.uuid4())
+    db = SessionLocal()
+    try:
+        db.add(PredictionJob(
+            id=job_id,
+            tenant_id=TENANT_ALPHA,
+            created_by_user_id=USER_CLIN_ALPHA,
+            status="Failed",
+            error="Storage access failure",
+        ))
+        db.commit()
+    finally:
+        db.close()
+
+    user_beta = User(id=USER_CLIN_BETA, username="adv_clin_beta", tenant_id=TENANT_BETA, role="clinician", token_version=1)
+    token_beta = create_access_token(user_beta)
+    headers_beta = {"Authorization": f"Bearer {token_beta}"}
+
+    cross_resp = client.get(f"/api/v2/jobs/{job_id}", headers=headers_beta)
+    assert cross_resp.status_code == 404
+
+    # 2. Researcher role cannot access clinical jobs
+    user_res = User(id=USER_RES_ALPHA, username="adv_res_alpha", tenant_id=TENANT_ALPHA, role="researcher", token_version=1)
+    token_res = create_access_token(user_res)
+    headers_res = {"Authorization": f"Bearer {token_res}"}
+
+    res_resp = client.get(f"/api/v2/jobs/{job_id}", headers=headers_res)
+    assert res_resp.status_code == 403
+
+    # 3. Soft-deleted failed job is rejected with 404
+    db = SessionLocal()
+    try:
+        job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
+        job.is_deleted = True
+        db.commit()
+    finally:
+        db.close()
+
+    user_alpha = User(id=USER_CLIN_ALPHA, username="adv_clin_alpha", tenant_id=TENANT_ALPHA, role="clinician", token_version=1)
+    token_alpha = create_access_token(user_alpha)
+    headers_alpha = {"Authorization": f"Bearer {token_alpha}"}
+
+    deleted_resp = client.get(f"/api/v2/jobs/{job_id}", headers=headers_alpha)
+    assert deleted_resp.status_code == 404

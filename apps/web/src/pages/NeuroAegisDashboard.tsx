@@ -394,6 +394,7 @@ export const NeuroAegisDashboard: React.FC = () => {
       <ErrorState
         message={lifecycleState.message}
         code={lifecycleState.code}
+        requestId={lifecycleState.requestId}
         onRetry={() => setLifecycleState({ status: 'ready' })}
       />
     );

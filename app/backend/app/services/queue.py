@@ -8,6 +8,7 @@ from arq import create_pool
 from arq.connections import ArqRedis, RedisSettings
 
 from app.core.config import settings
+from app.core.errors import mask_redis_url
 
 logger = logging.getLogger("neuroaegis.queue")
 
@@ -93,10 +94,11 @@ class RedisPredictionQueue(PredictionQueue):
                 redis_settings = RedisSettings.from_dsn(self.redis_url)
                 self._pool = await create_pool(redis_settings)
             except Exception as exc:
-                logger.error(f"Failed to connect to Redis at {self.redis_url}: {exc}")
+                masked_url = mask_redis_url(self.redis_url)
+                logger.error(f"Failed to connect to Redis at {masked_url}")
                 raise QueueConnectionError(
-                    f"Could not connect to Redis broker at '{self.redis_url}': {exc}"
-                ) from exc
+                    f"Could not connect to Redis broker at '{masked_url}'"
+                ) from None
         return self._pool
 
     async def close(self) -> None:
@@ -134,8 +136,8 @@ class RedisPredictionQueue(PredictionQueue):
         except QueueError:
             raise
         except Exception as exc:
-            logger.error(f"Failed to enqueue job {job_id}: {exc}")
-            raise QueueError(f"Failed to enqueue prediction job {job_id}: {exc}") from exc
+            logger.error(f"Failed to enqueue job {job_id}")
+            raise QueueError(f"Failed to enqueue prediction job {job_id}") from None
 
 
 class InMemoryPredictionQueue(PredictionQueue):

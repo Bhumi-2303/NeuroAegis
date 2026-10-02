@@ -148,6 +148,9 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 if "created_by_user_id" not in job_cols:
                     logger.info("Migrating schema: adding 'created_by_user_id' column to prediction_jobs")
                     conn.execute(text("ALTER TABLE prediction_jobs ADD COLUMN created_by_user_id VARCHAR"))
+                if "request_id" not in job_cols:
+                    logger.info("Migrating schema: adding 'request_id' column to prediction_jobs")
+                    conn.execute(text("ALTER TABLE prediction_jobs ADD COLUMN request_id VARCHAR(64)"))
                 if "is_deleted" not in job_cols:
                     logger.info("Migrating schema: adding 'is_deleted' column to prediction_jobs")
                     conn.execute(text("ALTER TABLE prediction_jobs ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE"))
@@ -177,6 +180,7 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 ("ix_prediction_jobs_created_by_user_id", "prediction_jobs", ["created_by_user_id"]),
                 ("ix_prediction_jobs_patient_id", "prediction_jobs", ["patient_id"]),
                 ("ix_prediction_jobs_tenant_patient", "prediction_jobs", ["tenant_id", "patient_id"]),
+                ("ix_prediction_jobs_request_id", "prediction_jobs", ["request_id"]),
                 ("ix_refresh_tokens_token_hash", "refresh_tokens", ["token_hash"]),
                 ("ix_refresh_tokens_user_id", "refresh_tokens", ["user_id"]),
                 ("ix_refresh_tokens_tenant_id", "refresh_tokens", ["tenant_id"]),

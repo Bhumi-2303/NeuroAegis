@@ -106,18 +106,29 @@ export interface EegVisualization {
 export class ApiRequestError extends Error {
   readonly status: number;
   readonly validation?: EdfValidationResult;
+  readonly requestId?: string;
 
   constructor(
     message: string,
     status: number,
     validation?: EdfValidationResult,
+    requestId?: string,
   ) {
     super(message);
     this.name = 'ApiRequestError';
     this.status = status;
     this.validation = validation;
+    this.requestId = requestId;
   }
 }
+
+export function generateRequestId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'req-' + Math.random().toString(36).substring(2, 15) + '-' + Date.now().toString(36);
+}
+
 
 export interface JobResponse {
   job_id: string;
@@ -247,6 +258,7 @@ export async function refreshAuthSession(): Promise<boolean> {
       const csrf = getCsrfToken();
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'X-Request-ID': generateRequestId(),
       };
       if (csrf) {
         headers['X-CSRF-Token'] = csrf;
@@ -282,7 +294,7 @@ export async function refreshAuthSession(): Promise<boolean> {
 
 export async function apiFetch(
   endpoint: string,
-  options: RequestInit & { _retry?: boolean } = {}
+  options: RequestInit & { _retry?: boolean; requestId?: string } = {}
 ): Promise<Response> {
   const url = endpoint.startsWith('http')
     ? endpoint
@@ -291,6 +303,17 @@ export async function apiFetch(
   const isStateChanging = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
 
   const headers = new Headers(options.headers || {});
+
+  // Determine or assign correlation ID
+  const effectiveRequestId =
+    options.requestId ||
+    headers.get('X-Request-ID') ||
+    headers.get('x-request-id') ||
+    generateRequestId();
+
+  if (!headers.has('X-Request-ID') && !headers.has('x-request-id')) {
+    headers.set('X-Request-ID', effectiveRequestId);
+  }
 
   // Add CSRF token for state-changing requests when not the initial login endpoint
   if (isStateChanging && !url.endsWith('/auth/login')) {
@@ -311,7 +334,12 @@ export async function apiFetch(
     response = await fetch(url, requestOptions);
   } catch (err) {
     if ((err as Error)?.name === 'AbortError') throw err;
-    throw new ApiRequestError(`Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`, 0);
+    throw new ApiRequestError(
+      `Backend service unreachable: ${(err as Error)?.message || 'Connection failed'}`,
+      0,
+      undefined,
+      effectiveRequestId,
+    );
   }
 
   // Centrally handle 401 Unauthorized for protected endpoints
@@ -319,12 +347,18 @@ export async function apiFetch(
     if (!options._retry && Boolean(getCsrfToken())) {
       const refreshed = await refreshAuthSession();
       if (refreshed) {
-        // Retry original request once
-        return apiFetch(endpoint, { ...options, _retry: true });
+        // Retry original request once, preserving the correlation ID
+        return apiFetch(endpoint, {
+          ...options,
+          headers,
+          requestId: effectiveRequestId,
+          _retry: true,
+        });
       }
     }
     notifySessionExpired();
-    throw new ApiRequestError('Session expired. Please log in again.', 401);
+    const serverRequestId = response.headers.get('x-request-id') || effectiveRequestId;
+    throw new ApiRequestError('Session expired. Please log in again.', 401, undefined, serverRequestId);
   }
 
   return response;
@@ -346,7 +380,8 @@ export async function loginUser(username: string, password: string): Promise<Aut
     const detail = isRecord(payload) && typeof payload.detail === 'string'
       ? payload.detail
       : 'Authentication failed';
-    throw new ApiRequestError(detail, response.status);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError(detail, response.status, undefined, serverRequestId);
   }
 
   const payload = await response.json().catch(() => null);
@@ -366,11 +401,13 @@ export async function getMe(): Promise<AuthUser> {
     const detail = isRecord(payload) && typeof payload.detail === 'string'
       ? payload.detail
       : 'Failed to retrieve current user session';
-    throw new ApiRequestError(detail, response.status);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError(detail, response.status, undefined, serverRequestId);
   }
   const payload = await response.json().catch(() => null);
   if (!isRecord(payload) || typeof payload.id !== 'string') {
-    throw new ApiRequestError('Invalid user profile response', 502);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError('Invalid user profile response', 502, undefined, serverRequestId);
   }
   return payload as unknown as AuthUser;
 }
@@ -451,12 +488,14 @@ export async function uploadEeg(
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
     const details = errorDetails(payload, response.status);
-    throw new ApiRequestError(details.message, response.status, details.validation);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError(details.message, response.status, details.validation, serverRequestId);
   }
 
   const payload: unknown = await response.json().catch(() => null);
   if (!isPredictResponse(payload)) {
-    throw new ApiRequestError('Backend returned an invalid upload response (502)', 502);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError('Backend returned an invalid upload response (502)', 502, undefined, serverRequestId);
   }
   return payload;
 }
@@ -520,12 +559,14 @@ export async function uploadEegV2(
   if (!response.ok) {
     const payload: unknown = await response.json().catch(() => null);
     const details = errorDetails(payload, response.status);
-    throw new ApiRequestError(details.message, response.status, details.validation);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError(details.message, response.status, details.validation, serverRequestId);
   }
 
   const payload: unknown = await response.json().catch(() => null);
   if (!isPredictResponse(payload)) {
-    throw new ApiRequestError('Backend returned an invalid upload response (502)', 502);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError('Backend returned an invalid upload response (502)', 502, undefined, serverRequestId);
   }
   return payload;
 }
@@ -542,12 +583,14 @@ export async function getJob(jobId: string, signal?: AbortSignal): Promise<JobRe
 
   if (!response.ok) {
     const message = await response.text();
-    throw new ApiRequestError(`Job request failed (${response.status}): ${message}`, response.status);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError(`Job request failed (${response.status}): ${message}`, response.status, undefined, serverRequestId);
   }
 
   const payload: unknown = await response.json().catch(() => null);
   if (!isJobResponse(payload)) {
-    throw new ApiRequestError('Backend returned an invalid job response (502)', 502);
+    const serverRequestId = response.headers.get('x-request-id') || undefined;
+    throw new ApiRequestError('Backend returned an invalid job response (502)', 502, undefined, serverRequestId);
   }
   return payload;
 }

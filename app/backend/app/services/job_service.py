@@ -1,5 +1,6 @@
 from __future__ import annotations
 import asyncio
+import contextvars
 import datetime
 import logging
 from functools import partial
@@ -7,6 +8,8 @@ from functools import partial
 import numpy as np
 from sqlalchemy.orm import Session
 
+from app.core.errors import categorize_exception, sanitize_for_log
+from app.core.logging import reset_logging_context, set_logging_context
 from app.db.database import SessionLocal
 from app.db.models import PredictionJob
 from app.services.prediction.prediction_router import prediction_router
@@ -62,16 +65,20 @@ async def run_prediction_pipeline(
     dataset_name: str = "bonn",
     eeg_visualization: dict | None = None,
     expected_worker_id: str | None = None,
+    request_id: str | None = None,
 ):
+    tokens = set_logging_context(request_id=request_id, job_id=job_id, worker_id=expected_worker_id)
     try:
         # Stage 1: Validating
         update_job_status(job_id, "Validating Patient Data", 10, expected_worker_id=expected_worker_id)
 
-        # Stage 2-5: Run CPU-bound ML inference in a thread executor
+        # Stage 2-5: Run CPU-bound ML inference in a thread executor with propagated contextvars
         update_job_status(job_id, "Feature Extraction & Signal Processing", 25, expected_worker_id=expected_worker_id)
         loop = asyncio.get_running_loop()
+        ctx = contextvars.copy_context()
         result = await loop.run_in_executor(
             None,
+            ctx.run,
             partial(_run_inference, eeg_data, channel_names, fs, dataset_name),
         )
 
@@ -118,7 +125,8 @@ async def run_prediction_pipeline(
             db.close()
 
     except Exception as e:
-        logger.error(f"Job {job_id} failed: {e}", exc_info=True)
+        safe_error = categorize_exception(e)
+        logger.error(f"Job {job_id} failed [{safe_error}]: {sanitize_for_log(str(e))}", exc_info=True)
         db = SessionLocal()
         try:
             job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
@@ -131,7 +139,9 @@ async def run_prediction_pipeline(
                     return
                 job.status = "Failed"
                 job.progress = 0
-                job.error = str(e)
+                job.error = safe_error
                 db.commit()
         finally:
             db.close()
+    finally:
+        reset_logging_context(tokens)

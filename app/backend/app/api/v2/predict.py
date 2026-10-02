@@ -31,6 +31,13 @@ from app.services.edf_validation import (
     usable_eeg_channel_indices,
 )
 from app.core.config import settings
+from app.core.errors import (
+    categorize_exception,
+    get_safe_dispatch_error_detail,
+    sanitize_for_log,
+    sanitize_job_error,
+)
+from app.core.logging import get_request_id
 from app.services.eeg_visualization import build_eeg_visualization_from_raw
 from app.services.job_service import run_prediction_pipeline
 from app.services.model_service import ml_model_service
@@ -207,6 +214,7 @@ async def create_prediction_job(
         
         # Create Job
         job_id = str(uuid.uuid4())
+        req_id = get_request_id()
         job = PredictionJob(
             id=job_id,
             tenant_id=current_user.tenant_id,
@@ -218,6 +226,7 @@ async def create_prediction_job(
             detection_confidence=validation.detection_confidence,
             selected_model="lightgbm",
             eeg_visualization=eeg_visualization,
+            request_id=req_id,
         )
         db.add(job)
         db.commit()
@@ -242,11 +251,12 @@ async def create_prediction_job(
                     staged_path=staged_path,
                     dataset_name=detected_dataset,
                     medical_history=parsed_medical_history,
+                    request_id=req_id,
                 )
             except Exception as queue_exc:
+                safe_error = categorize_exception(queue_exc)
                 logger.error(
-                    f"Failed to stage or enqueue job {job_id} in distributed queue mode: {queue_exc}",
-                    exc_info=True,
+                    f"Failed to stage or enqueue job {job_id} in distributed queue mode: {sanitize_for_log(str(queue_exc))}"
                 )
                 if staged_path:
                     try:
@@ -254,13 +264,14 @@ async def create_prediction_job(
                     except Exception:
                         pass
                 job.status = "Failed"
-                job.error = f"Distributed queue dispatch failed: {queue_exc}"
+                job.error = safe_error
                 db.commit()
                 # Strict Architectural Constraint: Never silently fall back to in-process execution!
+                client_detail = get_safe_dispatch_error_detail(queue_exc)
                 raise HTTPException(
                     status_code=503,
-                    detail=f"Distributed queue dispatch failed: {queue_exc}",
-                ) from queue_exc
+                    detail=client_detail,
+                ) from None
         else:
             # Default Prompt 6 path: in-process background execution
             background_tasks.add_task(
@@ -271,6 +282,7 @@ async def create_prediction_job(
                 final_sampling_rate,
                 detected_dataset,
                 eeg_visualization=eeg_visualization,
+                request_id=req_id,
             )
         
         return {
@@ -333,6 +345,7 @@ async def get_job_status(
         "datasetName": job.detected_dataset,
         "detectionConfidence": job.detection_confidence,
         "modelName": job.selected_model or "lightgbm",
+        "request_id": job.request_id,
     }
     
     if job.status == "Completed":
@@ -356,7 +369,7 @@ async def get_job_status(
         }
         response["explanation"] = job.shap_explanation
     elif job.status == "Failed":
-        response["error"] = job.error or "Job failed during processing"
+        response["error"] = sanitize_job_error(job.error)
         
     return response
 
@@ -408,7 +421,8 @@ async def get_report(
             "datasetName": job.detected_dataset,
             "detectionConfidence": job.detection_confidence,
             "modelName": job.selected_model or "lightgbm",
-            "error": job.error,
+            "request_id": job.request_id,
+            "error": sanitize_job_error(job.error) if (job.status == "Failed" or job.error) else None,
             "created_at": job.created_at,
             "completed_at": job.completed_at,
         },

@@ -105,7 +105,7 @@ class LocalStorageBackend(StorageBackend):
             resolved.relative_to(self.storage_dir)
         except ValueError as exc:
             raise StorageSecurityError(
-                f"Path traversal detected: reference '{staged_reference}' escapes storage directory '{self.storage_dir}'"
+                f"Path traversal detected: reference '{staged_reference}' escapes storage directory"
             ) from exc
 
         return resolved

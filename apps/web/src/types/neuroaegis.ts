@@ -71,6 +71,6 @@ export interface ModelThresholdConfig {
 
 export type ViewLifecycleState =
   | { status: 'loading' }
-  | { status: 'error'; message: string; code: string; retryCount: number }
+  | { status: 'error'; message: string; code: string; retryCount: number; requestId?: string }
   | { status: 'empty' }
   | { status: 'ready' };

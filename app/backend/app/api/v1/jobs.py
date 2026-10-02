@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.auth import get_tenant_job, require_roles
+from app.core.errors import sanitize_job_error
 from app.db.database import get_db
 from app.db.models import PredictionJob, User
 
@@ -36,6 +37,7 @@ def get_latest_job(
         "datasetName": job.detected_dataset,
         "detectionConfidence": job.detection_confidence,
         "generatedAt": job.completed_at.isoformat() if job.completed_at else job.created_at.isoformat(),
+        "request_id": job.request_id,
     }
 
     if job.status == "Completed":
@@ -61,7 +63,7 @@ def get_latest_job(
             "eeg_visualization": job.eeg_visualization,
         }
     elif job.status == "Failed":
-        response["error"] = job.error or "Job failed during processing"
+        response["error"] = sanitize_job_error(job.error)
 
     return response
 
@@ -81,6 +83,7 @@ def get_job(
         "datasetName": job.detected_dataset,
         "detectionConfidence": job.detection_confidence,
         "modelName": job.selected_model,
+        "request_id": job.request_id,
     }
 
     if job.status == "Completed":
@@ -92,6 +95,6 @@ def get_job(
             "eeg_visualization": job.eeg_visualization,
         }
     elif job.status == "Failed":
-        response["error"] = job.error or "Job failed during processing"
+        response["error"] = sanitize_job_error(job.error)
 
     return response

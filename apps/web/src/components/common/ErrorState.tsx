@@ -4,10 +4,11 @@ import { AlertOctagon, RotateCcw, FileText } from 'lucide-react';
 interface ErrorStateProps {
   readonly message: string;
   readonly code: string;
+  readonly requestId?: string;
   readonly onRetry: () => void;
 }
 
-export const ErrorState: React.FC<ErrorStateProps> = ({ message, code, onRetry }) => {
+export const ErrorState: React.FC<ErrorStateProps> = ({ message, code, requestId, onRetry }) => {
   return (
     <main className="min-h-[75vh] flex items-center justify-center p-6">
       <div className="max-w-md w-full bg-slate-900 border border-rose-900/60 rounded-2xl p-8 shadow-2xl text-center space-y-6">
@@ -21,6 +22,11 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ message, code, onRetry }
           <div className="inline-block mt-2 px-3 py-1 bg-slate-950 rounded text-xs font-mono text-rose-400 border border-slate-800">
             Error Code: {code}
           </div>
+          {requestId && (
+            <div className="block mt-1 px-3 py-1 bg-slate-950 rounded text-xs font-mono text-cyan-400 border border-slate-800">
+              Request ID: {requestId}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-2">

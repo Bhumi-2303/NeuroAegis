@@ -19,6 +19,12 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.errors import categorize_exception, sanitize_for_log
+from app.core.logging import (
+    get_request_id,
+    reset_logging_context,
+    set_logging_context,
+)
 from app.db.database import SessionLocal, get_db
 from app.db.models import Patient, PredictionJob, User
 from app.services.prediction.prediction_router import prediction_router
@@ -57,7 +63,12 @@ def process_and_save_prediction(
     dataset: str,
     model_name: str,
     eeg_visualization: dict[str, Any] | None = None,
+    request_id: str | None = None,
 ):
+    tokens = set_logging_context(
+        request_id=request_id,
+        job_id=job_id,
+    )
     db = SessionLocal()
     try:
         # Update status to processing
@@ -98,14 +109,16 @@ def process_and_save_prediction(
             db.commit()
             logger.info(f"[{job_id}] Prediction finished successfully. Result: {job.prediction_label} ({job.probability_seizure:.4f})")
     except Exception as e:
-        logger.error(f"[{job_id}] Prediction background task failed: {e}", exc_info=True)
+        safe_error = categorize_exception(e)
+        logger.error(f"[{job_id}] Prediction background task failed: {sanitize_for_log(str(e))}", exc_info=True)
         job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
         if job:
             job.status = "Failed"
             job.progress = 0
-            job.error = str(e)
+            job.error = safe_error
             db.commit()
     finally:
+        reset_logging_context(tokens)
         db.close()
 
 
@@ -287,6 +300,7 @@ async def predict_eeg(
 
         # Create Job inheriting authenticated tenant and creator
         job_id = str(uuid.uuid4())
+        req_id = get_request_id()
         job = PredictionJob(
             id=job_id,
             patient_id=patient_id,
@@ -297,6 +311,7 @@ async def predict_eeg(
             detected_dataset=detected_dataset,
             detection_confidence=confidence,
             selected_model=selected_model,
+            request_id=req_id,
         )
         db.add(job)
         db.commit()
@@ -313,6 +328,7 @@ async def predict_eeg(
             detected_dataset,
             selected_model,
             eeg_visualization,
+            request_id=req_id,
         )
         logger.info(f"[{job_id}] Response sent for prediction task.")
         
