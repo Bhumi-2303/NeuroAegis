@@ -74,7 +74,7 @@ def get_job(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles("clinician", "admin")),
 ):
-    job = get_tenant_job(job_id, db, current_user.tenant_id)
+    job = get_tenant_job(job_id, db, current_user.tenant_id, actor_id=current_user.id)
 
     response = {
         "job_id": job.id,

@@ -103,6 +103,35 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                 import hmac
                 from fastapi.responses import JSONResponse
                 if not csrf_cookie or not csrf_header or not hmac.compare_digest(csrf_cookie, csrf_header):
+                    from app.core.audit import EVENT_AUTH_CSRF_FAILURE, record_security_event
+                    from app.core.logging import get_request_id
+                    actor_id = None
+                    tenant_id = None
+                    actor_type = "anonymous"
+                    access_token = request.cookies.get(settings.ACCESS_COOKIE_NAME)
+                    if access_token:
+                        try:
+                            from jose import jwt
+                            payload = jwt.decode(
+                                access_token,
+                                settings.SECRET_KEY,
+                                algorithms=[settings.ALGORITHM],
+                                options={"verify_exp": False},
+                            )
+                            actor_id = payload.get("sub")
+                            tenant_id = payload.get("tenant_id")
+                            if actor_id:
+                                actor_type = "user"
+                        except Exception:
+                            pass
+                    record_security_event(
+                        event_type=EVENT_AUTH_CSRF_FAILURE,
+                        outcome="denied",
+                        actor_type=actor_type,
+                        actor_id=actor_id,
+                        tenant_id=tenant_id,
+                        request_id=get_request_id(),
+                    )
                     return JSONResponse(
                         status_code=403,
                         content={"detail": "CSRF token missing or invalid"},

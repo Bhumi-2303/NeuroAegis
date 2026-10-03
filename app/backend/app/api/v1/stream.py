@@ -26,7 +26,7 @@ async def stream_eeg(
     current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     if job_id:
-        get_tenant_job(job_id, db, current_user.tenant_id)
+        get_tenant_job(job_id, db, current_user.tenant_id, actor_id=current_user.id)
     """
     Streams EEG data using Server-Sent Events (SSE).
     Reads from chbmit_subset.parquet.

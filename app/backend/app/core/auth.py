@@ -133,6 +133,19 @@ def verify_and_rotate_refresh_token(
         logger.warning(
             f"Security alert: Replay detected on refresh token {session_record.id} for user {session_record.user_id}. Revoking all sessions."
         )
+        from app.core.audit import EVENT_AUTH_SESSION_REPLAY_DETECTED, record_security_event
+        from app.core.logging import get_request_id
+        record_security_event(
+            event_type=EVENT_AUTH_SESSION_REPLAY_DETECTED,
+            outcome="denied",
+            actor_type="user",
+            actor_id=session_record.user_id,
+            tenant_id=session_record.tenant_id,
+            session_id=session_record.id,
+            resource_type="session",
+            resource_id=session_record.id,
+            request_id=get_request_id(),
+        )
         db.query(RefreshToken).filter(
             RefreshToken.user_id == session_record.user_id,
             RefreshToken.revoked_at.is_(None),
@@ -364,6 +377,34 @@ def verify_csrf_token(request: Request) -> None:
     )
 
     if not csrf_cookie or not csrf_header or not hmac.compare_digest(csrf_cookie, csrf_header):
+        from app.core.audit import EVENT_AUTH_CSRF_FAILURE, record_security_event
+        from app.core.logging import get_request_id
+        actor_id = None
+        tenant_id = None
+        actor_type = "anonymous"
+        access_token = request.cookies.get(settings.ACCESS_COOKIE_NAME)
+        if access_token:
+            try:
+                payload = jwt.decode(
+                    access_token,
+                    settings.SECRET_KEY,
+                    algorithms=[settings.ALGORITHM],
+                    options={"verify_exp": False},
+                )
+                actor_id = payload.get("sub")
+                tenant_id = payload.get("tenant_id")
+                if actor_id:
+                    actor_type = "user"
+            except Exception:
+                pass
+        record_security_event(
+            event_type=EVENT_AUTH_CSRF_FAILURE,
+            outcome="denied",
+            actor_type=actor_type,
+            actor_id=actor_id,
+            tenant_id=tenant_id,
+            request_id=get_request_id(),
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="CSRF token missing or invalid",
@@ -382,11 +423,33 @@ def require_roles(*allowed_roles: str):
     def role_checker(current_user: User = Depends(get_current_user)) -> User:
         valid_roles = {"clinician", "researcher", "admin"}
         if current_user.role not in valid_roles:
+            from app.core.audit import EVENT_AUTH_ACCESS_DENIED, record_security_event
+            from app.core.logging import get_request_id
+            record_security_event(
+                event_type=EVENT_AUTH_ACCESS_DENIED,
+                outcome="denied",
+                actor_type="user",
+                actor_id=current_user.id,
+                tenant_id=current_user.tenant_id,
+                request_id=get_request_id(),
+                metadata={"role": current_user.role},
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Invalid role assigned to user",
             )
         if current_user.role not in allowed_roles:
+            from app.core.audit import EVENT_AUTH_ACCESS_DENIED, record_security_event
+            from app.core.logging import get_request_id
+            record_security_event(
+                event_type=EVENT_AUTH_ACCESS_DENIED,
+                outcome="denied",
+                actor_type="user",
+                actor_id=current_user.id,
+                tenant_id=current_user.tenant_id,
+                request_id=get_request_id(),
+                metadata={"role": current_user.role},
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Insufficient permissions for this resource",
@@ -407,7 +470,12 @@ def require_role(required_role: str):
     return require_roles(required_role)
 
 
-def get_tenant_patient(patient_id: str, db: Session, tenant_id: str) -> Patient:
+def get_tenant_patient(
+    patient_id: str,
+    db: Session,
+    tenant_id: str,
+    actor_id: str | None = None,
+) -> Patient:
     """
     Authoritative tenant-scoped patient retrieval (Prompt 9.3 Phase 5 & 13).
     Returns 400 on malformed ID, 404 if not found or belongs to another tenant.
@@ -425,11 +493,36 @@ def get_tenant_patient(patient_id: str, db: Session, tenant_id: str) -> Patient:
         .first()
     )
     if not patient:
+        # Check if resource exists in another tenant to detect cross-tenant violation attempt
+        other_tenant_patient = (
+            db.query(Patient.id)
+            .filter(Patient.id == patient_id, Patient.is_deleted == False)
+            .first()
+        )
+        if other_tenant_patient:
+            from app.core.audit import EVENT_AUTH_TENANT_VIOLATION, record_security_event
+            from app.core.logging import get_request_id
+            record_security_event(
+                event_type=EVENT_AUTH_TENANT_VIOLATION,
+                outcome="denied",
+                actor_type="user",
+                actor_id=actor_id,
+                tenant_id=tenant_id,  # Caller's tenant, never the target's tenant
+                resource_type="patient",
+                resource_id=patient_id,
+                patient_id=patient_id,
+                request_id=get_request_id(),
+            )
         raise HTTPException(status_code=404, detail="Patient not found")
     return patient
 
 
-def get_tenant_job(job_id: str, db: Session, tenant_id: str) -> PredictionJob:
+def get_tenant_job(
+    job_id: str,
+    db: Session,
+    tenant_id: str,
+    actor_id: str | None = None,
+) -> PredictionJob:
     """
     Authoritative tenant-scoped job retrieval (Prompt 9.3 Phase 7 & 13).
     Returns 400 on malformed ID, 404 if not found or belongs to another tenant.
@@ -447,5 +540,25 @@ def get_tenant_job(job_id: str, db: Session, tenant_id: str) -> PredictionJob:
         .first()
     )
     if not job:
+        # Check if resource exists in another tenant to detect cross-tenant violation attempt
+        other_tenant_job = (
+            db.query(PredictionJob.id)
+            .filter(PredictionJob.id == job_id, PredictionJob.is_deleted == False)
+            .first()
+        )
+        if other_tenant_job:
+            from app.core.audit import EVENT_AUTH_TENANT_VIOLATION, record_security_event
+            from app.core.logging import get_request_id
+            record_security_event(
+                event_type=EVENT_AUTH_TENANT_VIOLATION,
+                outcome="denied",
+                actor_type="user",
+                actor_id=actor_id,
+                tenant_id=tenant_id,  # Caller's tenant, never the target's tenant
+                resource_type="prediction_job",
+                resource_id=job_id,
+                job_id=job_id,
+                request_id=get_request_id(),
+            )
         raise HTTPException(status_code=404, detail="Job not found")
     return job

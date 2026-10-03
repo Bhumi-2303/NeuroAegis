@@ -1,11 +1,22 @@
 from __future__ import annotations
+import hashlib
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.audit import (
+    EVENT_AUTH_LOGIN_FAILURE,
+    EVENT_AUTH_LOGIN_SUCCESS,
+    EVENT_AUTH_LOGOUT,
+    EVENT_AUTH_LOGOUT_ALL,
+    EVENT_AUTH_SESSION_ROTATED,
+    record_audit_event,
+    record_security_event,
+    sanitize_bounded_text,
+)
 from app.core.config import settings
 from app.db.database import get_db
-from app.db.models import User
+from app.db.models import RefreshToken, User
 from app.core.auth import (
     clear_auth_cookies,
     create_access_token,
@@ -83,20 +94,61 @@ async def login(
     if not user:
         # Dummy verification to prevent timing discrepancy
         verify_password("dummy", "$2b$12$DUMMY_SALT_DUMMY_SALT_DUMMY_SALT_DUMMY_SALT_DUMMY")
+        record_security_event(
+            event_type=EVENT_AUTH_LOGIN_FAILURE,
+            outcome="failure",
+            actor_type="anonymous",
+            actor_id=None,
+            tenant_id=None,
+            resource_type="user",
+            metadata={"attempted_username": sanitize_bounded_text(username, 64)},
+        )
         raise generic_auth_error
 
     if not verify_password(password, user.hashed_password):
+        record_security_event(
+            event_type=EVENT_AUTH_LOGIN_FAILURE,
+            outcome="failure",
+            actor_type="anonymous",
+            actor_id=None,
+            tenant_id=None,
+            resource_type="user",
+            metadata={"attempted_username": sanitize_bounded_text(username, 64)},
+        )
         raise generic_auth_error
 
     if not user.is_active:
+        record_security_event(
+            event_type=EVENT_AUTH_LOGIN_FAILURE,
+            outcome="failure",
+            actor_type="anonymous",
+            actor_id=None,
+            tenant_id=None,
+            resource_type="user",
+            metadata={"attempted_username": sanitize_bounded_text(username, 64)},
+        )
         raise generic_auth_error
 
     # Issue credentials
     access_token = create_access_token(user)
-    raw_refresh_token, _ = create_refresh_token(user, db)
+    raw_refresh_token, session_record = create_refresh_token(user, db)
     csrf_token = secrets.token_urlsafe(32)
 
     set_auth_cookies(response, access_token, raw_refresh_token, csrf_token)
+
+    record_audit_event(
+        db=db,
+        event_type=EVENT_AUTH_LOGIN_SUCCESS,
+        outcome="success",
+        actor_type="user",
+        actor_id=user.id,
+        tenant_id=user.tenant_id,
+        session_id=session_record.id,
+        resource_type="session",
+        resource_id=session_record.id,
+        metadata={"username": user.username, "role": user.role},
+    )
+    db.commit()
 
     return {
         "csrf_token": csrf_token,
@@ -150,11 +202,25 @@ async def refresh_session(
             detail="Refresh token missing",
         )
 
-    user, new_raw_token, _ = verify_and_rotate_refresh_token(raw_token, db)
+    user, new_raw_token, new_session = verify_and_rotate_refresh_token(raw_token, db)
     new_access_token = create_access_token(user)
     new_csrf_token = secrets.token_urlsafe(32)
 
     set_auth_cookies(response, new_access_token, new_raw_token, new_csrf_token)
+
+    record_audit_event(
+        db=db,
+        event_type=EVENT_AUTH_SESSION_ROTATED,
+        outcome="success",
+        actor_type="user",
+        actor_id=user.id,
+        tenant_id=user.tenant_id,
+        session_id=new_session.id,
+        resource_type="session",
+        resource_id=new_session.id,
+        metadata={"username": user.username, "role": user.role},
+    )
+    db.commit()
 
     return {
         "access_token": new_access_token,
@@ -176,8 +242,30 @@ async def logout(
     verify_csrf_token(request)
 
     raw_token = request.cookies.get(settings.REFRESH_COOKIE_NAME)
+    session_id = None
+    actor_id = None
+    tenant_id = None
     if raw_token:
+        incoming_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
+        session_record = db.query(RefreshToken).filter(RefreshToken.token_hash == incoming_hash).first()
+        if session_record:
+            session_id = session_record.id
+            actor_id = session_record.user_id
+            tenant_id = session_record.tenant_id
         revoke_refresh_token(raw_token, db)
+
+    record_audit_event(
+        db=db,
+        event_type=EVENT_AUTH_LOGOUT,
+        outcome="success",
+        actor_type="user" if actor_id else "anonymous",
+        actor_id=actor_id,
+        tenant_id=tenant_id,
+        session_id=session_id,
+        resource_type="session",
+        resource_id=session_id,
+    )
+    db.commit()
 
     clear_auth_cookies(response)
     return {"detail": "Logged out successfully"}
@@ -196,5 +284,19 @@ async def logout_all(
     verify_csrf_token(request)
 
     revoke_all_user_sessions(current_user, db)
+
+    record_audit_event(
+        db=db,
+        event_type=EVENT_AUTH_LOGOUT_ALL,
+        outcome="success",
+        actor_type="user",
+        actor_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        resource_type="user",
+        resource_id=current_user.id,
+        metadata={"username": current_user.username, "role": current_user.role},
+    )
+    db.commit()
+
     clear_auth_cookies(response)
     return {"detail": "All sessions revoked successfully"}

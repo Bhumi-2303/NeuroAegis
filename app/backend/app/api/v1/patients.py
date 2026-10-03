@@ -5,6 +5,11 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+from app.core.audit import (
+    EVENT_CLINICAL_PATIENT_CREATED,
+    EVENT_CLINICAL_PATIENT_VIEWED,
+    record_audit_event,
+)
 from app.core.auth import get_tenant_patient, require_roles
 from app.db.database import get_db
 from app.db.models import Patient, User
@@ -33,6 +38,17 @@ def create_patient(
         created_at=datetime.utcnow(),
     )
     db.add(db_patient)
+    record_audit_event(
+        db=db,
+        event_type=EVENT_CLINICAL_PATIENT_CREATED,
+        outcome="success",
+        actor_type="user",
+        actor_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        patient_id=db_patient.id,
+        resource_type="patient",
+        resource_id=db_patient.id,
+    )
     db.commit()
     db.refresh(db_patient)
     return db_patient
@@ -56,6 +72,17 @@ def get_patients(
         .limit(limit)
         .all()
     )
+    record_audit_event(
+        db=db,
+        event_type=EVENT_CLINICAL_PATIENT_VIEWED,
+        outcome="success",
+        actor_type="user",
+        actor_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        resource_type="patient",
+        metadata={"count": len(patients)},
+    )
+    db.commit()
     return patients
 
 
@@ -65,5 +92,18 @@ def get_patient(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_roles("clinician", "admin")),
 ):
-    return get_tenant_patient(patient_id, db, current_user.tenant_id)
+    patient = get_tenant_patient(patient_id, db, current_user.tenant_id, actor_id=current_user.id)
+    record_audit_event(
+        db=db,
+        event_type=EVENT_CLINICAL_PATIENT_VIEWED,
+        outcome="success",
+        actor_type="user",
+        actor_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        patient_id=patient.id,
+        resource_type="patient",
+        resource_id=patient.id,
+    )
+    db.commit()
+    return patient
 

@@ -161,7 +161,7 @@ async def predict_eeg(
 
     # Authoritative early check: verify patient ownership before expensive file parsing and staging
     if patient_id:
-        get_tenant_patient(patient_id, db, current_user.tenant_id)
+        get_tenant_patient(patient_id, db, current_user.tenant_id, actor_id=current_user.id)
 
     logger.info("Received EDF upload. Size limit=%s bytes", settings.MAX_EEG_UPLOAD_BYTES)
     validation: EdfValidationResult
@@ -296,7 +296,7 @@ async def predict_eeg(
     try:
         # Verify patient exists and belongs to current user's tenant if provided
         if patient_id:
-            get_tenant_patient(patient_id, db, current_user.tenant_id)
+            get_tenant_patient(patient_id, db, current_user.tenant_id, actor_id=current_user.id)
 
         # Create Job inheriting authenticated tenant and creator
         job_id = str(uuid.uuid4())

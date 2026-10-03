@@ -34,6 +34,7 @@ class Tenant(Base):
     patients = relationship("Patient", back_populates="tenant", foreign_keys="Patient.tenant_id")
     prediction_jobs = relationship("PredictionJob", back_populates="tenant", foreign_keys="PredictionJob.tenant_id")
     refresh_tokens = relationship("RefreshToken", back_populates="tenant", foreign_keys="RefreshToken.tenant_id")
+    audit_events = relationship("AuditEvent", back_populates="tenant", foreign_keys="AuditEvent.tenant_id")
 
     @validates("slug")
     def validate_slug(self, key, slug):
@@ -208,6 +209,77 @@ class RefreshToken(Base):
 
     user = relationship("User", back_populates="refresh_tokens", foreign_keys=[user_id])
     tenant = relationship("Tenant", back_populates="refresh_tokens", foreign_keys=[tenant_id])
+
+
+class AuditEvent(Base):
+    __tablename__ = "audit_events"
+
+    id = Column(String(36), primary_key=True, index=True)
+    occurred_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    event_type = Column(String(64), nullable=False, index=True)
+    outcome = Column(String(16), nullable=False, index=True)
+    actor_type = Column(String(16), nullable=False)
+    actor_id = Column(String(64), nullable=True, index=True)
+    tenant_id = Column(String(36), ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
+    request_id = Column(String(64), nullable=True, index=True)
+    session_id = Column(String(36), nullable=True)
+    resource_type = Column(String(32), nullable=True)
+    resource_id = Column(String(64), nullable=True, index=True)
+    patient_id = Column(String(64), nullable=True, index=True)
+    job_id = Column(String(64), nullable=True, index=True)
+    error_category = Column(String(64), nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True)
+
+    tenant = relationship("Tenant", back_populates="audit_events", foreign_keys=[tenant_id])
+
+    def __init__(self, **kwargs):
+        if "metadata" in kwargs and "metadata_json" not in kwargs:
+            kwargs["metadata_json"] = kwargs.pop("metadata")
+        super().__init__(**kwargs)
+
+    @property
+    def event_metadata(self):
+        return self.metadata_json
+
+    @event_metadata.setter
+    def event_metadata(self, val):
+        self.metadata_json = val
+
+    @validates("event_type")
+    def validate_event_type(self, key, event_type):
+        from app.core.audit import SAFE_AUDIT_EVENT_TYPES
+        if event_type not in SAFE_AUDIT_EVENT_TYPES:
+            raise ValueError(f"Invalid audit event_type: {event_type}")
+        return event_type
+
+    @validates("outcome")
+    def validate_outcome(self, key, outcome):
+        from app.core.audit import SAFE_AUDIT_OUTCOMES
+        if outcome not in SAFE_AUDIT_OUTCOMES:
+            raise ValueError(f"Invalid audit outcome: {outcome}")
+        return outcome
+
+    @validates("actor_type")
+    def validate_actor_type(self, key, actor_type):
+        from app.core.audit import SAFE_AUDIT_ACTOR_TYPES
+        if actor_type not in SAFE_AUDIT_ACTOR_TYPES:
+            raise ValueError(f"Invalid audit actor_type: {actor_type}")
+        return actor_type
+
+    @validates("metadata_json")
+    def validate_metadata_json(self, key, metadata):
+        from app.core.audit import validate_metadata
+        return validate_metadata(metadata)
+
+
+@event.listens_for(AuditEvent, "before_update")
+def audit_event_before_update(mapper, connection, target):
+    raise ValueError("audit_events table is append-only: updates are forbidden")
+
+
+@event.listens_for(AuditEvent, "before_delete")
+def audit_event_before_delete(mapper, connection, target):
+    raise ValueError("audit_events table is append-only: deletions are forbidden")
 
 
 

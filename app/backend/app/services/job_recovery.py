@@ -46,7 +46,12 @@ def is_job_stale(job: PredictionJob, now: datetime.datetime | None = None) -> bo
     return job.lease_expires_at <= current_time
 
 
-def recover_job_as_failed(job: PredictionJob, error_message: str = STALE_JOB_ERROR_MESSAGE, now: datetime.datetime | None = None) -> None:
+def recover_job_as_failed(
+    job: PredictionJob,
+    error_message: str = STALE_JOB_ERROR_MESSAGE,
+    now: datetime.datetime | None = None,
+    db: Session | None = None,
+) -> None:
     """
     Transition a stale job to the terminal 'Failed' state with structured error context.
     Does NOT rerun inference or move the job back to the queue.
@@ -73,6 +78,24 @@ def recover_job_as_failed(job: PredictionJob, error_message: str = STALE_JOB_ERR
         },
     )
 
+    sess = db or Session.object_session(job)
+    if sess is not None:
+        from app.core.audit import EVENT_SYSTEM_WORKER_LEASE_EXPIRED, record_audit_event
+        record_audit_event(
+            db=sess,
+            event_type=EVENT_SYSTEM_WORKER_LEASE_EXPIRED,
+            outcome="failure",
+            actor_type="system",
+            actor_id="neuroaegis-reaper",
+            tenant_id=job.tenant_id,
+            patient_id=job.patient_id,
+            job_id=job.id,
+            resource_type="prediction_job",
+            resource_id=job.id,
+            request_id=getattr(job, "request_id", None),
+            error_category=SAFE_ERROR_LEASE_EXPIRED,
+        )
+
 
 def reap_job_if_stale(job_id: str, db: Session, now: datetime.datetime | None = None) -> bool:
     """
@@ -81,7 +104,7 @@ def reap_job_if_stale(job_id: str, db: Session, now: datetime.datetime | None = 
     """
     job = db.query(PredictionJob).filter(PredictionJob.id == job_id).first()
     if job and is_job_stale(job, now=now):
-        recover_job_as_failed(job, now=now)
+        recover_job_as_failed(job, now=now, db=db)
         db.commit()
         return True
     return False
@@ -108,7 +131,7 @@ def reap_stale_jobs(db: Session, now: datetime.datetime | None = None) -> list[s
         )
 
         for job in stale_jobs:
-            recover_job_as_failed(job, now=current_time)
+            recover_job_as_failed(job, now=current_time, db=db)
             reaped_ids.append(job.id)
 
         if reaped_ids:

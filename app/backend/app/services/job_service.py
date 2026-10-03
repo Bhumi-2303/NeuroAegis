@@ -134,6 +134,21 @@ async def run_prediction_pipeline(
                     job.status = "Completed"
                     job.progress = 100
                     job.completed_at = datetime.datetime.utcnow()
+                    from app.core.audit import EVENT_CLINICAL_PREDICTION_COMPLETED, record_audit_event
+                    record_audit_event(
+                        db=db,
+                        event_type=EVENT_CLINICAL_PREDICTION_COMPLETED,
+                        outcome="success",
+                        actor_type="worker" if expected_worker_id else "system",
+                        actor_id=expected_worker_id or "in_process",
+                        tenant_id=job.tenant_id,
+                        patient_id=job.patient_id,
+                        job_id=job.id,
+                        resource_type="prediction_job",
+                        resource_id=job.id,
+                        request_id=request_id,
+                        metadata={"dataset": safe_dataset, "execution_mode": exec_mode},
+                    )
                     db.commit()
             finally:
                 db.close()
@@ -175,6 +190,22 @@ async def run_prediction_pipeline(
                 job.status = "Failed"
                 job.progress = 0
                 job.error = safe_error
+                from app.core.audit import EVENT_CLINICAL_PREDICTION_FAILED, record_audit_event
+                record_audit_event(
+                    db=db,
+                    event_type=EVENT_CLINICAL_PREDICTION_FAILED,
+                    outcome="failure",
+                    actor_type="worker" if expected_worker_id else "system",
+                    actor_id=expected_worker_id or "in_process",
+                    tenant_id=job.tenant_id,
+                    patient_id=job.patient_id,
+                    job_id=job.id,
+                    resource_type="prediction_job",
+                    resource_id=job.id,
+                    request_id=request_id,
+                    error_category=safe_error,
+                    metadata={"dataset": safe_dataset, "execution_mode": exec_mode},
+                )
                 db.commit()
         finally:
             db.close()

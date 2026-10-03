@@ -19,6 +19,11 @@ from fastapi import (
 )
 from sqlalchemy.orm import Session
 
+from app.core.audit import (
+    EVENT_CLINICAL_JOB_CREATED,
+    EVENT_CLINICAL_JOB_REPORT_VIEWED,
+    record_audit_event,
+)
 from app.db.database import get_db
 from app.db.models import Patient, PredictionJob, User
 from app.core.auth import get_tenant_job, get_tenant_patient, require_roles
@@ -94,7 +99,7 @@ async def create_prediction_job(
 
     existing_patient = None
     if patient_id:
-        existing_patient = get_tenant_patient(patient_id, db, current_user.tenant_id)
+        existing_patient = get_tenant_patient(patient_id, db, current_user.tenant_id, actor_id=current_user.id)
 
     try:
         safe_filename = sanitize_upload_filename(file.filename)
@@ -237,6 +242,20 @@ async def create_prediction_job(
             request_id=req_id,
         )
         db.add(job)
+        record_audit_event(
+            db=db,
+            event_type=EVENT_CLINICAL_JOB_CREATED,
+            outcome="success",
+            actor_type="user",
+            actor_id=current_user.id,
+            tenant_id=current_user.tenant_id,
+            patient_id=target_patient_id,
+            job_id=job_id,
+            resource_type="prediction_job",
+            resource_id=job_id,
+            request_id=req_id,
+            metadata={"dataset": detected_dataset, "model_name": "lightgbm"},
+        )
         db.commit()
 
         # Telemetry: Record job creation (Step 8)
@@ -359,7 +378,7 @@ async def get_job_status(
     current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     validate_job_id(job_id)
-    job = get_tenant_job(job_id, db, current_user.tenant_id)
+    job = get_tenant_job(job_id, db, current_user.tenant_id, actor_id=current_user.id)
 
     # If the job is active but its worker lease expired, reap it immediately
     if job.status not in ("Completed", "Failed") and job.lease_expires_at is not None:
@@ -435,8 +454,22 @@ async def get_report(
     current_user: User = Depends(require_roles("clinician", "admin")),
 ):
     validate_job_id(job_id)
-    job = get_tenant_job(job_id, db, current_user.tenant_id)
+    job = get_tenant_job(job_id, db, current_user.tenant_id, actor_id=current_user.id)
     
+    record_audit_event(
+        db=db,
+        event_type=EVENT_CLINICAL_JOB_REPORT_VIEWED,
+        outcome="success",
+        actor_type="user",
+        actor_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        patient_id=job.patient_id,
+        job_id=job.id,
+        resource_type="prediction_job",
+        resource_id=job.id,
+    )
+    db.commit()
+
     patient = job.patient if (job.patient and not job.patient.is_deleted) else None
     return {
         "job": {

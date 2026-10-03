@@ -169,7 +169,13 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 Base.metadata.tables["refresh_tokens"].create(bind=conn, checkfirst=True)
                 tables.add("refresh_tokens")
 
-            # 7. Ensure indexes exist
+            # 7. Ensure 'audit_events' table exists (Phase 10.4)
+            if "audit_events" not in tables:
+                logger.info("Migrating schema: creating 'audit_events' table")
+                Base.metadata.tables["audit_events"].create(bind=conn, checkfirst=True)
+                tables.add("audit_events")
+
+            # 8. Ensure indexes exist
             indexes = [
                 ("ix_tenants_slug", "tenants", ["slug"]),
                 ("ix_users_tenant_id", "users", ["tenant_id"]),
@@ -185,6 +191,12 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                 ("ix_refresh_tokens_user_id", "refresh_tokens", ["user_id"]),
                 ("ix_refresh_tokens_tenant_id", "refresh_tokens", ["tenant_id"]),
                 ("ix_refresh_tokens_expires_at", "refresh_tokens", ["expires_at"]),
+                ("ix_audit_events_tenant_occurred", "audit_events", ["tenant_id", "occurred_at"]),
+                ("ix_audit_events_tenant_event_type", "audit_events", ["tenant_id", "event_type"]),
+                ("ix_audit_events_tenant_patient", "audit_events", ["tenant_id", "patient_id"]),
+                ("ix_audit_events_tenant_job", "audit_events", ["tenant_id", "job_id"]),
+                ("ix_audit_events_request_id", "audit_events", ["request_id"]),
+                ("ix_audit_events_actor", "audit_events", ["actor_id"]),
             ]
             for idx_name, table_name, cols in indexes:
                 if table_name in tables:
@@ -194,7 +206,50 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                     except Exception as idx_exc:
                         logger.debug(f"Index creation notice ({idx_name}): {idx_exc}")
 
-            # 8. PostgreSQL foreign key constraints (idempotent)
+            # 9. Append-only triggers for audit_events (Phase 10.4)
+            if "audit_events" in tables:
+                if conn.dialect.name == "sqlite":
+                    try:
+                        conn.execute(text("""
+                            CREATE TRIGGER IF NOT EXISTS trg_audit_no_update
+                            BEFORE UPDATE ON audit_events
+                            BEGIN
+                                SELECT RAISE(ABORT, 'audit_events table is append-only: updates are forbidden');
+                            END;
+                        """))
+                        conn.execute(text("""
+                            CREATE TRIGGER IF NOT EXISTS trg_audit_no_delete
+                            BEFORE DELETE ON audit_events
+                            BEGIN
+                                SELECT RAISE(ABORT, 'audit_events table is append-only: deletions are forbidden');
+                            END;
+                        """))
+                    except Exception as trg_exc:
+                        logger.debug(f"SQLite trigger notice: {trg_exc}")
+                elif conn.dialect.name == "postgresql":
+                    try:
+                        conn.execute(text("""
+                            CREATE OR REPLACE FUNCTION prevent_audit_tampering()
+                            RETURNS TRIGGER AS $$
+                            BEGIN
+                                RAISE EXCEPTION 'audit_events table is append-only: updates and deletions are forbidden';
+                            END;
+                            $$ LANGUAGE plpgsql;
+                        """))
+                        conn.execute(text("""
+                            DO $$
+                            BEGIN
+                                IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'trg_audit_events_immutable') THEN
+                                    CREATE TRIGGER trg_audit_events_immutable
+                                    BEFORE UPDATE OR DELETE ON audit_events
+                                    FOR EACH ROW EXECUTE FUNCTION prevent_audit_tampering();
+                                END IF;
+                            END $$;
+                        """))
+                    except Exception as trg_exc:
+                        logger.debug(f"PostgreSQL trigger notice: {trg_exc}")
+
+            # 10. PostgreSQL foreign key constraints (idempotent)
             if conn.dialect.name == "postgresql":
                 fk_constraints = [
                     ("fk_users_tenant", "users", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
@@ -204,6 +259,7 @@ def ensure_schema_compatibility(engine_instance=None) -> None:
                     ("fk_prediction_jobs_created_by", "prediction_jobs", "FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL"),
                     ("fk_refresh_tokens_user", "refresh_tokens", "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE"),
                     ("fk_refresh_tokens_tenant", "refresh_tokens", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
+                    ("fk_audit_events_tenant", "audit_events", "FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE RESTRICT"),
                 ]
                 for fk_name, tbl_name, fk_clause in fk_constraints:
                     if tbl_name in tables:
